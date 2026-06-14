@@ -1,0 +1,13 @@
+[project]
+name = "tesla-broker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "django>=5.2.15",
+    "dotenv>=0.9.9",
+    "pillow>=12.2.0",
+    "uuid>=1.30",
+    "whitenoise>=6.12.0",
+]

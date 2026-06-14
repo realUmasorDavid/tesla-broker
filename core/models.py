@@ -1,0 +1,244 @@
+# models.py
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+import uuid
+import secrets
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    
+    # Referral System
+    referral_code = models.CharField(max_length=12, unique=True, blank=True)
+    referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
+    
+    # Personal Info
+    phone_number = models.CharField(max_length=20, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    address = models.TextField(blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    country = models.CharField(max_length=100, blank=True)
+    
+    # Financial
+    total_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    available_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    
+    # KYC Status
+    kyc_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('not_submitted', 'Not Submitted'),
+            ('pending', 'Pending Review'),
+            ('verified', 'Verified'),
+            ('rejected', 'Rejected'),
+        ],
+        default='not_submitted'
+    )
+    kyc_tier = models.CharField(
+        max_length=20,
+        choices=[
+            ('basic', 'Basic'),
+            ('silver', 'Silver'),
+            ('gold', 'Gold'),
+            ('platinum', 'Platinum'),
+        ],
+        default='basic'
+    )
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            self.referral_code = secrets.token_urlsafe(8).upper()[:12]
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
+
+class KYCVerification(models.Model):
+    """Detailed KYC information"""
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='kyc_verification')
+    
+    id_type = models.CharField(max_length=50, choices=[
+        ('passport', 'Passport'),
+        ('national_id', 'National ID'),
+        ('drivers_license', 'Driver’s License'),
+    ])
+    id_number = models.CharField(max_length=100)
+    id_front = models.ImageField(upload_to='kyc/ids/', blank=True)
+    id_back = models.ImageField(upload_to='kyc/ids/', blank=True)
+    selfie = models.ImageField(upload_to='kyc/selfies/', blank=True)
+    
+    verification_date = models.DateTimeField(null=True, blank=True)
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='kyc_reviews')
+    notes = models.TextField(blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"KYC - {self.profile.user.username} ({self.profile.kyc_status})"
+
+
+class WalletTransaction(models.Model):
+ 
+    TRANSACTION_TYPES = [
+        ('deposit',    'Deposit'),
+        ('withdrawal', 'Withdrawal'),
+        ('transfer',   'Transfer'),
+        ('investment', 'Investment'),
+        ('return',     'Investment Return'),
+        ('purchase',   'Vehicle Purchase'),
+    ]
+ 
+    STATUS_CHOICES = [
+        ('pending',   'Pending'),
+        ('completed', 'Completed'),
+        ('failed',    'Failed'),
+    ]
+ 
+    PAYMENT_METHODS = [
+        ('btc', 'Bitcoin'),
+        ('eth', 'Ethereum'),
+        ('ltc', 'Litecoin'),
+        ('bank', 'Bank Transfer'),
+        ('card', 'Card'),
+        ('internal', 'Internal'),
+    ]
+ 
+    profile          = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='transactions')
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    payment_method   = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='internal')
+    amount           = models.DecimalField(max_digits=14, decimal_places=2)
+    status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    balance_before   = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    balance_after    = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    description      = models.TextField(blank=True)
+    created_at       = models.DateTimeField(auto_now_add=True)
+    confirmed_at     = models.DateTimeField(null=True, blank=True)  # set when admin approves
+ 
+    class Meta:
+        ordering = ['-created_at']
+ 
+    def __str__(self):
+        return f'{self.profile.user.username} | {self.transaction_type} | ${self.amount} | {self.status}'
+
+
+class Stock(models.Model):
+    """Available stocks for trading"""
+    symbol = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=200)
+    company_logo = models.URLField(blank=True)
+    current_price = models.DecimalField(max_digits=10, decimal_places=2)
+    previous_close = models.DecimalField(max_digits=10, decimal_places=2, null=True)
+    
+    market_cap = models.BigIntegerField(null=True, blank=True)
+    industry = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.symbol} - {self.name}"
+
+
+class StockHolding(models.Model):
+    """User's owned stocks"""
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='stock_holdings')
+    stock = models.ForeignKey(Stock, on_delete=models.CASCADE)
+    
+    shares = models.DecimalField(max_digits=12, decimal_places=4)
+    average_buy_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('profile', 'stock')
+
+    def __str__(self):
+        return f"{self.profile.user.username} - {self.stock.symbol} ({self.shares} shares)"
+
+
+class InvestmentPlan(models.Model):
+    """Automated investment plans"""
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='investment_plans')
+    
+    name = models.CharField(max_length=100)
+    amount_per_cycle = models.DecimalField(max_digits=10, decimal_places=2)
+    cycle = models.CharField(max_length=20, choices=[
+        ('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')
+    ])
+    is_active = models.BooleanField(default=True)
+    next_execution = models.DateTimeField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.profile.user.username}"
+
+
+class TeslaVehicle(models.Model):
+    """Tesla Inventory"""
+    model_name = models.CharField(max_length=100)
+    variant = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    range_miles = models.IntegerField()
+    zero_to_sixty = models.DecimalField(max_digits=4, decimal_places=1)
+    top_speed = models.IntegerField()
+    
+    image = models.ImageField(upload_to='vehicles/', blank=True)
+    is_available = models.BooleanField(default=True)
+    stock_quantity = models.IntegerField(default=5)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.model_name} {self.variant}"
+
+
+class Order(models.Model):
+    """Orders for vehicles or stocks"""
+    ORDER_TYPES = [('vehicle', 'Vehicle'), ('stock', 'Stock')]
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='orders')
+    order_type = models.CharField(max_length=20, choices=ORDER_TYPES)
+    
+    # Vehicle order
+    vehicle = models.ForeignKey(TeslaVehicle, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    # Stock order
+    stock = models.ForeignKey(Stock, on_delete=models.SET_NULL, null=True, blank=True)
+    shares = models.DecimalField(max_digits=12, decimal_places=4, null=True, blank=True)
+    
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        if self.order_type == 'vehicle':
+            return f"Vehicle Order #{self.id} - {self.profile.user.username}"
+        return f"Stock Order #{self.id} - {self.profile.user.username}"
+
+
+class ReferralBonus(models.Model):
+    """Track referral rewards"""
+    referrer = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='referral_bonuses')
+    referred_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='referred_by_bonus')
+    
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    is_claimed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Referral bonus from {self.referrer.user.username} → {self.referred_user.user.username}"

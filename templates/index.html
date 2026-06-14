@@ -1,0 +1,745 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesla — Invest. Trade. Drive.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        surface: '#1a1a1a',
+                        card: '#242424',
+                        border: '#2e2e2e',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+</head>
+
+<body class="bg-black text-white font-sans antialiased">
+
+    <!-- Nav -->
+    <nav
+        class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
+        <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
+        <div class="hidden lg:flex items-center gap-8 text-sm text-black">
+            <a href="#" class="hover:text-white transition">Inventory</a>
+            <a href="#" class="hover:text-white transition">Invest</a>
+            <a href="#" class="hover:text-white transition">Stocks</a>
+            <a href="#" class="hover:text-white transition">Portfolio</a>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">{{ user.username }}</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
+        {% endif %}
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative bg-black min-h-screen">
+        <!-- Background glow -->
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative min-h-[80vh] flex items-center px-5 md:px-10 py-12 md:py-20 overflow-hidden">
+
+            <div class="relative z-10 grid lg:grid-cols-2 gap-8 md:gap-12 w-full max-w-6xl mx-auto">
+
+                <!-- Left: headline + CTAs + stat cards -->
+                <div class="flex flex-col justify-center gap-8">
+                    <div>
+                        <h1 class="text-4xl md:text-5xl font-bold leading-tight tracking-tight">Invest. Trade. Drive.
+                        </h1>
+                        <p class="mt-4 text-gray-400 text-base leading-relaxed max-w-sm">
+                            All-in-one platform for crypto wallet funding, automated investments, live stocks, and
+                            premium
+                            EV inventory.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3">
+                        <a href="#"
+                            class="flex items-center gap-2 bg-white text-black text-sm font-medium px-5 py-3 rounded hover:bg-gray-100 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M13 7l5 5-5 5M6 12h12" />
+                            </svg>
+                            Start Investing
+                        </a>
+                        <a href="#"
+                            class="flex items-center gap-2 border border-border text-sm text-gray-300 px-5 py-3 rounded hover:border-gray-500 hover:text-white transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                            </svg>
+                            Explore Stocks
+                        </a>
+                        <a href="#"
+                            class="flex items-center gap-2 border border-border text-sm text-gray-300 px-5 py-3 rounded hover:border-gray-500 hover:text-white transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 8v4l3 3" />
+                            </svg>
+                            View Inventory
+                        </a>
+                    </div>
+
+                    <!-- Stat mini-cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div
+                            class="bg-card bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition rounded-lg px-6 py-5">
+                            <p class="text-xs text-gray-500 tracking-wide mb-1">Live Stocks</p>
+                            <p class="font-semibold text-lg">Realtime</p>
+                        </div>
+                        <div
+                            class="bg-card bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition rounded-lg px-6 py-5">
+                            <p class="text-xs text-gray-500 tracking-wide mb-1">Wallet</p>
+                            <p class="font-semibold text-lg">Crypto</p>
+                        </div>
+                        <div
+                            class="bg-card bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition rounded-lg px-6 py-5">
+                            <p class="text-xs text-gray-500 tracking-wide mb-1">EV Inventory</p>
+                            <p class="font-semibold text-lg">Premium</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: feature cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Investments</p>
+                        <h3 class="text-xl font-semibold mb-2">Automated</h3>
+                        <p class="text-sm text-gray-400">Flexible plans, recurring contributions.</p>
+                    </div>
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Stocks</p>
+                        <h3 class="text-xl font-semibold mb-2">Realtime</h3>
+                        <p class="text-sm text-gray-400">Quotes, news, and watchlists.</p>
+                    </div>
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Wallet</p>
+                        <h3 class="text-xl font-semibold mb-2">Crypto</h3>
+                        <p class="text-sm text-gray-400">Deposit and withdraw easily.</p>
+                    </div>
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Marketplace</p>
+                        <h3 class="text-xl font-semibold mb-2">Tesla</h3>
+                        <p class="text-sm text-gray-400">Curated EV selection.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row justify-between items-center gap-4 px-5 md:px-10 py-8 max-w-7xl mx-auto">
+            <div
+                class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
+                <div class="flex flex-col">
+                    <p class="text-xs text-gray-500 tracking-wide mb-2">Wallet</p>
+                    <h3 class="text-base font-semibold mb-2">Fund or withdraw</h3>
+                </div>
+                <div class="bg-white/5 backdrop-blur-md rounded-full p-3 flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                        viewBox="0 0 512 512">
+                        <path
+                            d="M64 32C28.7 32 0 60.7 0 96L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64L72 128c-13.3 0-24-10.7-24-24S58.7 80 72 80l384 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L64 32zM416 256a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
+                    </svg>
+                </div>
+            </div>
+            <div
+                class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
+                <div class="flex flex-col">
+                    <p class="text-xs text-gray-500 tracking-wide mb-2">Investments</p>
+                    <h3 class="text-base font-semibold mb-2">Create a plan</h3>
+                </div>
+                <div class="bg-white/5 backdrop-blur-md rounded-full p-3 flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                        viewBox="0 0 576 512">
+                        <path
+                            d="M384 160c-17.7 0-32-14.3-32-32s14.3-32 32-32l160 0c17.7 0 32 14.3 32 32l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-82.7-169.4 169.4c-12.5 12.5-32.8 12.5-45.3 0L192 269.3 54.6 406.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160c12.5-12.5 32.8-12.5 45.3 0L320 306.7 466.7 160 384 160z" />
+                    </svg>
+                </div>
+            </div>
+            <div
+                class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
+                <div class="flex flex-col">
+                    <p class="text-xs text-gray-500 tracking-wide mb-2">Stocks</p>
+                    <h3 class="text-base font-semibold mb-2">Market Overview</h3>
+                </div>
+                <div class="bg-white/5 backdrop-blur-md rounded-full p-3 flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                        viewBox="0 0 512 512">
+                        <path
+                            d="M32 32c17.7 0 32 14.3 32 32l0 336c0 8.8 7.2 16 16 16l400 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L80 480c-44.2 0-80-35.8-80-80L0 64C0 46.3 14.3 32 32 32zM144 224c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32zm144-64l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32s32 14.3 32 32zm80 32c17.7 0 32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96c0-17.7 14.3-32 32-32zM512 96l0 224c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-224c0-17.7 14.3-32 32-32s32 14.3 32 32z" />
+                    </svg>
+                </div>
+            </div>
+            <div
+                class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
+                <div class="flex flex-col">
+                    <p class="text-xs text-gray-500 tracking-wide mb-2">Portfolio</p>
+                    <h3 class="text-base font-semibold mb-2">Market performance</h3>
+                </div>
+                <div class="bg-white/5 backdrop-blur-md rounded-full p-3 flex-shrink-0">
+                    <svg class="w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                        viewBox="0 0 576 512">
+                        <path
+                            d="M512.4 240l-176 0c-17.7 0-32-14.3-32-32l0-176c0-17.7 14.4-32.2 31.9-29.9 107 14.2 191.8 99 206 206 2.3 17.5-12.2 31.9-29.9 31.9zM222.6 37.2c18.1-3.8 33.8 11 33.8 29.5l0 197.3c0 5.6 2 11 5.5 15.3L394 438.7c11.7 14.1 9.2 35.4-6.9 44.1-34.1 18.6-73.2 29.2-114.7 29.2-132.5 0-240-107.5-240-240 0-115.5 81.5-211.9 190.2-234.8zM477.8 288l64 0c18.5 0 33.3 15.7 29.5 33.8-10.2 48.4-35 91.4-69.6 124.2-12.3 11.7-31.6 9.2-42.4-3.9L374.9 340.4c-17.3-20.9-2.4-52.4 24.6-52.4l78.2 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-white text-black px-5 md:px-10 lg:px-20 py-12 md:py-16">
+        <div class="max-w-7xl mx-auto">
+            <div class="head flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div class="left flex flex-col">
+                    <h1 class="text-3xl font-semibold">Available Inventory</h1>
+                    <p class="text-sm text-gray-500">Explore a curated selection ready for delivery.</p>
+                </div>
+                <div class="right">
+                    <a href="" class="font-semibold">View all</a>
+                </div>
+            </div>
+            <div class="inventory grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                <div class="card bg-gray-100 rounded-2xl overflow-hidden shadow-lg">
+                    <img src="{% static 'modelX.jpg' %}" alt="Model X" class="w-full aspect-video md:h-64 object-cover">
+                    <div class="p-5 md:p-6 space-y-5">
+                        <h2 class="text-xl font-semibold">Tesla Model X</h2>
+                        <div class="details grid grid-cols-3 gap-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">348 miles</span>
+                                <span class="text-xs text-gray-500">Range</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">2.5 s</span>
+                                <span class="text-xs text-gray-500">0-60 mph</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">130 mph</span>
+                                <span class="text-xs text-gray-500">Top Speed</span>
+                            </div>
+                        </div>
+                        <div class="imp-details flex flex-col sm:flex-row sm:items-end gap-4 sm:justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold">Starting at $39,990.00+</span>
+                                <span class="text-xs text-gray-500">After Est. Gas Savings</span>
+                            </div>
+                            <div class="actions flex gap-3">
+                                <a href="">
+                                    <button
+                                        class="bg-transparent hover:bg-black border border-black text-sm text-black hover:text-white py-2.5 px-6 rounded transition w-full sm:w-auto">
+                                        Learn More
+                                    </button>
+                                </a>
+                                <a href="">
+                                    <button
+                                        class="bg-black hover:bg-transparent border border-black text-sm text-white hover:text-black py-2.5 px-6 rounded transition w-full sm:w-auto">
+                                        Order
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card bg-gray-100 rounded-2xl overflow-hidden shadow-lg">
+                    <img src="{% static 'modelX.jpg' %}" alt="Model X" class="w-full aspect-video md:h-64 object-cover">
+                    <div class="p-5 md:p-6 space-y-5">
+                        <h2 class="text-xl font-semibold">Tesla Model X</h2>
+                        <div class="details grid grid-cols-3 gap-4">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">348 miles</span>
+                                <span class="text-xs text-gray-500">Range</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">2.5 s</span>
+                                <span class="text-xs text-gray-500">0-60 mph</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-sm font-medium">130 mph</span>
+                                <span class="text-xs text-gray-500">Top Speed</span>
+                            </div>
+                        </div>
+                        <div class="imp-details flex flex-col sm:flex-row sm:items-end gap-4 sm:justify-between">
+                            <div class="flex flex-col">
+                                <span class="text-sm font-bold">Starting at $39,990.00+</span>
+                                <span class="text-xs text-gray-500">After Est. Gas Savings</span>
+                            </div>
+                            <div class="actions flex gap-3">
+                                <a href="">
+                                    <button
+                                        class="bg-transparent hover:bg-black border border-black text-sm text-black hover:text-white py-2.5 px-6 rounded transition w-full sm:w-auto">
+                                        Learn More
+                                    </button>
+                                </a>
+                                <a href="">
+                                    <button
+                                        class="bg-black hover:bg-transparent border border-black text-sm text-white hover:text-black py-2.5 px-6 rounded transition w-full sm:w-auto">
+                                        Order
+                                    </button>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="px-5 md:px-10 py-12 md:py-16 border-t border-border">
+        <div class="max-w-6xl mx-auto">
+
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold">Stock Markets</h2>
+                    <p class="text-sm text-gray-500 mt-1">Featured picks, top gainers, losers, and most active.</p>
+                </div>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition">Open markets</a>
+            </div>
+
+
+
+            <!-- 4-column grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <!-- Featured -->
+                <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <p class="text-sm font-semibold">Featured</p>
+                        <a href="#" class="text-xs text-gray-500 hover:text-white transition">See all</a>
+                    </div>
+                    <div id="featured-list" class="space-y-4">
+                        <!-- Skeleton -->
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Gainers -->
+                <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5">
+                    <p class="text-sm font-semibold mb-4">Top Gainers</p>
+                    <div id="gainers-list" class="space-y-3">
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Losers -->
+                <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5">
+                    <p class="text-sm font-semibold mb-4">Top Losers</p>
+                    <div id="losers-list" class="space-y-3">
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Most Active -->
+                <div class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-5">
+                    <p class="text-sm font-semibold mb-4">Most Active</p>
+                    <div id="active-list" class="space-y-3">
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse space-y-2">
+                            <div class="h-3 bg-white/10 rounded w-3/4"></div>
+                            <div class="h-3 bg-white/10 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="px-5 md:px-10 py-12 md:py-16 border-t border-border">
+        <div class="max-w-6xl mx-auto">
+
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 class="text-2xl font-bold">Market News</h2>
+                    <p class="text-sm text-gray-500 mt-1">Latest headlines impacting your watchlist.</p>
+                </div>
+                <a href="#" class="text-sm text-gray-400 hover:text-white transition">View Stocks</a>
+            </div>
+
+            <!-- News list -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            
+                <div class="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl space-x-4 rounded p-4">
+                    <div class="left">
+                        <img src="{% static 'modelX.jpg' %}" alt="News 1" class="w-full h-16 object-cover rounded mb-3">
+                    </div>
+                    <div class="flex flex-col space-y-2 right">
+                        <div class="head flex items-center text-white/60 space-x-2">
+                            <p class="bg-white/5 backdrop-blur-md border border-white/10 rounded text-xs p-1">AAPL</p>
+                            <p class="text-xs">Seeking Alpha</p>
+                            <p class="text-xs">•</p>
+                            <p class="text-xs">2 months ago</p>
+                        </div>
+                        <div class="body space-y-2">
+                            <p class="text-sm font-medium">
+                                AMC, Cisco Set To Report Earnings As Investors Watch Out For Core...
+                            </p>
+                            <p class="text-xs text-gray-300">
+                                Stay informed with Seeking Alpha's Wall Street Week Ahead - your guide to key...
+                            </p>
+                        </div>
+                        <div class="sentiment text-green-700 text-xs">Sentiment: Very Positive</div>
+                    </div>
+                </div>
+            
+                <div class="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl space-x-4 rounded p-4">
+                    <div class="left">
+                        <img src="{% static 'modelX.jpg' %}" alt="News 1" class="w-full h-16 object-cover rounded mb-3">
+                    </div>
+                    <div class="flex flex-col space-y-2 right">
+                        <div class="head flex items-center text-white/60 space-x-2">
+                            <p class="bg-white/5 backdrop-blur-md border border-white/10 rounded text-xs p-1">JPM</p>
+                            <p class="text-xs">Seeking Alpha</p>
+                            <p class="text-xs">•</p>
+                            <p class="text-xs">2 months ago</p>
+                        </div>
+                        <div class="body space-y-2">
+                            <p class="text-sm font-medium">
+                                How I've Built A Monster Passive Income Portfolio (And What I'm)...
+                            </p>
+                            <p class="text-xs text-gray-300">
+                                Read about how to grow resilient passive income with a balanced dividend growth...
+                            </p>
+                        </div>
+                        <div class="sentiment text-green-700 text-xs">Sentiment: Very Positive</div>
+                    </div>
+                </div>
+            
+                <div class="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl space-x-4 rounded p-4">
+                    <div class="left">
+                        <img src="{% static 'modelX.jpg' %}" alt="News 1" class="w-full h-16 object-cover rounded mb-3">
+                    </div>
+                    <div class="flex flex-col space-y-2 right">
+                        <div class="head flex items-center text-white/60 space-x-2">
+                            <p class="bg-white/5 backdrop-blur-md border border-white/10 rounded text-xs p-1">AAPL</p>
+                            <p class="text-xs">Seeking Alpha</p>
+                            <p class="text-xs">•</p>
+                            <p class="text-xs">2 months ago</p>
+                        </div>
+                        <div class="body space-y-2">
+                            <p class="text-sm font-medium">
+                                AMC, Cisco Set To Report Earnings As Investors Watch Out For Core...
+                            </p>
+                            <p class="text-xs text-gray-300">
+                                Stay informed with Seeking Alpha's Wall Street Week Ahead - your guide to key...
+                            </p>
+                        </div>
+                        <div class="sentiment text-green-700 text-xs">Sentiment: Very Positive</div>
+                    </div>
+                </div>
+            
+                <div class="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl space-x-4 rounded p-4">
+                    <div class="left">
+                        <img src="{% static 'modelX.jpg' %}" alt="News 1" class="w-full h-16 object-cover rounded mb-3">
+                    </div>
+                    <div class="flex flex-col space-y-2 right">
+                        <div class="head flex items-center text-white/60 space-x-2">
+                            <p class="bg-white/5 backdrop-blur-md border border-white/10 rounded text-xs p-1">AAPL</p>
+                            <p class="text-xs">Seeking Alpha</p>
+                            <p class="text-xs">•</p>
+                            <p class="text-xs">2 months ago</p>
+                        </div>
+                        <div class="body space-y-2">
+                            <p class="text-sm font-medium">
+                                AMC, Cisco Set To Report Earnings As Investors Watch Out For Core...
+                            </p>
+                            <p class="text-xs text-gray-300">
+                                Stay informed with Seeking Alpha's Wall Street Week Ahead - your guide to key...
+                            </p>
+                        </div>
+                        <div class="sentiment text-green-700 text-xs">Sentiment: Very Positive</div>
+                    </div>
+                </div>
+            
+                <div class="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl space-x-4 rounded p-4">
+                    <div class="left">
+                        <img src="{% static 'modelX.jpg' %}" alt="News 1" class="w-full h-16 object-cover rounded mb-3">
+                    </div>
+                    <div class="flex flex-col space-y-2 right">
+                        <div class="head flex items-center text-white/60 space-x-2">
+                            <p class="bg-white/5 backdrop-blur-md border border-white/10 rounded text-xs p-1">AAPL</p>
+                            <p class="text-xs">Seeking Alpha</p>
+                            <p class="text-xs">•</p>
+                            <p class="text-xs">2 months ago</p>
+                        </div>
+                        <div class="body space-y-2">
+                            <p class="text-sm font-medium">
+                                AMC, Cisco Set To Report Earnings As Investors Watch Out For Core...
+                            </p>
+                            <p class="text-xs text-gray-300">
+                                Stay informed with Seeking Alpha's Wall Street Week Ahead - your guide to key...
+                            </p>
+                        </div>
+                        <div class="sentiment text-green-700 text-xs">Sentiment: Very Positive</div>
+                    </div>
+                </div>
+            
+                <div class="flex bg-white/5 backdrop-blur-md border border-white/10 rounded-xl space-x-4 rounded p-4">
+                    <div class="left">
+                        <img src="{% static 'modelX.jpg' %}" alt="News 1" class="w-full h-16 object-cover rounded mb-3">
+                    </div>
+                    <div class="flex flex-col space-y-2 right">
+                        <div class="head flex items-center text-white/60 space-x-2">
+                            <p class="bg-white/5 backdrop-blur-md border border-white/10 rounded text-xs p-1">AAPL</p>
+                            <p class="text-xs">Seeking Alpha</p>
+                            <p class="text-xs">•</p>
+                            <p class="text-xs">2 months ago</p>
+                        </div>
+                        <div class="body space-y-2">
+                            <p class="text-sm font-medium">
+                                AMC, Cisco Set To Report Earnings As Investors Watch Out For Core...
+                            </p>
+                            <p class="text-xs text-gray-300">
+                                Stay informed with Seeking Alpha's Wall Street Week Ahead - your guide to key...
+                            </p>
+                        </div>
+                        <div class="sentiment text-green-700 text-xs">Sentiment: Very Positive</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="px-5 md:px-10 py-12 md:py-16 border-t border-border">
+        <div class="flex flex-col max-w-6xl mx-auto space-y-3 text-center">
+            <h1 class="font-semibold text-2xl md:text-3xl">Ready to build your portfolio?</h1>
+            <p class="text-gray-300 max-w-md mx-auto">
+                Create an investment plan, follow stocks, and shop inventory in one place.
+            </p>
+            <div class="flex flex-col sm:flex-row items-center gap-4 justify-center pt-6">
+                <a href="{% url 'register' %}"
+                    class="bg-white text-black border border-white hover:bg-transparent hover:text-white transition duration-300 px-8 py-3.5 w-full sm:w-auto rounded">
+                    Get Started
+                </a>
+                <a href="{% url 'login' %}" 
+                    class="bg-transparent text-white border border-white hover:bg-white hover:text-black transition duration-300 px-8 py-3.5 w-full sm:w-auto rounded">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="relative bg-black text-white py-12">
+        <!-- Background glow -->
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+
+        <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                <div class="lg:col-span-2 flex flex-col space-y-6">
+                    <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
+                    <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
+                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
+                        rights reserved.</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Company</h3>
+                    <p class="text-gray-300 text-sm hover:text-white cursor-pointer">About Us</p>
+                    <p class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Resources</h3>
+                    <p class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</p>
+                    <p class="text-gray-300 text-sm hover:text-white cursor-pointer">Help Center</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Legal</h3>
+                    <p class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy Policy</p>
+                    <p class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms of Service</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+<script>
+    // ─── Paste your Finnhub API key here ──────────────────────────────────────
+    const FINNHUB_API_KEY = 'd8l9239r01qut1f9ro7gd8l9239r01qut1f9ro80';
+
+    // ─── Config ────────────────────────────────────────────────────────────────
+    const FEATURED = ['AAPL', 'MSFT', 'GOOGL'];
+    const GAINERS = ['TMO', 'NVDA', 'PYPL', 'CVS', 'VZ'];
+    const LOSERS = ['HON', 'NEE', 'GS', 'HD', 'DIS'];
+    const ACTIVE = ['PYPL', 'FTNT', 'WFC', 'JPM'];
+
+    // ─── Helpers ───────────────────────────────────────────────────────────────
+    // Renders a company logo img, falls back to coloured initials badge
+    function badge(sym, profile) {
+        const logo = profile?.logo;
+        if (logo) {
+            return `<img src="${logo}" alt="${sym}"
+                  class="w-8 h-8 rounded-md object-contain bg-white/10 p-0.5 shrink-0"
+                  onerror="this.replaceWith(initBadge('${sym}'))" />`;
+        }
+        return initBadge(sym);
+    }
+
+    function initBadge(sym) {
+        const el = document.createElement('span');
+        el.className = 'w-8 h-8 rounded-md flex items-center justify-center text-xs font-bold shrink-0 bg-white/10';
+        el.textContent = sym.slice(0, 2);
+        return el.outerHTML;
+    }
+
+    function pct(val) {
+        const color = val >= 0 ? 'text-green-400' : 'text-red-400';
+        return `<span class="${color} text-xs font-medium">${val >= 0 ? '+' : ''}${val.toFixed(2)}%</span>`;
+    }
+
+    function mktCap(mc) {
+        if (!mc) return '—';
+        if (mc >= 1e6) return '$' + (mc / 1e6).toFixed(1) + 'T';
+        if (mc >= 1e3) return '$' + (mc / 1e3).toFixed(1) + 'B';
+        return '$' + mc.toFixed(0) + 'M';
+    }
+
+    // ─── API calls ─────────────────────────────────────────────────────────────
+    async function fetchQuote(sym) {
+        const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FINNHUB_API_KEY}`);
+        return r.json();
+    }
+
+    async function fetchProfile(sym) {
+        const r = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${sym}&token=${FINNHUB_API_KEY}`);
+        return r.json();
+    }
+
+    // ─── Main ──────────────────────────────────────────────────────────────────
+    async function loadStocks() {
+        const all = [...new Set([...FEATURED, ...GAINERS, ...LOSERS, ...ACTIVE])];
+
+        // Fetch quotes + profiles in parallel
+        const quotes = {};
+        const profiles = {};
+
+        await Promise.all(all.map(async sym => {
+            try {
+                const [q, p] = await Promise.all([fetchQuote(sym), fetchProfile(sym)]);
+                if (q?.c) quotes[sym] = q;
+                if (p?.ticker) profiles[sym] = p;
+            } catch (e) { }
+        }));
+
+        // ── Featured ──────────────────────────────────────────────────────────
+        document.getElementById('featured-list').innerHTML = FEATURED.map(sym => {
+            const q = quotes[sym];
+            if (!q) return '';
+            const p = profiles[sym];
+            const change = (q.c - q.pc) / q.pc * 100;
+            const chgVal = (q.c - q.pc).toFixed(2);
+            const color = change >= 0 ? 'text-green-400' : 'text-red-400';
+            const industry = p?.finnhubIndustry || 'Stocks';
+            return `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              ${badge(sym, p)}
+              <div class="min-w-0">
+                <p class="text-xs font-semibold truncate">${sym}</p>
+                <p class="text-xs text-gray-500 truncate">${industry}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-sm font-semibold">$${q.c.toFixed(2)}</p>
+              <p class="${color} text-xs">${chgVal >= 0 ? '+' : ''}${chgVal} (${change >= 0 ? '+' : ''}${change.toFixed(2)}%)</p>
+            </div>
+          </div>`;
+        }).join('');
+
+        // ── Gainers ───────────────────────────────────────────────────────────
+        const gainerData = GAINERS
+            .map(sym => quotes[sym] ? { sym, change: (quotes[sym].c - quotes[sym].pc) / quotes[sym].pc * 100 } : null)
+            .filter(Boolean).sort((a, b) => b.change - a.change);
+
+        document.getElementById('gainers-list').innerHTML = gainerData.map(({ sym, change }) => `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">${badge(sym, profiles[sym])}<span class="text-sm font-medium">${sym}</span></div>
+          ${pct(change)}
+        </div>`).join('');
+
+        // ── Losers ────────────────────────────────────────────────────────────
+        const loserData = LOSERS
+            .map(sym => quotes[sym] ? { sym, change: (quotes[sym].c - quotes[sym].pc) / quotes[sym].pc * 100 } : null)
+            .filter(Boolean).sort((a, b) => a.change - b.change);
+
+        document.getElementById('losers-list').innerHTML = loserData.map(({ sym, change }) => `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">${badge(sym, profiles[sym])}<span class="text-sm font-medium">${sym}</span></div>
+          ${pct(change)}
+        </div>`).join('');
+
+        // ── Most Active — show market cap (quote has no volume field) ─────────
+        document.getElementById('active-list').innerHTML = ACTIVE.map(sym => {
+            const p = profiles[sym];
+            return `
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">${badge(sym, p)}<span class="text-sm font-medium">${sym}</span></div>
+            <span class="text-xs text-gray-400">Mkt ${mktCap(p?.marketCapitalization)}</span>
+          </div>`;
+        }).join('');
+    }
+
+    loadStocks();
+</script>
+
+</html>

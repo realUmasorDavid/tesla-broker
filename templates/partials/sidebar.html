@@ -1,0 +1,137 @@
+{% load static %}
+
+<aside id="sidebar"
+    class="w-56 bg-black text-white flex flex-col min-h-screen fixed top-0 left-0 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out">
+
+    <!-- Logo -->
+    <div class="px-6 py-5 border-b border-white/10">
+        <a href="{% url 'index' %}">
+            <img src="{% static 'logo2.svg' %}" class="w-24 sm:w-32" alt="Tesla">
+        </a>
+    </div>
+
+    <!-- User Info -->
+    <div class="px-5 py-4 border-b border-white/10 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-sm font-bold shrink-0">ND
+        </div>
+        <div class="min-w-0">
+            <p class="text-sm font-semibold truncate">{{ user.get_full_name|default:user.username }}</p>
+            <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+            <span
+                class="inline-flex items-center gap-1 mt-1 text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">
+                <span class="w-3 h-3 text-green-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 512 512">
+                        <path
+                            d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zm0-464a208 208 0 1 0 0 416 208 208 0 1 0 0-416zm70.7 121.9c7.8-10.7 22.8-13.1 33.5-5.3 10.7 7.8 13.1 22.8 5.3 33.5L243.4 366.1c-4.1 5.7-10.5 9.3-17.5 9.8-7 .5-13.9-2-18.8-6.9l-55.9-55.9c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l36 36 105.6-145.2z" />
+                    </svg>
+                </span> KYC Verified
+            </span>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-4 space-y-0.5 text-sm overflow-y-auto">
+        {% with request.resolver_match.url_name as url_name %}
+
+        <a href="{% url 'dashboard' %}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if url_name == 'dashboard' %}bg-white text-black font-semibold{% else %}text-gray-400 hover:bg-white/10 hover:text-white{% endif %} transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" />
+                <rect x="14" y="3" width="7" height="7" />
+                <rect x="3" y="14" width="7" height="7" />
+                <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            Dashboard
+        </a>
+
+        <a href="#"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if url_name == 'wallet' %}bg-white text-black font-semibold{% else %}text-gray-400 hover:bg-white/10 hover:text-white{% endif %} transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M2 10h20" />
+            </svg>
+            Wallet
+        </a>
+
+        <a href="#"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            Investments
+        </a>
+
+        <a href="#"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Stocks
+        </a>
+
+        <a href="#"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path
+                    d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+            </svg>
+            Portfolio
+        </a>
+
+        <a href="#"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4l3 3" />
+            </svg>
+            Inventory
+        </a>
+
+        <a href="#"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                <rect x="9" y="3" width="6" height="4" rx="1" />
+            </svg>
+            Orders
+        </a>
+
+        <a href="{% url 'profile' %}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if url_name == 'profile' %}bg-white text-black font-semibold{% else %}text-gray-400 hover:bg-white/10 hover:text-white{% endif %} transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+            </svg>
+            Account
+        </a>
+
+        <a href="{% url 'kyc' %}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg {% if url_name == 'kyc' %}bg-white text-black font-semibold{% else %}text-gray-400 hover:bg-white/10 hover:text-white{% endif %} transition">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            KYC Verification
+        </a>
+
+        {% endwith %}
+    </nav>
+
+    <!-- Logout -->
+    <div class="px-3 py-4 border-t border-white/10">
+        <form method="POST" action="#">
+            {% csrf_token %}
+            <button type="submit"
+                class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-400 hover:bg-red-400/10 transition text-sm">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Logout
+            </button>
+        </form>
+    </div>
+</aside>
