@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import deposit_confirm_view, index, login, profile_view, register, dashboard, kyc_view, wallet_view, deposit_view, withdraw_view
+from .views import deposit_confirm_view, index, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy
 
 urlpatterns = [
     path('', index, name='index'),
@@ -12,4 +12,9 @@ urlpatterns = [
     path('deposit/', deposit_view, name='deposit'),
     path('deposit/<int:pk>/confirm/', deposit_confirm_view, name='deposit_confirm'),
     path('withdraw/', withdraw_view, name='withdraw'),
+    path('withdraw/<int:pk>/confirm/', withdraw_confirm_view, name='withdraw_confirm'),
+    path('stocks/', stocks_list, name='stocks'),
+    path('stocks/<str:symbol>/', stock_detail, name='stock_detail'),
+    path('stocks/<str:symbol>/buy/', stock_buy, name='stock_buy'),
+    path('stocks/<str:symbol>/confirm/', stock_confirm, name='stock_confirm'),
 ]

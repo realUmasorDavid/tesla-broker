@@ -336,6 +336,13 @@
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('-translate-x-full');
         }
+
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
     </script>
 
 </body>

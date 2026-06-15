@@ -1,0 +1,231 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesla — {{ stock.symbol }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'partials/sidebar.html' %}
+
+    <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
+
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex items-center gap-2">
+                    {% if stock.company_logo %}
+                    <img src="{{ stock.company_logo }}" class="w-6 h-6 rounded object-contain bg-gray-100 p-0.5" />
+                    {% endif %}
+                    <h1 class="text-lg font-semibold text-gray-900">{{ stock.symbol }}</h1>
+                    <span class="text-sm text-gray-400 hidden sm:inline">· {{ stock.name }}</span>
+                </div>
+            </div>
+            <a href="{% url 'stocks' %}" class="text-sm text-gray-500 hover:text-black transition">← Market</a>
+        </header>
+
+        <main class="flex-1 px-6 py-6">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- Left col: Price + Chart + Info -->
+                <div class="lg:col-span-2 space-y-6">
+
+                    <!-- Price Banner -->
+                    <div class="bg-gradient-to-r from-gray-900 to-gray-700 rounded-2xl p-6 text-white">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs text-gray-400 mb-1">{{ stock.name }}</p>
+                                <p class="text-4xl font-bold">${{ stock.current_price|floatformat:2 }}</p>
+                                <div class="mt-2">
+                                    <span class="inline-flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg
+                    {% if change >= 0 %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                                        {% if change >= 0 %}↑{% else %}↓{% endif %} {{ change|floatformat:2 }}% today
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-400 mb-1">Previous Close</p>
+                                <p class="text-xl font-semibold">${{ stock.previous_close|floatformat:2 }}</p>
+                                {% if stock.company_logo %}
+                                <img src="{{ stock.company_logo }}"
+                                    class="w-10 h-10 rounded-xl object-contain bg-white/10 p-1 mt-3 ml-auto" />
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TradingView Chart -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-5">
+                        <p class="text-sm font-semibold text-gray-900 mb-4">Price Chart</p>
+                        <div id="tradingview_chart" class="rounded-xl overflow-hidden" style="height:380px;"></div>
+                    </div>
+
+                    <!-- Stock Info -->
+                    <div class="bg-white rounded-xl border border-gray-200 p-5">
+                        <p class="text-sm font-semibold text-gray-900 mb-4">Stock Details</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <p class="text-xs text-gray-400 mb-1">Symbol</p>
+                                <p class="font-semibold text-gray-900">{{ stock.symbol }}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <p class="text-xs text-gray-400 mb-1">Industry</p>
+                                <p class="font-semibold text-gray-900 text-sm">{{ stock.industry|default:"—" }}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <p class="text-xs text-gray-400 mb-1">Market Cap</p>
+                                <p class="font-semibold text-gray-900">{% if stock.market_cap %}${{ stock.market_cap|intcomma }}M{% else %}—{% endif %}</p>
+                            </div>
+                            {% if holding %}
+                            <div class="bg-purple-50 rounded-xl p-4">
+                                <p class="text-xs text-purple-400 mb-1">Your Shares</p>
+                                <p class="font-semibold text-purple-900">{{ holding.shares|floatformat:1 }}</p>
+                            </div>
+                            <div class="bg-purple-50 rounded-xl p-4">
+                                <p class="text-xs text-purple-400 mb-1">Avg Cost</p>
+                                <p class="font-semibold text-purple-900">${{ holding.average_buy_price|floatformat:2 }}
+                                </p>
+                            </div>
+                            <div class="bg-purple-50 rounded-xl p-4">
+                                <p class="text-xs text-purple-400 mb-1">Current Value</p>
+                                <p class="font-semibold text-purple-900">${{ current_stock_value|floatformat:2|intcomma|default:"—" }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right col: Trade Panel -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl border border-gray-200 p-5 sticky top-24">
+
+                        <p class="text-sm font-semibold text-gray-900 mb-4">Trade {{ stock.symbol }}</p>
+
+                        <!-- Balance -->
+                        <div
+                            class="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 mb-5">
+                            <span class="text-xs text-gray-500">Available Balance</span>
+                            <span class="text-sm font-semibold text-gray-900">${{ request.user.profile.available_balance|floatformat:2 }}</span>
+                        </div>
+
+                        {% if messages %}
+                        {% for message in messages %}
+                        <div
+                            class="mb-4 px-3 py-2 rounded-xl text-xs {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-100{% else %}bg-green-50 text-green-600 border border-green-100{% endif %}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+
+                        <!-- Original form — action and field names unchanged -->
+                        <form method="POST" action="{% url 'stock_buy' stock.symbol %}" class="space-y-4">
+                            {% csrf_token %}
+
+                            <div>
+                                <label class="block text-xs font-medium text-gray-600 mb-1.5">Number of Shares</label>
+                                <input type="number" name="shares" value="1" min="1" step="1"
+                                    oninput="updateTotal(this.value)"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-black transition" />
+                            </div>
+
+                            <!-- Quick % buttons -->
+                            <div class="grid grid-cols-4 gap-1.5">
+                                <button type="button" onclick="setShares(25)"
+                                    class="text-xs border border-gray-200 rounded-lg py-1.5 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition">25%</button>
+                                <button type="button" onclick="setShares(50)"
+                                    class="text-xs border border-gray-200 rounded-lg py-1.5 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition">50%</button>
+                                <button type="button" onclick="setShares(75)"
+                                    class="text-xs border border-gray-200 rounded-lg py-1.5 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition">75%</button>
+                                <button type="button" onclick="setShares(100)"
+                                    class="text-xs border border-gray-200 rounded-lg py-1.5 hover:bg-gray-900 hover:text-white hover:border-gray-900 transition">Max</button>
+                            </div>
+
+                            <!-- Order Summary -->
+                            <div class="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-2 text-sm">
+                                <div class="flex justify-between text-gray-500">
+                                    <span>Price per share</span>
+                                    <span class="font-medium text-gray-900">${{ stock.current_price|floatformat:2 }}</span>
+                                </div>
+                                <div class="flex justify-between text-gray-500">
+                                    <span>Fee</span>
+                                    <span class="font-medium text-gray-900">$0.00</span>
+                                </div>
+                                <div
+                                    class="flex justify-between font-semibold text-gray-900 border-t border-gray-200 pt-2">
+                                    <span>Estimated Total</span>
+                                    <span id="total-cost">$0.00</span>
+                                </div>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-black text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition">
+                                Buy {{ stock.symbol }}
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        // Original total cost calculation — unchanged
+        const price = {{ stock.current_price|floatformat:2 }};
+        const BALANCE = parseFloat('{{ request.user.profile.available_balance|default:0 }}');
+
+        new TradingView.widget({
+            container_id: 'tradingview_chart',
+            symbol: '{{ stock.symbol }}',
+            interval: 'D',
+            timezone: 'Etc/UTC',
+            theme: 'light',
+            style: '1',
+            locale: 'en',
+            width: '100%',
+            height: 380,
+            hide_side_toolbar: false,
+            allow_symbol_change: false,
+        });
+
+        function updateTotal(qty) {
+            const total = (parseFloat(qty) || 0) * price;
+            document.getElementById('total-cost').textContent = '$' + total.toFixed(2);
+        }
+
+        function setShares(pct) {
+            const maxShares = Math.floor((BALANCE * pct / 100) / price);
+            const input = document.querySelector('input[name="shares"]');
+            input.value = maxShares;
+            updateTotal(maxShares);
+        }
+
+        // Init with default value
+        updateTotal(document.querySelector('input[name="shares"]').value);
+
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+    </script>
+
+</body>
+
+</html>

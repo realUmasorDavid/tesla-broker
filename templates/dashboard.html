@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -58,23 +59,23 @@
                 </div>
                 <div class="bg-white/10 rounded-xl mt-4 p-5 lg:text-right lg:min-w-[200px]">
                     <p class="text-xs text-gray-400 mb-1">Available Balance</p>
-                    <p class="text-2xl font-bold">${{ balance|default:"40,210.30" }}</p>
+                    <p class="text-2xl font-bold">${{ profile.available_balance|floatformat:2|default:"0.00" }}</p>
                     <div class="flex gap-2 mt-3">
-                        <button
+                        <a href="{% url 'deposit' %}"
                             class="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <line x1="12" y1="5" x2="12" y2="19" />
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
                             Deposit
-                        </button>
-                        <button
+                        </a>
+                        <a href="{% url 'withdraw' %}"
                             class="flex items-center gap-1 bg-white/20 hover:bg-white/30 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <line x1="5" y1="12" x2="19" y2="12" />
                             </svg>
                             Withdraw
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -84,7 +85,7 @@
 
                 <div class="bg-white rounded-xl border border-gray-200 p-5">
                     <p class="text-xs text-gray-500 mb-1">Portfolio Value</p>
-                    <p class="text-xl font-bold text-gray-900">${{ portfolio_value|default:"72,033" }}</p>
+                    <p class="text-xl font-bold text-gray-900">${{ portfolio_value|intcomma|default:"72,033" }}</p>
                     <p class="text-xs text-green-500 mt-1 flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
@@ -108,14 +109,14 @@
 
                 <div class="bg-white rounded-xl border border-gray-200 p-5">
                     <p class="text-xs text-gray-500 mb-1">Stock Holdings</p>
-                    <p class="text-xl font-bold text-gray-900">${{ stock_holdings|default:"26,153" }}</p>
+                    <p class="text-xl font-bold text-gray-900">${{ total_stock_value|intcomma }}</p>
                     <p class="text-xs text-purple-500 mt-1 flex items-center gap-1">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <line x1="18" y1="20" x2="18" y2="10" />
                             <line x1="12" y1="20" x2="12" y2="4" />
                             <line x1="6" y1="20" x2="6" y2="14" />
                         </svg>
-                        2 stock positions
+                        {{ total_stock_holding|default:0 }} stock positions
                     </p>
                 </div>
 
@@ -281,6 +282,13 @@
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('-translate-x-full');
         }
+
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
     </script>
     <script>
         const FINNHUB_API_KEY = 'd8l9239r01qut1f9ro7gd8l9239r01qut1f9ro80';

@@ -33,7 +33,7 @@ class StockHoldingInline(admin.TabularInline):
 class WalletTransactionInline(admin.TabularInline):
     model = WalletTransaction
     extra = 0
-    readonly_fields = ('balance_before', 'balance_after', 'created_at')
+    readonly_fields = ('balance_before', 'balance_after', 'created_at', 'confirmed_at')
 
 
 # ====================== Custom User Admin ======================
@@ -47,36 +47,84 @@ class UserAdmin(BaseUserAdmin):
     def get_kyc_status(self, obj):
         return obj.profile.kyc_status if hasattr(obj, 'profile') else '-'
     get_kyc_status.short_description = 'KYC Status'
-    get_kyc_status.admin_order_field = 'profile__kyc_status'
 
 
-# Unregister default User and register custom
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 
 
-# ====================== Main Models ======================    
+# ====================== Actions ======================
+
+@admin.action(description='✅ Approve Deposits')
+def approve_deposits(modeladmin, request, queryset):
+    approved = 0
+    for tx in queryset.filter(transaction_type='deposit', status='pending'):
+        profile = tx.profile
+        balance_before = profile.available_balance
+        profile.available_balance += tx.amount
+        profile.total_balance += tx.amount
+        profile.save(update_fields=['available_balance', 'total_balance'])
+        
+        tx.status = 'completed'
+        tx.balance_before = balance_before
+        tx.balance_after = profile.available_balance
+        tx.confirmed_at = timezone.now()
+        tx.save()
+        approved += 1
+    modeladmin.message_user(request, f'✅ {approved} deposit(s) approved.', messages.SUCCESS)
+
+
+@admin.action(description='❌ Reject Deposits')
+def reject_deposits(modeladmin, request, queryset):
+    rejected = 0
+    for tx in queryset.filter(transaction_type='deposit', status='pending'):
+        tx.status = 'failed'
+        tx.save()
+        rejected += 1
+    modeladmin.message_user(request, f'❌ {rejected} deposit(s) rejected.', messages.SUCCESS)
+
+
+@admin.action(description='✅ Approve Withdrawals')
+def approve_withdrawals(modeladmin, request, queryset):
+    approved = 0
+    for tx in queryset.filter(transaction_type='withdrawal', status='pending'):
+        tx.status = 'completed'
+        tx.confirmed_at = timezone.now()
+        tx.save()
+        approved += 1
+    modeladmin.message_user(request, f'✅ {approved} withdrawal(s) approved.', messages.SUCCESS)
+
+
+@admin.action(description='❌ Reject Withdrawals (Restore Balance)')
+def reject_withdrawals(modeladmin, request, queryset):
+    rejected = 0
+    for tx in queryset.filter(transaction_type='withdrawal', status='pending'):
+        profile = tx.profile
+        profile.available_balance += abs(tx.amount)  # restore
+        profile.save()
+        
+        tx.status = 'failed'
+        tx.balance_after = profile.available_balance
+        tx.confirmed_at = timezone.now()
+        tx.save()
+        rejected += 1
+    modeladmin.message_user(request, f'❌ {rejected} withdrawal(s) rejected and balance restored.', messages.SUCCESS)
+
+
+# ====================== Main Models ======================
+
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'referral_code', 'kyc_status', 'kyc_tier', 'available_balance', 'total_balance', 'created_at')
-    list_filter = ('kyc_status', 'kyc_tier', 'created_at')
-    search_fields = ('user__username', 'user__email', 'referral_code', 'phone_number')
+    list_display = ('user', 'referral_code', 'kyc_status', 'kyc_tier', 'available_balance', 'total_balance')
+    list_filter = ('kyc_status', 'kyc_tier')
+    search_fields = ('user__username', 'user__email', 'referral_code')
     readonly_fields = ('referral_code', 'created_at', 'updated_at')
-    
-    fieldsets = (
-        ('User Info', {'fields': ('user', 'phone_number', 'date_of_birth', 'address', 'city', 'country')}),
-        ('Referral', {'fields': ('referral_code', 'referred_by')}),
-        ('Financial', {'fields': ('total_balance', 'available_balance')}),
-        ('KYC', {'fields': ('kyc_status', 'kyc_tier')}),
-        ('Timestamps', {'fields': ('created_at', 'updated_at')}),
-    )
 
 
 @admin.register(KYCVerification)
 class KYCVerificationAdmin(admin.ModelAdmin):
-    list_display = ('profile', 'id_type', 'kyc_status_display', 'verification_date', 'created_at')
-    list_filter = ('profile__kyc_status', 'id_type', 'created_at')
-    search_fields = ('profile__user__username', 'id_number')
+    list_display = ('profile', 'id_type', 'kyc_status_display', 'verification_date')
+    list_filter = ('profile__kyc_status', 'id_type')
     readonly_fields = ('verification_date', 'reviewed_by')
 
     def kyc_status_display(self, obj):
@@ -84,92 +132,36 @@ class KYCVerificationAdmin(admin.ModelAdmin):
     kyc_status_display.short_description = 'KYC Status'
 
 
-@admin.action(description='✅ Approve selected deposits (credit balance)')
-def approve_deposits(modeladmin, request, queryset):
-    """
-    Credits the user's wallet for each selected pending deposit.
-    Only acts on transactions that are still 'pending'.
-    """
-    approved = 0
-    skipped  = 0
- 
-    for tx in queryset:
-        if tx.transaction_type != 'deposit' or tx.status != 'pending':
-            skipped += 1
-            continue
- 
-        profile = tx.profile
-        balance_before = profile.available_balance
- 
-        # Credit the balance
-        profile.available_balance += tx.amount
-        profile.total_balance     += tx.amount
-        profile.save()
- 
-        # Update the transaction record
-        tx.status          = 'completed'
-        tx.balance_before  = balance_before
-        tx.balance_after   = profile.available_balance
-        tx.confirmed_at    = timezone.now()
-        tx.save()
- 
-        approved += 1
- 
-    if approved:
-        modeladmin.message_user(request, f'{approved} deposit(s) approved and credited.', messages.SUCCESS)
-    if skipped:
-        modeladmin.message_user(request, f'{skipped} transaction(s) skipped (not pending deposits).', messages.WARNING)
- 
- 
-@admin.action(description='❌ Reject selected deposits')
-def reject_deposits(modeladmin, request, queryset):
-    rejected = 0
-    skipped  = 0
- 
-    for tx in queryset:
-        if tx.transaction_type != 'deposit' or tx.status != 'pending':
-            skipped += 1
-            continue
- 
-        tx.status = 'failed'
-        tx.save()
-        rejected += 1
- 
-    if rejected:
-        modeladmin.message_user(request, f'{rejected} deposit(s) rejected.', messages.SUCCESS)
-    if skipped:
-        modeladmin.message_user(request, f'{skipped} transaction(s) skipped.', messages.WARNING)
- 
 @admin.register(WalletTransaction)
 class WalletTransactionAdmin(admin.ModelAdmin):
-    list_display  = (
-        'id', 'profile', 'transaction_type', 'payment_method',
-        'amount', 'status', 'created_at', 'confirmed_at',
-    )
-    list_filter   = ('status', 'transaction_type', 'payment_method')
-    search_fields = ('profile__user__username', 'profile__user__email', 'description')
-    readonly_fields = (
-        'balance_before', 'balance_after', 'created_at', 'confirmed_at',
-    )
-    ordering      = ('-created_at',)
-    actions       = [approve_deposits, reject_deposits]
- 
-    # Highlight pending rows in the list
-    def get_list_display_links(self, request, list_display):
-        return ['id']
- 
-    def status_badge(self, obj):
-        colours = {'pending': 'orange', 'completed': 'green', 'failed': 'red'}
-        colour  = colours.get(obj.status, 'grey')
-        return f'<span style="color:{colour};font-weight:600">{obj.status.upper()}</span>'
-    status_badge.allow_tags  = True
-    status_badge.short_description = 'Status'
-    
+    list_display = ('id', 'get_username', 'transaction_type', 'amount', 'colored_status', 'created_at')
+    list_filter = ('status', 'transaction_type', 'payment_method')
+    search_fields = ('profile__user__username', 'description')
+    readonly_fields = ('balance_before', 'balance_after', 'created_at', 'confirmed_at')
+    ordering = ('-created_at',)
+    actions = [approve_deposits, reject_deposits, approve_withdrawals, reject_withdrawals]
+
+    @admin.display(description='User')
+    def get_username(self, obj):
+        return obj.profile.user.username
+
+    @admin.display(description='Status')
+    def colored_status(self, obj):
+        colours = {
+            'pending': '#f59e0b',
+            'completed': '#10b981',
+            'failed': '#ef4444'
+        }
+        colour = colours.get(obj.status, '#6b7280')
+        return f'<span style="color:{colour}; font-weight:600;">{obj.status.upper()}</span>'
+    colored_status.allow_tags = True
+
+
 @admin.register(Stock)
 class StockAdmin(admin.ModelAdmin):
     list_display = ('symbol', 'name', 'current_price', 'previous_close', 'market_cap', 'is_active', 'updated_at')
     list_filter = ('is_active', 'industry')
-    search_fields = ('symbol', 'name', 'industry')
+    search_fields = ('symbol', 'name')
     readonly_fields = ('updated_at',)
 
 
@@ -189,28 +181,20 @@ class StockHoldingAdmin(admin.ModelAdmin):
 class InvestmentPlanAdmin(admin.ModelAdmin):
     list_display = ('profile', 'name', 'amount_per_cycle', 'cycle', 'is_active', 'next_execution')
     list_filter = ('cycle', 'is_active')
-    search_fields = ('profile__user__username', 'name')
 
 
 @admin.register(TeslaVehicle)
 class TeslaVehicleAdmin(admin.ModelAdmin):
-    list_display = ('model_name', 'variant', 'price', 'range_miles', 'zero_to_sixty', 'top_speed', 'is_available', 'stock_quantity')
-    list_filter = ('is_available', 'model_name')
-    search_fields = ('model_name', 'variant')
+    list_display = ('model_name', 'variant', 'price', 'is_available', 'stock_quantity')
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id', 'profile', 'order_type', 'status', 'total_amount', 'created_at')
-    list_filter = ('order_type', 'status', 'created_at')
-    search_fields = ('profile__user__username',)
-    readonly_fields = ('created_at', 'updated_at')
-    date_hierarchy = 'created_at'
+    list_filter = ('order_type', 'status')
 
 
 @admin.register(ReferralBonus)
 class ReferralBonusAdmin(admin.ModelAdmin):
     list_display = ('referrer', 'referred_user', 'amount', 'is_claimed', 'created_at')
-    list_filter = ('is_claimed', 'created_at')
-    search_fields = ('referrer__user__username', 'referred_user__user__username')
-    readonly_fields = ('created_at',)
+    list_filter = ('is_claimed',)

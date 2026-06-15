@@ -115,6 +115,7 @@ class WalletTransaction(models.Model):
     status           = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     balance_before   = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     balance_after    = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    destination = models.TextField(blank=True, default='')
     description      = models.TextField(blank=True)
     created_at       = models.DateTimeField(auto_now_add=True)
     confirmed_at     = models.DateTimeField(null=True, blank=True)  # set when admin approves
