@@ -30,12 +30,12 @@ SECRET_KEY = 'django-insecure-fzms@y)0uj_ft!si(sufv^zi-i_$e1k7_=sv(ke5%s$*41j_)d
 # DEBUG = os.getenv('DEBUG')
 DEBUG = True
 
-ALLOWED_HOSTS = ['://pythonanywhere.com', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['umasordavid.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.dev',
     'https://*.ngrok.io',
-    'https://pythonanywhere.com',
+    'https://umasordavid.pythonanywhere.com',
 ]
 
 
