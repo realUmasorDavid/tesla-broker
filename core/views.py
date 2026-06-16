@@ -4,11 +4,12 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
 from django.utils import timezone
+from datetime import timedelta
 import requests
 
 User = get_user_model()
@@ -467,3 +468,97 @@ def stock_confirm(request, symbol):
         'order': order_data,
     }
     return render(request, 'stock_confirm.html', context)
+
+@login_required
+def investments_view(request):
+    profile = request.user.profile
+ 
+    plans = InvestmentPlan.objects.filter(is_active=True)
+
+    active_investments = UserInvestment.objects.filter(
+        profile=profile, status='active'
+    ).select_related('plan')
+ 
+    history = UserInvestment.objects.filter(
+        profile=profile, status__in=['completed', 'cancelled']
+    ).select_related('plan')
+    
+    total_invested   = sum(i.amount          for i in UserInvestment.objects.filter(profile=profile))
+    total_earned     = sum(i.expected_return for i in UserInvestment.objects.filter(profile=profile, status='completed'))
+    active_count     = active_investments.count()
+    total_active_val = sum(i.amount for i in active_investments)
+ 
+    context = {
+        'profile':          profile,
+        'plans':            plans,
+        'active_investments': active_investments,
+        'history':          history,
+        'total_invested':   total_invested,
+        'total_earned':     total_earned,
+        'active_count':     active_count,
+        'total_active_val': total_active_val,
+    }
+    return render(request, 'investments.html', context)
+ 
+ 
+@login_required
+def investment_subscribe(request, plan_id):
+    """POST only — deducts balance and creates UserInvestment."""
+    plan = get_object_or_404(InvestmentPlan, pk=plan_id, is_active=True)
+    profile = request.user.profile
+ 
+    if request.method == 'POST':
+        try:
+            amount = Decimal(request.POST.get('amount', '0'))
+        except Exception:
+            amount = Decimal('0')
+ 
+        # Validations
+        if amount < plan.min_amount:
+            messages.error(request, f'Minimum investment for {plan.name} is ${plan.min_amount:,.2f}.')
+            return redirect('investments')
+ 
+        if plan.max_amount and amount > plan.max_amount:
+            messages.error(request, f'Maximum investment for {plan.name} is ${plan.max_amount:,.2f}.')
+            return redirect('investments')
+ 
+        if amount > profile.available_balance:
+            messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
+            return redirect('investments')
+ 
+        # Calculate return
+        expected_return = (amount * plan.roi_percent / Decimal('100')).quantize(Decimal('0.01'))
+        matures_at      = timezone.now() + timedelta(days=plan.duration_days)
+ 
+        # Deduct balance
+        balance_before             = profile.available_balance
+        profile.available_balance -= amount
+        profile.save(update_fields=['available_balance'])
+ 
+        # Create investment record
+        UserInvestment.objects.create(
+            profile         = profile,
+            plan            = plan,
+            amount          = amount,
+            expected_return = expected_return,
+            matures_at      = matures_at,
+            balance_before  = balance_before,
+            balance_after   = profile.available_balance,
+        )
+ 
+        # Log as wallet transaction
+        WalletTransaction.objects.create(
+            profile          = profile,
+            transaction_type = 'investment',
+            payment_method   = 'internal',
+            amount           = -amount,
+            status           = 'completed',
+            balance_before   = balance_before,
+            balance_after    = profile.available_balance,
+            description      = f'Invested ${amount:,.2f} in {plan.name} ({plan.roi_percent}% ROI)',
+        )
+ 
+        messages.success(request, f'🎉 Successfully invested ${amount:,.2f} in {plan.name}! It matures on {matures_at.strftime("%b %d, %Y")}.')
+        return redirect('investments')
+ 
+    return redirect('investments')

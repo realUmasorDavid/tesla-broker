@@ -162,23 +162,81 @@ class StockHolding(models.Model):
     def __str__(self):
         return f"{self.profile.user.username} - {self.stock.symbol} ({self.shares} shares)"
 
-
 class InvestmentPlan(models.Model):
-    """Automated investment plans"""
-    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='investment_plans')
-    
-    name = models.CharField(max_length=100)
-    amount_per_cycle = models.DecimalField(max_digits=10, decimal_places=2)
-    cycle = models.CharField(max_length=20, choices=[
-        ('daily', 'Daily'), ('weekly', 'Weekly'), ('monthly', 'Monthly')
-    ])
-    is_active = models.BooleanField(default=True)
-    next_execution = models.DateTimeField()
-    
-    created_at = models.DateTimeField(auto_now_add=True)
+    """Admin-defined fixed investment plans (e.g. Basic 5%, Gold 15%)"""
+    CYCLE_CHOICES = [
+        ('daily',   'Daily'),
+        ('weekly',  'Weekly'),
+        ('monthly', 'Monthly'),
+        ('bi-annually', 'Bi-Anually'),
+        ('annually', 'Anually'),
+    ]
+
+    name          = models.CharField(max_length=100)
+    description   = models.TextField(blank=True)
+    roi_percent   = models.DecimalField(max_digits=5, decimal_places=2, default=5.00)   # e.g. 15.00
+    duration_days = models.PositiveIntegerField(default=180)                          # e.g. 30
+    cycle         = models.CharField(max_length=20, choices=CYCLE_CHOICES, default='monthly')
+    min_amount    = models.DecimalField(max_digits=14, decimal_places=2, default=100)
+    max_amount    = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    is_active     = models.BooleanField(default=True)
+    # Controls the accent colour on the plan card — use Tailwind keyword: gray / blue / yellow / green / purple
+    badge_color   = models.CharField(max_length=30, default='gray')
+    created_at    = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['roi_percent']
 
     def __str__(self):
-        return f"{self.name} - {self.profile.user.username}"
+        return f"{self.name} ({self.roi_percent}% / {self.duration_days}d)"
+
+
+class UserInvestment(models.Model):
+    """A user's active or historical investment in a plan."""
+    STATUS_CHOICES = [
+        ('active',    'Active'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+
+    profile         = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='user_investments')
+    plan            = models.ForeignKey(InvestmentPlan, on_delete=models.PROTECT, related_name='subscriptions')
+    amount          = models.DecimalField(max_digits=14, decimal_places=2)
+    # Locked in at subscription time so price changes don't shift it
+    expected_return = models.DecimalField(max_digits=14, decimal_places=2)
+    status          = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+
+    started_at      = models.DateTimeField(auto_now_add=True)
+    matures_at      = models.DateTimeField()       # started_at + duration_days
+    paid_out_at     = models.DateTimeField(null=True, blank=True)
+
+    balance_before  = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    balance_after   = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ['-started_at']
+
+    def __str__(self):
+        return f"{self.profile.user.username} — {self.plan.name} ${self.amount} [{self.status}]"
+
+    @property
+    def progress_percent(self):
+        from django.utils import timezone
+        now     = timezone.now()
+        total   = (self.matures_at - self.started_at).total_seconds()
+        elapsed = (now - self.started_at).total_seconds()
+        if total <= 0:
+            return 100
+        return min(100, max(0, int(elapsed / total * 100)))
+
+    @property
+    def is_matured(self):
+        from django.utils import timezone
+        return timezone.now() >= self.matures_at
+
+    @property
+    def total_payout(self):
+        return self.amount + self.expected_return
 
 
 class TeslaVehicle(models.Model):

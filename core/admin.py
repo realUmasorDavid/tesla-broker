@@ -6,7 +6,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     Profile, KYCVerification, WalletTransaction, Stock, 
     StockHolding, InvestmentPlan, TeslaVehicle, 
-    Order, ReferralBonus
+    Order, ReferralBonus, InvestmentPlan, UserInvestment
 )
 
 
@@ -109,6 +109,63 @@ def reject_withdrawals(modeladmin, request, queryset):
         tx.save()
         rejected += 1
     modeladmin.message_user(request, f'❌ {rejected} withdrawal(s) rejected and balance restored.', messages.SUCCESS)
+    
+admin.action(description='✅ Approve & Pay Out Investments')
+def approve_investment_payouts(modeladmin, request, queryset):
+    from django.utils import timezone
+    paid = 0
+    for inv in queryset.filter(status='active'):
+        profile  = inv.profile
+        payout   = inv.amount + inv.expected_return
+ 
+        balance_before             = profile.available_balance
+        profile.available_balance += payout
+        profile.total_balance     += inv.expected_return   # only profit bumps total
+        profile.save(update_fields=['available_balance', 'total_balance'])
+ 
+        inv.status      = 'completed'
+        inv.paid_out_at = timezone.now()
+        inv.save()
+ 
+        # Wallet record for the return
+        WalletTransaction.objects.create(
+            profile          = profile,
+            transaction_type = 'return',
+            payment_method   = 'internal',
+            amount           = payout,
+            status           = 'completed',
+            balance_before   = balance_before,
+            balance_after    = profile.available_balance,
+            description      = f'Investment payout: {inv.plan.name} — principal ${inv.amount} + return ${inv.expected_return}',
+        )
+        paid += 1
+    modeladmin.message_user(request, f'✅ {paid} investment(s) paid out.', messages.SUCCESS)
+ 
+ 
+@admin.action(description='❌ Cancel Investments (Restore Principal)')
+def cancel_investments(modeladmin, request, queryset):
+    cancelled = 0
+    for inv in queryset.filter(status='active'):
+        profile = inv.profile
+        balance_before             = profile.available_balance
+        profile.available_balance += inv.amount   # refund principal only
+        profile.save(update_fields=['available_balance'])
+ 
+        inv.status = 'cancelled'
+        inv.save()
+ 
+        WalletTransaction.objects.create(
+            profile          = profile,
+            transaction_type = 'return',
+            payment_method   = 'internal',
+            amount           = inv.amount,
+            status           = 'completed',
+            balance_before   = balance_before,
+            balance_after    = profile.available_balance,
+            description      = f'Investment cancelled — principal refunded for {inv.plan.name}',
+        )
+        cancelled += 1
+    modeladmin.message_user(request, f'❌ {cancelled} investment(s) cancelled and principal restored.', messages.SUCCESS)
 
 
 # ====================== Main Models ======================
@@ -179,8 +236,35 @@ class StockHoldingAdmin(admin.ModelAdmin):
 
 @admin.register(InvestmentPlan)
 class InvestmentPlanAdmin(admin.ModelAdmin):
-    list_display = ('profile', 'name', 'amount_per_cycle', 'cycle', 'is_active', 'next_execution')
-    list_filter = ('cycle', 'is_active')
+    list_display  = ('name', 'roi_percent', 'duration_days', 'cycle', 'min_amount', 'max_amount', 'badge_color', 'is_active')
+    list_filter   = ('is_active', 'cycle')
+    search_fields = ('name',)
+ 
+ 
+@admin.register(UserInvestment)
+class UserInvestmentAdmin(admin.ModelAdmin):
+    list_display  = ('id', 'get_username', 'plan', 'amount', 'expected_return',
+                     'colored_status', 'started_at', 'matures_at', 'paid_out_at')
+    list_filter   = ('status', 'plan')
+    search_fields = ('profile__user__username', 'plan__name')
+    readonly_fields = ('started_at', 'matures_at', 'paid_out_at', 'balance_before', 'balance_after')
+    ordering      = ('-started_at',)
+    actions       = [approve_investment_payouts, cancel_investments]
+ 
+    @admin.display(description='User')
+    def get_username(self, obj):
+        return obj.profile.user.username
+ 
+    @admin.display(description='Status')
+    def colored_status(self, obj):
+        colours = {
+            'active':    '#3b82f6',
+            'completed': '#10b981',
+            'cancelled': '#ef4444',
+        }
+        colour = colours.get(obj.status, '#6b7280')
+        return f'<span style="color:{colour}; font-weight:600;">{obj.status.upper()}</span>'
+    colored_status.allow_tags = True
 
 
 @admin.register(TeslaVehicle)
