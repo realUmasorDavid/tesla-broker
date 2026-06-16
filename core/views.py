@@ -105,6 +105,13 @@ def dashboard(request):
     for holding in stock_holdings:
         stock_price = round(float(holding.stock.current_price), 2)
         total_stock_value += float(holding.shares) * stock_price
+        
+    active_investments = UserInvestment.objects.filter(
+        profile=profile, status='active'
+    ).select_related('plan')
+    
+    active_count     = active_investments.count()
+    total_active_val = sum(i.amount for i in active_investments)
 
     context = {
         'profile': profile,
@@ -112,6 +119,8 @@ def dashboard(request):
         'total_stock_holding': total_stock_holding,
         'total_stock_value': total_stock_value,
         'portfolio_value': total_stock_value,  # You can expand this later
+        'active_count': active_count,
+        'total_active_val': total_active_val,
     }
     return render(request, 'dashboard.html', context)
     
