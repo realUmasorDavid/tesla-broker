@@ -1,0 +1,473 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesla — Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .progress-bar {
+            transition: width 0.7s ease;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'partials/sidebar.html' %}
+
+    <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
+
+        <!-- Top Bar -->
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">Portfolio</h1>
+            </div>
+            <button class="relative text-gray-500 hover:text-black transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 01-3.46 0" />
+                </svg>
+            </button>
+        </header>
+
+        <main class="flex-1 px-3 py-6 space-y-6">
+
+            <!-- ── Hero banner ── -->
+            <div
+                class="bg-gradient-to-r from-gray-900 to-gray-700 rounded-2xl p-6 flex flex-col lg:flex-row lg:items-center justify-between text-white gap-6">
+                <div>
+                    <p class="text-sm text-gray-400 mb-1">Total Portfolio Value</p>
+                    <h2 class="text-3xl font-bold tracking-tight">${{ total_portfolio|floatformat:2|intcomma }}</h2>
+                    <p class="text-sm text-gray-400 mt-2">Across cash, stocks, and active investments</p>
+                </div>
+
+                <!-- Allocation pill strip -->
+                <div class="flex flex-col gap-2 lg:min-w-[280px]">
+                    <p class="text-xs text-gray-400 font-medium uppercase tracking-wide">Allocation</p>
+                    <div class="flex rounded-full overflow-hidden h-3 w-full bg-white/10">
+                        {% if cash_pct > 0 %}
+                        <div class="bg-blue-400 h-full" style="width:{{ cash_pct }}%"></div>
+                        {% endif %}
+                        {% if stocks_pct > 0 %}
+                        <div class="bg-purple-400 h-full" style="width:{{ stocks_pct }}%"></div>
+                        {% endif %}
+                        {% if invest_pct > 0 %}
+                        <div class="bg-green-400 h-full" style="width:{{ invest_pct }}%"></div>
+                        {% endif %}
+                    </div>
+                    <div class="flex items-center gap-4 text-xs text-gray-300">
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block"></span>Cash {{ cash_pct }}%</span>
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-2.5 h-2.5 rounded-full bg-purple-400 inline-block"></span>Stocks {{ stocks_pct }}%</span>
+                        <span class="flex items-center gap-1.5"><span
+                                class="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>Invested {{ invest_pct }}%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Stat cards ── -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <p class="text-xs text-gray-500 mb-1">Cash Balance</p>
+                    <p class="text-xl font-bold text-gray-900">${{ cash_balance|floatformat:2|intcomma }}</p>
+                    <p class="text-xs text-blue-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path
+                                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        </svg>
+                        Available to deploy
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <p class="text-xs text-gray-500 mb-1">Stock Holdings</p>
+                    <p class="text-xl font-bold text-gray-900">${{ total_stock_value|floatformat:2|intcomma }}</p>
+                    <p class="text-xs text-purple-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        {{ holdings_data|length }} position{{ holdings_data|length|pluralize }}
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <p class="text-xs text-gray-500 mb-1">Active Investments</p>
+                    <p class="text-xl font-bold text-gray-900">${{ total_investment_value|floatformat:2|intcomma }}</p>
+                    <p class="text-xs text-green-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                        </svg>
+                        {{ active_inv_count }} plan{{ active_inv_count|pluralize }}
+                    </p>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 p-5">
+                    <p class="text-xs text-gray-500 mb-1">Total Earned</p>
+                    <p class="text-xl font-bold text-gray-900">${{ total_earned|floatformat:2|intcomma }}</p>
+                    <p class="text-xs text-orange-500 mt-1 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="M12 6v6l4 2" />
+                        </svg>
+                        From completed plans
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- ── Chart + Stock Holdings ── -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+                <!-- Donut chart -->
+                <div class="bg-white rounded-xl border border-gray-200 p-5 flex flex-col items-center justify-center">
+                    <p class="text-sm font-semibold text-gray-900 self-start mb-4">Allocation</p>
+                    <div class="relative w-44 h-44">
+                        <canvas id="alloc-chart" width="176" height="176"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                            <p class="text-xs text-gray-400">Total</p>
+                            <p class="text-base font-bold text-gray-900">${{ total_portfolio|floatformat:0|intcomma }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="mt-5 w-full space-y-2">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="flex items-center gap-2"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block"></span>Cash</span>
+                            <span class="font-semibold text-gray-700">${{ cash_balance|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="flex items-center gap-2"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-purple-400 inline-block"></span>Stocks</span>
+                            <span class="font-semibold text-gray-700">${{ total_stock_value|floatformat:2|intcomma }}</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="flex items-center gap-2"><span
+                                    class="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>Investments</span>
+                            <span class="font-semibold text-gray-700">${{ total_investment_value|floatformat:2|intcomma }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stock holdings -->
+                <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">Stock Holdings</p>
+                            <p class="text-xs text-gray-400 mt-0.5">Current positions</p>
+                        </div>
+                        <a href="{% url 'stocks' %}" class="text-xs text-gray-500 hover:text-black transition">Trade
+                            Stocks →</a>
+                    </div>
+
+                    {% if holdings_data %}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="text-xs text-gray-400 border-b border-gray-100">
+                                    <th class="text-left pb-3 font-medium">Stock</th>
+                                    <th class="text-right pb-3 font-medium">Shares</th>
+                                    <th class="text-right pb-3 font-medium">Price</th>
+                                    <th class="text-right pb-3 font-medium">Value</th>
+                                    <th class="text-right pb-3 font-medium">Allocation</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-50">
+                                {% for h in holdings_data %}
+                                <tr class="hover:bg-gray-50 transition">
+                                    <td class="py-3">
+                                        <div class="flex items-center gap-2">
+                                            <div
+                                                class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-600 shrink-0">
+                                                {{ h.symbol|slice:":2" }}
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-gray-900">{{ h.symbol }}</p>
+                                                <p class="text-xs text-gray-400 truncate max-w-[120px]">{{ h.name }}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-3 text-right text-gray-700">{{ h.shares|floatformat:4 }}</td>
+                                    <td class="py-3 text-right text-gray-700">${{ h.current_price|floatformat:2 }}</td>
+                                    <td class="py-3 text-right font-semibold text-gray-900">${{ h.current_value|floatformat:2|intcomma }}</td>
+                                    <td class="py-3 text-right">
+                                        {% if total_portfolio > 0 %}
+                                        {% widthratio h.current_value total_portfolio 100 as stock_alloc %}
+                                        <span class="text-xs text-gray-500">{{ stock_alloc }}%</span>
+                                        {% else %}
+                                        <span class="text-xs text-gray-400">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="border-t border-gray-200">
+                                    <td colspan="3" class="pt-3 text-xs text-gray-400 font-medium">Total</td>
+                                    <td class="pt-3 text-right font-bold text-gray-900">${{ total_stock_value|floatformat:2|intcomma }}</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-10 text-gray-400">
+                        <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor"
+                            stroke-width="1.5" viewBox="0 0 24 24">
+                            <path
+                                d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                        </svg>
+                        <p class="text-sm">No stock positions yet.</p>
+                        <a href="{% url 'stocks' %}"
+                            class="text-xs text-purple-500 hover:underline mt-1 inline-block">Browse stocks →</a>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <!-- ── Active Investments summary ── -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+                <div class="flex items-center justify-between mb-5">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">Active Investment Plans</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Currently running</p>
+                    </div>
+                    <a href="{% url 'investments' %}" class="text-xs text-gray-500 hover:text-black transition">Manage
+                        →</a>
+                </div>
+
+                {% if active_investments %}
+                <div class="space-y-4">
+                    {% for inv in active_investments %}
+                    <div class="border border-gray-100 rounded-xl p-4 hover:border-gray-200 transition">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path
+                                            d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-gray-900">{{ inv.plan.name }}</p>
+                                    <p class="text-xs text-gray-400">Matures {{ inv.matures_at|date:"M d, Y" }} · {{ inv.plan.roi_percent }}% ROI</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-5 shrink-0">
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400">Invested</p>
+                                    <p class="text-sm font-semibold text-gray-900">${{ inv.amount|floatformat:2|intcomma }}</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs text-gray-400">Expected Return</p>
+                                    <p class="text-sm font-semibold text-green-600">+${{ inv.expected_return|floatformat:2|intcomma }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-gray-100 rounded-full h-1.5">
+                            <div class="progress-bar h-1.5 rounded-full {% if inv.is_matured %}bg-green-500{% else %}bg-gray-800{% endif %}"
+                                style="width: {{ inv.progress_percent }}%">
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1.5 text-right">
+                            {% if inv.is_matured %}
+                            <span class="text-green-500 font-medium">Matured — awaiting payout</span>
+                            {% else %}
+                            {{ inv.progress_percent }}% complete
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-10 text-gray-400">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M12 8v4l3 3m9-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p class="text-sm">No active investment plans.</p>
+                    <a href="{% url 'investments' %}"
+                        class="text-xs text-green-500 hover:underline mt-1 inline-block">Browse plans →</a>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- ── Recent Transactions ── -->
+            <div class="bg-white rounded-xl border border-gray-200 p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">Recent Transactions</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Last 6 wallet movements</p>
+                    </div>
+                    <a href="{% url 'wallet' %}" class="text-xs text-gray-500 hover:text-black transition">View All
+                        →</a>
+                </div>
+
+                {% if recent_transactions %}
+                <div class="divide-y divide-gray-50">
+                    {% for tx in recent_transactions %}
+                    <div class="flex items-center justify-between py-3">
+                        <div class="flex items-center gap-3">
+                            <!-- Icon by type -->
+                            <div class="w-9 h-9 rounded-lg flex items-center justify-center shrink-0
+                                {% if tx.transaction_type == 'deposit' %}bg-green-50
+                                {% elif tx.transaction_type == 'withdrawal' %}bg-red-50
+                                {% elif tx.transaction_type == 'investment' %}bg-blue-50
+                                {% elif tx.transaction_type == 'return' %}bg-orange-50
+                                {% else %}bg-gray-100{% endif %}">
+                                {% if tx.transaction_type == 'deposit' %}
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                {% elif tx.transaction_type == 'withdrawal' %}
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                {% elif tx.transaction_type == 'investment' %}
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
+                                {% elif tx.transaction_type == 'return' %}
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 6v6l4 2" />
+                                </svg>
+                                {% else %}
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                </svg>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900 capitalize">{{ tx.get_transaction_type_display }}</p>
+                                <p class="text-xs text-gray-400">{{ tx.created_at|date:"M d, Y · g:i A" }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-semibold
+                                {% if tx.amount >= 0 %}text-green-600{% else %}text-red-500{% endif %}">
+                                {% if tx.amount >= 0 %}+{% endif %}${{ tx.amount|floatformat:2|intcomma }}
+                            </p>
+                            <span class="text-xs px-2 py-0.5 rounded-full font-medium
+                                {% if tx.status == 'completed' %}bg-green-50 text-green-600
+                                {% elif tx.status == 'pending' %}bg-yellow-50 text-yellow-600
+                                {% else %}bg-red-50 text-red-500{% endif %}">
+                                {{ tx.status|capfirst }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-10 text-gray-400">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
+                        <path
+                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                    </svg>
+                    <p class="text-sm">No transactions yet.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // ── Sidebar toggle ─────────────────────────────────────────────────────
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        // ── Donut chart (vanilla canvas — no CDN needed) ───────────────────────
+        (function () {
+            const canvas = document.getElementById('alloc-chart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            const cash = {{ cash_pct }
+        };
+        const stocks = {{ stocks_pct }};
+        const invest = {{ invest_pct }};
+        const total = cash + stocks + invest;
+
+        // If no data, draw empty ring
+        const segments = total > 0
+            ? [
+                { value: cash, color: '#60a5fa' },  // blue-400
+                { value: stocks, color: '#c084fc' },  // purple-400
+                { value: invest, color: '#4ade80' },  // green-400
+            ].filter(s => s.value > 0)
+            : [{ value: 100, color: '#e5e7eb' }];     // gray-200
+
+        const cx = canvas.width / 2;
+        const cy = canvas.height / 2;
+        const outerR = cx - 8;
+        const innerR = outerR * 0.62;
+        const gap = 0.03; // radians gap between segments
+
+        let startAngle = -Math.PI / 2;
+
+        segments.forEach(seg => {
+            const sweep = (seg.value / 100) * (Math.PI * 2) - gap;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.arc(cx, cy, outerR, startAngle, startAngle + sweep);
+            ctx.closePath();
+
+            // Cut inner hole
+            ctx.save();
+            ctx.fillStyle = seg.color;
+            ctx.fill();
+            ctx.restore();
+
+            startAngle += sweep + gap;
+        });
+
+        // Punch inner hole
+        ctx.save();
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.beginPath();
+        ctx.arc(cx, cy, innerR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        }) ();
+    </script>
+
+</body>
+
+</html>

@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -93,34 +93,48 @@ def register(request):
 @login_required
 def dashboard(request):
     profile = request.user.profile
-    
-    # Get recent transactions
+
+    # ── Transactions ──────────────────────────────────────────────────────────
     transactions = WalletTransaction.objects.filter(profile=profile).order_by('-created_at')[:10]
 
-    # Calculate total stock holdings value
-    total_stock_holding = StockHolding.objects.filter(profile=profile).select_related('stock').count()
+    # ── Stock holdings ────────────────────────────────────────────────────────
     stock_holdings = StockHolding.objects.filter(profile=profile).select_related('stock')
-    
-    total_stock_value = 0
+    total_stock_holding = stock_holdings.count()
+
+    total_stock_value = Decimal('0')
     for holding in stock_holdings:
-        stock_price = round(float(holding.stock.current_price), 2)
-        total_stock_value += float(holding.shares) * stock_price
-        
+        total_stock_value += holding.shares * holding.stock.current_price
+
+    # ── Active investments ────────────────────────────────────────────────────
     active_investments = UserInvestment.objects.filter(
         profile=profile, status='active'
     ).select_related('plan')
-    
     active_count     = active_investments.count()
     total_active_val = sum(i.amount for i in active_investments)
 
+    # ── Portfolio value = cash + stocks + investments ─────────────────────────
+    portfolio_value = profile.available_balance + total_stock_value + total_active_val
+
+    # ── Recent vehicle orders ─────────────────────────────────────────────────
+    recent_orders = Order.objects.filter(
+        profile=profile, order_type='vehicle'
+    ).select_related('vehicle').order_by('-created_at')[:5]
+
+    # ── Tesla vehicles owned (completed vehicle orders) ───────────────────────
+    tesla_vehicles = Order.objects.filter(
+        profile=profile, order_type='vehicle', status='completed'
+    ).count()
+
     context = {
-        'profile': profile,
-        'transactions': transactions,
+        'profile':             profile,
+        'transactions':        transactions,
         'total_stock_holding': total_stock_holding,
-        'total_stock_value': total_stock_value,
-        'portfolio_value': total_stock_value,  # You can expand this later
-        'active_count': active_count,
-        'total_active_val': total_active_val,
+        'total_stock_value':   total_stock_value,
+        'active_count':        active_count,
+        'total_active_val':    total_active_val,
+        'portfolio_value':     portfolio_value,
+        'recent_orders':       recent_orders,
+        'tesla_vehicles':      tesla_vehicles,
     }
     return render(request, 'dashboard.html', context)
     
@@ -571,3 +585,71 @@ def investment_subscribe(request, plan_id):
         return redirect('investments')
  
     return redirect('investments')
+
+@login_required
+def portfolio_view(request):
+    profile = request.user.profile
+ 
+    # ── Stock holdings ────────────────────────────────────────────────────────
+    stock_holdings = StockHolding.objects.filter(
+        profile=profile
+    ).select_related('stock')
+ 
+    holdings_data = []
+    total_stock_value = Decimal('0')
+    for h in stock_holdings:
+        current_value = h.shares * h.stock.current_price
+        total_stock_value += current_value
+        holdings_data.append({
+            'symbol':        h.stock.symbol,
+            'name':          h.stock.name,
+            'shares':        h.shares,
+            'current_price': h.stock.current_price,
+            'current_value': current_value,
+        })
+ 
+    # ── Active investments ────────────────────────────────────────────────────
+    active_investments = UserInvestment.objects.filter(
+        profile=profile, status='active'
+    ).select_related('plan')
+    total_investment_value = sum(i.amount for i in active_investments)
+ 
+    # ── Recent transactions (last 6) ──────────────────────────────────────────
+    recent_transactions = WalletTransaction.objects.filter(
+        profile=profile
+    ).order_by('-created_at')[:6]
+ 
+    # ── Portfolio totals ──────────────────────────────────────────────────────
+    cash_balance       = profile.available_balance
+    total_portfolio    = cash_balance + total_stock_value + total_investment_value
+ 
+    # Allocation percentages for chart (guard div-by-zero)
+    if total_portfolio > 0:
+        cash_pct   = round(float(cash_balance)         / float(total_portfolio) * 100, 1)
+        stocks_pct = round(float(total_stock_value)    / float(total_portfolio) * 100, 1)
+        invest_pct = round(float(total_investment_value) / float(total_portfolio) * 100, 1)
+    else:
+        cash_pct = stocks_pct = invest_pct = 0
+ 
+    # Total earned from completed investments
+    total_earned = sum(
+        i.expected_return
+        for i in UserInvestment.objects.filter(profile=profile, status='completed')
+    )
+ 
+    context = {
+        'profile':               profile,
+        'holdings_data':         holdings_data,
+        'active_investments':    active_investments,
+        'recent_transactions':   recent_transactions,
+        'total_stock_value':     total_stock_value,
+        'total_investment_value': total_investment_value,
+        'cash_balance':          cash_balance,
+        'total_portfolio':       total_portfolio,
+        'total_earned':          total_earned,
+        'cash_pct':              cash_pct,
+        'stocks_pct':            stocks_pct,
+        'invest_pct':            invest_pct,
+        'active_inv_count':      active_investments.count(),
+    }
+    return render(request, 'portfolio.html', context)
