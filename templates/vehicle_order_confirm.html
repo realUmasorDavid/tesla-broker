@@ -1,0 +1,124 @@
+{% comment %}
+====== vehicle_order_confirm.html ======
+Save this as templates/vehicle_order_confirm.html
+{% endcomment %}
+
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesla — Confirm Order</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'partials/sidebar.html' %}
+
+    <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
+
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-3 sticky top-0 z-20">
+            <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+            <a href="{% url 'vehicle_detail' pk=vehicle.pk %}" class="text-gray-400 hover:text-gray-700 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+            </a>
+            <h1 class="text-lg font-semibold text-gray-900">Confirm Order</h1>
+        </header>
+
+        <main class="flex-1 px-3 py-10 flex items-start justify-center">
+            <div class="w-full max-w-md space-y-5">
+
+                <!-- Vehicle summary -->
+                <div class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                    {% if vehicle.image %}
+                    <img src="{{ vehicle.image.url }}" alt="{{ vehicle.model_name }}"
+                        class="w-full h-48 object-cover" />
+                    {% else %}
+                    <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
+                        <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" stroke-width="1"
+                            viewBox="0 0 24 24">
+                            <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3" />
+                            <rect x="9" y="11" width="14" height="10" rx="1" />
+                        </svg>
+                    </div>
+                    {% endif %}
+                    <div class="p-5 space-y-4">
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase tracking-wide">{{ vehicle.model_name }}</p>
+                            <h2 class="text-xl font-bold text-gray-900">{{ vehicle.variant }}</h2>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-500">Vehicle Price</span>
+                                <span class="font-semibold text-gray-900">${{ vehicle.price|floatformat:2|intcomma }}</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-gray-100">
+                                <span class="text-gray-500">Current Balance</span>
+                                <span class="font-semibold text-gray-900">${{ profile.available_balance|floatformat:2|intcomma }}</span>
+                            </div>
+                            <div class="flex justify-between py-2">
+                                <span class="text-gray-500">Balance After Purchase</span>
+                                <span class="font-semibold text-gray-900">
+                                    ${% with remaining=profile.available_balance|floatformat:2 %}{{ remaining }}{% endwith %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warning -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 flex gap-3">
+                    <svg class="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        stroke-width="2" viewBox="0 0 24 24">
+                        <path
+                            d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+                        <path d="M12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <p class="text-sm text-yellow-700">
+                        <span class="font-semibold">This action is immediate.</span> ${{ vehicle.price|floatformat:2|intcomma }} will be deducted from your wallet right away.
+                    </p>
+                </div>
+
+                <!-- Confirm / Cancel buttons -->
+                <form method="POST" action="{% url 'vehicle_order_confirm' pk=vehicle.pk %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="w-full bg-gray-900 hover:bg-black text-white font-semibold py-4 rounded-xl transition text-sm mb-3">
+                        Confirm Purchase — ${{ vehicle.price|floatformat:2|intcomma }}
+                    </button>
+                </form>
+                <a href="{% url 'vehicle_detail' pk=vehicle.pk %}"
+                    class="block w-full text-center border border-gray-200 text-gray-600 hover:border-gray-400 font-medium py-3.5 rounded-xl transition text-sm">
+                    Cancel
+                </a>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+    </script>
+</body>
+
+</html>

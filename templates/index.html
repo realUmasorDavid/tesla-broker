@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -82,7 +83,7 @@
                             </svg>
                             Explore Stocks
                         </a>
-                        <a href="#"
+                        <a href="{% url 'inventory' %}"
                             class="flex items-center gap-2 border border-border text-sm text-gray-300 px-5 py-3 rounded hover:border-gray-500 hover:text-white transition">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="10" />
@@ -211,41 +212,43 @@
                     <p class="text-sm text-gray-500">Explore a curated selection ready for delivery.</p>
                 </div>
                 <div class="right">
-                    <a href="" class="font-semibold">View all</a>
+                    <a href="{% url 'inventory' %}" class="font-semibold">View all</a>
                 </div>
             </div>
+
+            {% for vehicle in vehicles %}
             <div class="inventory grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                 <div class="card bg-gray-100 rounded-2xl overflow-hidden shadow-lg">
-                    <img src="{% static 'modelX.jpg' %}" alt="Model X" class="w-full aspect-video md:h-64 object-cover">
+                    <img src="{{ vehicle.image.url }}" alt="{{ vehicle.model_name }}" class="w-full aspect-video md:h-64 object-cover">
                     <div class="p-5 md:p-6 space-y-5">
-                        <h2 class="text-xl font-semibold">Tesla Model X</h2>
+                        <h2 class="text-xl font-semibold">{{ vehicle.model_name }}</h2>
                         <div class="details grid grid-cols-3 gap-4">
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium">348 miles</span>
+                                <span class="text-sm font-medium">{{ vehicle.range_miles }} miles</span>
                                 <span class="text-xs text-gray-500">Range</span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium">2.5 s</span>
+                                <span class="text-sm font-medium">{{ vehicle.zero_to_sixty }} s</span>
                                 <span class="text-xs text-gray-500">0-60 mph</span>
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-sm font-medium">130 mph</span>
+                                <span class="text-sm font-medium">{{ vehicle.top_speed }} mph</span>
                                 <span class="text-xs text-gray-500">Top Speed</span>
                             </div>
                         </div>
                         <div class="imp-details flex flex-col sm:flex-row sm:items-end gap-4 sm:justify-between">
                             <div class="flex flex-col">
-                                <span class="text-sm font-bold">Starting at $39,990.00+</span>
+                                <span class="text-sm font-bold">Starting at ${{ vehicle.price|floatformat:2|intcomma }}</span>
                                 <span class="text-xs text-gray-500">After Est. Gas Savings</span>
                             </div>
                             <div class="actions flex gap-3">
-                                <a href="">
+                                <a href="{% url 'vehicle_detail' pk=vehicle.pk %}">
                                     <button
                                         class="bg-transparent hover:bg-black border border-black text-sm text-black hover:text-white py-2.5 px-6 rounded transition w-full sm:w-auto">
                                         Learn More
                                     </button>
                                 </a>
-                                <a href="">
+                                <a href="{% url 'vehicle_detail' pk=vehicle.pk %}">
                                     <button
                                         class="bg-black hover:bg-transparent border border-black text-sm text-white hover:text-black py-2.5 px-6 rounded transition w-full sm:w-auto">
                                         Order
@@ -255,46 +258,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="card bg-gray-100 rounded-2xl overflow-hidden shadow-lg">
-                    <img src="{% static 'modelX.jpg' %}" alt="Model X" class="w-full aspect-video md:h-64 object-cover">
-                    <div class="p-5 md:p-6 space-y-5">
-                        <h2 class="text-xl font-semibold">Tesla Model X</h2>
-                        <div class="details grid grid-cols-3 gap-4">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-medium">348 miles</span>
-                                <span class="text-xs text-gray-500">Range</span>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-medium">2.5 s</span>
-                                <span class="text-xs text-gray-500">0-60 mph</span>
-                            </div>
-                            <div class="flex flex-col">
-                                <span class="text-sm font-medium">130 mph</span>
-                                <span class="text-xs text-gray-500">Top Speed</span>
-                            </div>
-                        </div>
-                        <div class="imp-details flex flex-col sm:flex-row sm:items-end gap-4 sm:justify-between">
-                            <div class="flex flex-col">
-                                <span class="text-sm font-bold">Starting at $39,990.00+</span>
-                                <span class="text-xs text-gray-500">After Est. Gas Savings</span>
-                            </div>
-                            <div class="actions flex gap-3">
-                                <a href="">
-                                    <button
-                                        class="bg-transparent hover:bg-black border border-black text-sm text-black hover:text-white py-2.5 px-6 rounded transition w-full sm:w-auto">
-                                        Learn More
-                                    </button>
-                                </a>
-                                <a href="">
-                                    <button
-                                        class="bg-black hover:bg-transparent border border-black text-sm text-white hover:text-black py-2.5 px-6 rounded transition w-full sm:w-auto">
-                                        Order
-                                    </button>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
+
             </div>
         </div>
     </section>

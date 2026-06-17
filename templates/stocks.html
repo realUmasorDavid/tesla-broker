@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -50,7 +51,7 @@
                 </div>
                 <div class="bg-white/10 rounded-xl mt-4 sm:mt-0 p-4 sm:text-right">
                     <p class="text-xs text-gray-400 mb-1">Available Balance</p>
-                    <p class="text-2xl font-bold">${{ request.user.profile.available_balance|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold">${{ request.user.profile.available_balance|floatformat:2|intcomma }}</p>
                 </div>
             </div>
 

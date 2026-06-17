@@ -1,10 +1,10 @@
 from django.contrib import messages
-from django.contrib.auth import authenticate, get_user_model, login as auth_login
+from django.contrib.auth import authenticate, get_user_model, login as auth_login, logout as auth_logout
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -15,7 +15,12 @@ import requests
 User = get_user_model()
 
 def index(request):
-    return render(request, 'index.html')
+    vehicles = TeslaVehicle.objects.filter(is_available=True)[:4]
+    
+    context = {
+        'vehicles': vehicles,
+    }
+    return render(request, 'index.html', context)
 
 def login(request):
     if request.method == 'POST':
@@ -89,6 +94,10 @@ def register(request):
         'email': email,
         'referral_code': referral_code,
     })
+    
+def logout(request):
+    auth_logout(request)
+    return redirect('index')
 
 @login_required
 def dashboard(request):
@@ -209,11 +218,17 @@ def wallet_view(request):
     withdrawal_total = abs(withdrawals.aggregate(Sum('amount')).get('amount__sum') or 0.00)
     deposit_total = deposits.aggregate(Sum('amount')).get('amount__sum') or 0.00
     
+    active_investments = UserInvestment.objects.filter(
+        profile=profile, status='active'
+    ).select_related('plan')
+    total_invested = sum(i.amount for i in active_investments)
+    
     context = {
         'profile': profile,
         'transactions': transactions,
         'deposit_total': deposit_total,
         'withdrawal_total': withdrawal_total,
+        'total_invested': total_invested,
     }
     return render(request, 'wallet.html', context)
 
@@ -653,3 +668,140 @@ def portfolio_view(request):
         'active_inv_count':      active_investments.count(),
     }
     return render(request, 'portfolio.html', context)
+
+login_required
+def inventory_view(request):
+    """Vehicle listing with optional model filter."""
+    model_filter = request.GET.get('model', '').strip()
+ 
+    vehicles = TeslaVehicle.objects.filter(is_available=True)
+    if model_filter:
+        vehicles = vehicles.filter(model_name__icontains=model_filter)
+    vehicles = vehicles.order_by('model_name', 'price')
+ 
+    # Distinct model names for filter tabs
+    all_models = TeslaVehicle.objects.filter(
+        is_available=True
+    ).values_list('model_name', flat=True).distinct().order_by('model_name')
+ 
+    context = {
+        'profile':      request.user.profile,
+        'vehicles':     vehicles,
+        'all_models':   all_models,
+        'model_filter': model_filter,
+    }
+    return render(request, 'inventory.html', context)
+ 
+ 
+@login_required
+def vehicle_detail_view(request, pk):
+    """Single vehicle detail page."""
+    vehicle = get_object_or_404(TeslaVehicle, pk=pk, is_available=True)
+    profile = request.user.profile
+ 
+    can_afford = profile.available_balance >= vehicle.price
+ 
+    context = {
+        'profile':    profile,
+        'vehicle':    vehicle,
+        'can_afford': can_afford,
+    }
+    return render(request, 'vehicle_detail.html', context)
+ 
+ 
+@login_required
+def vehicle_order_view(request, pk):
+    """POST — store order in session, redirect to confirm."""
+    vehicle = get_object_or_404(TeslaVehicle, pk=pk, is_available=True)
+    profile = request.user.profile
+ 
+    if request.method == 'POST':
+        if vehicle.price > profile.available_balance:
+            messages.error(request, f'Insufficient balance. You need ${vehicle.price:,.2f} but have ${profile.available_balance:,.2f}.')
+            return redirect('vehicle_detail', pk=pk)
+ 
+        if vehicle.stock_quantity < 1:
+            messages.error(request, 'This vehicle is currently out of stock.')
+            return redirect('vehicle_detail', pk=pk)
+ 
+        # Store in session for confirmation step
+        request.session['pending_vehicle_order'] = {
+            'vehicle_id': vehicle.pk,
+            'price':      float(vehicle.price),
+        }
+        return redirect('vehicle_order_confirm', pk=vehicle.pk)
+ 
+    return redirect('vehicle_detail', pk=pk)
+ 
+ 
+@login_required
+def vehicle_order_confirm_view(request, pk):
+    """GET — show confirm page. POST — execute purchase."""
+    vehicle = get_object_or_404(TeslaVehicle, pk=pk, is_available=True)
+    profile = request.user.profile
+    order_data = request.session.get('pending_vehicle_order')
+ 
+    if not order_data or order_data.get('vehicle_id') != pk:
+        messages.error(request, 'No pending order found.')
+        return redirect('inventory')
+ 
+    if request.method == 'POST':
+        # Re-validate
+        if vehicle.price > profile.available_balance:
+            messages.error(request, 'Insufficient balance.')
+            return redirect('vehicle_detail', pk=pk)
+ 
+        if vehicle.stock_quantity < 1:
+            messages.error(request, 'This vehicle is no longer available.')
+            return redirect('inventory')
+ 
+        balance_before             = profile.available_balance
+        profile.available_balance -= vehicle.price
+        profile.save(update_fields=['available_balance'])
+ 
+        # Reduce stock
+        vehicle.stock_quantity -= 1
+        if vehicle.stock_quantity == 0:
+            vehicle.is_available = False
+        vehicle.save(update_fields=['stock_quantity', 'is_available'])
+ 
+        # Create order
+        order = Order.objects.create(
+            profile      = profile,
+            order_type   = 'vehicle',
+            vehicle      = vehicle,
+            total_amount = vehicle.price,
+            status       = 'pending',
+        )
+ 
+        # Wallet transaction
+        WalletTransaction.objects.create(
+            profile          = profile,
+            transaction_type = 'purchase',
+            payment_method   = 'internal',
+            amount           = -vehicle.price,
+            status           = 'completed',
+            balance_before   = balance_before,
+            balance_after    = profile.available_balance,
+            description      = f'Vehicle purchase: {vehicle.model_name} {vehicle.variant} (Order #{order.pk})',
+        )
+ 
+        # Clear session
+        del request.session['pending_vehicle_order']
+ 
+        messages.success(request, f'🎉 Order placed for {vehicle.model_name} {vehicle.variant}! Our team will be in touch shortly.')
+        return redirect('vehicle_order_success', pk=order.pk)
+ 
+    context = {
+        'profile': profile,
+        'vehicle': vehicle,
+        'order_data': order_data,
+    }
+    return render(request, 'vehicle_order_confirm.html', context)
+ 
+ 
+@login_required
+def vehicle_order_success_view(request, pk):
+    """Order success/receipt page."""
+    order = get_object_or_404(Order, pk=pk, profile=request.user.profile, order_type='vehicle')
+    return render(request, 'vehicle_order_success.html', {'order': order, 'profile': request.user.profile})
