@@ -127,6 +127,19 @@
     </div>
 
     <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        }
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
+
+    <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
 
         const FINNHUB_API_KEY = 'd8l9239r01qut1f9ro7gd8l9239r01qut1f9ro80';
@@ -179,9 +192,10 @@
           </td>
           <td class="py-3 text-right font-semibold text-gray-900">$${quote.c.toFixed(2)}</td>
           <td class="py-3 text-right">
-            <span class="inline-flex items-center gap-0.5 text-xs font-semibold px-2 py-1 rounded-lg
+            <span class="inline-flex items-center justify-end whitespace-nowrap text-xs font-semibold px-2 py-1 rounded-lg
               ${isPos ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}">
-              ${isPos ? '↑' : '↓'} ${Math.abs(change).toFixed(2)}%
+              <span class="shrink-0">${isPos ? '↑' : '↓'}</span>
+              <span class="ml-0.5">${Math.abs(change).toFixed(2)}%</span>
             </span>
           </td>
           <td class="py-3 text-right text-xs text-gray-500 hidden md:table-cell">${mktCap(profile?.marketCapitalization)}</td>
