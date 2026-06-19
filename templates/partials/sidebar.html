@@ -16,7 +16,7 @@
         </div>
         <div class="min-w-0">
             <p class="text-sm font-semibold truncate">{{ user.get_full_name|default:user.username }}</p>
-            <p class="text-xs text-gray-400 truncate">{{ user.email }}</p>
+            {% if user.profile.kyc_verified %}
             <span
                 class="inline-flex items-center gap-1 mt-1 text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">
                 <span class="w-3 h-3 text-green-400">
@@ -26,6 +26,16 @@
                     </svg>
                 </span> KYC Verified
             </span>
+            {% else %}
+            <span
+                class="inline-flex items-center gap-1 mt-1 text-xs text-red-400 bg-red-400/10 px-2 py-0.5 rounded-full">
+                <span class="w-3 h-3 text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 512 512">
+                        <path
+                            d="M256 512a256 256 0 1 1 0-512 256 256 0 1 1 0 512zm0-464a208 208 0 1 0 0 416 208 208 0 1 0 0-416zm93.7 294.3c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0L256 289.9l-59.8 59.8c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L222.1 256l-59.8-59.8c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0L256 222.1l59.8-59.8c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9L289.9 256l59.8 59.8z" />
+                    </svg>
+                </span> KYC Not Verified
+            {% endif %}
         </div>
     </div>
 

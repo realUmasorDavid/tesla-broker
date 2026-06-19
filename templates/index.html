@@ -33,10 +33,10 @@
         class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
         <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
         <div class="hidden lg:flex items-center gap-8 text-sm text-black">
-            <a href="#" class="hover:text-white transition">Inventory</a>
-            <a href="#" class="hover:text-white transition">Invest</a>
-            <a href="#" class="hover:text-white transition">Stocks</a>
-            <a href="#" class="hover:text-white transition">Portfolio</a>
+            <a href="{% url 'inventory' %}" class="hover:text-white transition">Inventory</a>
+            <a href="{% url 'investments' %}" class="hover:text-white transition">Invest</a>
+            <a href="{% url 'stocks' %}" class="hover:text-white transition">Stocks</a>
+            <a href="{% url 'portfolio' %}" class="hover:text-white transition">Portfolio</a>
         </div>
         {% if user.is_authenticated %}
         <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name }}!</a>
@@ -95,57 +95,57 @@
 
                     <!-- Stat mini-cards -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div
+                        <a href="{% url 'stocks' %}"
                             class="bg-card bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition rounded-lg px-6 py-5">
                             <p class="text-xs text-gray-500 tracking-wide mb-1">Live Stocks</p>
                             <p class="font-semibold text-lg">Realtime</p>
-                        </div>
-                        <div
+                        </a>
+                        <a href="{% url 'wallet' %}"
                             class="bg-card bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition rounded-lg px-6 py-5">
                             <p class="text-xs text-gray-500 tracking-wide mb-1">Wallet</p>
                             <p class="font-semibold text-lg">Crypto</p>
-                        </div>
-                        <div
+                        </a>
+                        <a href="{% url 'inventory' %}"
                             class="bg-card bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 hover:border-white/20 transition rounded-lg px-6 py-5">
                             <p class="text-xs text-gray-500 tracking-wide mb-1">EV Inventory</p>
                             <p class="font-semibold text-lg">Premium</p>
-                        </div>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Right: feature cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div
+                    <a href="{% url 'investments' %}"
                         class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
                         <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Investments</p>
                         <h3 class="text-xl font-semibold mb-2">Automated</h3>
                         <p class="text-sm text-gray-400">Flexible plans, recurring contributions.</p>
-                    </div>
-                    <div
+                    </a>
+                    <a href="{% url 'stocks' %}"
                         class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
                         <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Stocks</p>
                         <h3 class="text-xl font-semibold mb-2">Realtime</h3>
                         <p class="text-sm text-gray-400">Quotes, news, and watchlists.</p>
-                    </div>
-                    <div
+                    </a>
+                    <a href="{% url 'wallet' %}"
                         class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
                         <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Wallet</p>
                         <h3 class="text-xl font-semibold mb-2">Crypto</h3>
                         <p class="text-sm text-gray-400">Deposit and withdraw easily.</p>
-                    </div>
-                    <div
+                    </a>
+                    <a href="{% url 'inventory' %}"
                         class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
                         <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Marketplace</p>
                         <h3 class="text-xl font-semibold mb-2">Tesla</h3>
                         <p class="text-sm text-gray-400">Curated EV selection.</p>
-                    </div>
+                    </a>
                 </div>
 
             </div>
         </div>
 
         <div class="flex flex-col lg:flex-row justify-between items-center gap-4 px-5 md:px-10 py-8 max-w-7xl mx-auto">
-            <div
+            <a href="{% url 'wallet' %}"
                 class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
                 <div class="flex flex-col">
                     <p class="text-xs text-gray-500 tracking-wide mb-2">Wallet</p>
@@ -158,8 +158,8 @@
                             d="M64 32C28.7 32 0 60.7 0 96L0 384c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-192c0-35.3-28.7-64-64-64L72 128c-13.3 0-24-10.7-24-24S58.7 80 72 80l384 0c13.3 0 24-10.7 24-24s-10.7-24-24-24L64 32zM416 256a32 32 0 1 1 0 64 32 32 0 1 1 0-64z" />
                     </svg>
                 </div>
-            </div>
-            <div
+            </a>
+            <a href="{% url 'investments' %}"
                 class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
                 <div class="flex flex-col">
                     <p class="text-xs text-gray-500 tracking-wide mb-2">Investments</p>
@@ -172,8 +172,8 @@
                             d="M384 160c-17.7 0-32-14.3-32-32s14.3-32 32-32l160 0c17.7 0 32 14.3 32 32l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-82.7-169.4 169.4c-12.5 12.5-32.8 12.5-45.3 0L192 269.3 54.6 406.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l160-160c12.5-12.5 32.8-12.5 45.3 0L320 306.7 466.7 160 384 160z" />
                     </svg>
                 </div>
-            </div>
-            <div
+            </a>
+            <a href="{% url 'stocks' %}"
                 class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
                 <div class="flex flex-col">
                     <p class="text-xs text-gray-500 tracking-wide mb-2">Stocks</p>
@@ -186,8 +186,8 @@
                             d="M32 32c17.7 0 32 14.3 32 32l0 336c0 8.8 7.2 16 16 16l400 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L80 480c-44.2 0-80-35.8-80-80L0 64C0 46.3 14.3 32 32 32zM144 224c17.7 0 32 14.3 32 32l0 64c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-64c0-17.7 14.3-32 32-32zm144-64l0 160c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-160c0-17.7 14.3-32 32-32s32 14.3 32 32zm80 32c17.7 0 32 14.3 32 32l0 96c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-96c0-17.7 14.3-32 32-32zM512 96l0 224c0 17.7-14.3 32-32 32s-32-14.3-32-32l0-224c0-17.7 14.3-32 32-32s32 14.3 32 32z" />
                     </svg>
                 </div>
-            </div>
-            <div
+            </a>
+            <a href="{% url 'portfolio' %}"
                 class="flex items-center justify-between lg:justify-normal lg:space-x-16 bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition w-full lg:w-auto">
                 <div class="flex flex-col">
                     <p class="text-xs text-gray-500 tracking-wide mb-2">Portfolio</p>
@@ -200,7 +200,7 @@
                             d="M512.4 240l-176 0c-17.7 0-32-14.3-32-32l0-176c0-17.7 14.4-32.2 31.9-29.9 107 14.2 191.8 99 206 206 2.3 17.5-12.2 31.9-29.9 31.9zM222.6 37.2c18.1-3.8 33.8 11 33.8 29.5l0 197.3c0 5.6 2 11 5.5 15.3L394 438.7c11.7 14.1 9.2 35.4-6.9 44.1-34.1 18.6-73.2 29.2-114.7 29.2-132.5 0-240-107.5-240-240 0-115.5 81.5-211.9 190.2-234.8zM477.8 288l64 0c18.5 0 33.3 15.7 29.5 33.8-10.2 48.4-35 91.4-69.6 124.2-12.3 11.7-31.6 9.2-42.4-3.9L374.9 340.4c-17.3-20.9-2.4-52.4 24.6-52.4l78.2 0z" />
                     </svg>
                 </div>
-            </div>
+            </a>
         </div>
     </section>
 
@@ -273,7 +273,7 @@
                     <h2 class="text-2xl font-bold">Stock Markets</h2>
                     <p class="text-sm text-gray-500 mt-1">Featured picks, top gainers, losers, and most active.</p>
                 </div>
-                <a href="#" class="text-sm text-gray-400 hover:text-white transition">Open markets</a>
+                <a href="{% url 'stocks' %}" class="text-sm text-gray-400 hover:text-white transition">Open markets</a>
             </div>
 
 
@@ -374,7 +374,7 @@
                     <h2 class="text-2xl font-bold">Market News</h2>
                     <p class="text-sm text-gray-500 mt-1">Latest headlines impacting your watchlist.</p>
                 </div>
-                <a href="#" class="text-sm text-gray-400 hover:text-white transition">View Stocks</a>
+                <a href="{% url 'stocks' %}" class="text-sm text-gray-400 hover:text-white transition">View Stocks</a>
             </div>
 
             <!-- News list -->
