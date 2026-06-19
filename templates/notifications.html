@@ -1,0 +1,234 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesla — Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'partials/sidebar.html' %}
+
+    <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
+
+        <!-- Top Bar -->
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">Notifications</h1>
+                {% if unread_count > 0 %}
+                <span class="bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                    {{ unread_count }} unread
+                </span>
+                {% endif %}
+            </div>
+            {% if unread_count > 0 %}
+            <button onclick="markAllRead()" class="text-sm text-gray-500 hover:text-gray-900 font-medium transition">
+                Mark all as read
+            </button>
+            {% endif %}
+        </header>
+
+        <main class="flex-1 px-3 py-6 space-y-5">
+
+            <!-- Filter tabs -->
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <a href="{% url 'notifications' %}"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium transition
+                        {% if not notif_type_filter %}bg-gray-900 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        All
+                    </a>
+                    {% for key, label in notification_types %}
+                    <a href="{% url 'notifications' %}?type={{ key }}"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium transition flex items-center gap-1.5
+                        {% if notif_type_filter == key %}bg-gray-900 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        <span class="w-2 h-2 rounded-full inline-block
+                            {% if key == 'deposit' %}bg-green-400
+                            {% elif key == 'withdrawal' %}bg-red-400
+                            {% elif key == 'stock' %}bg-purple-400
+                            {% elif key == 'investment' %}bg-blue-400
+                            {% elif key == 'vehicle' %}bg-orange-400
+                            {% elif key == 'kyc' %}bg-yellow-400
+                            {% else %}bg-gray-400{% endif %}">
+                        </span>
+                        {{ label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Notifications list -->
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                {% if notifications %}
+                <div class="divide-y divide-gray-50" id="notif-list">
+                    {% for notif in notifications %}
+                    <div id="notif-{{ notif.pk }}" class="flex gap-4 px-5 py-4 hover:bg-gray-50 transition cursor-pointer
+                               {% if not notif.is_read %}bg-blue-50/30{% endif %}"
+                        onclick="markRead({{ notif.pk }}, this)">
+
+                        <!-- Type icon -->
+                        <div class="shrink-0 mt-0.5">
+                            <div class="w-9 h-9 rounded-xl flex items-center justify-center
+                                {% if notif.notif_type == 'deposit' %}bg-green-50
+                                {% elif notif.notif_type == 'withdrawal' %}bg-red-50
+                                {% elif notif.notif_type == 'stock' %}bg-purple-50
+                                {% elif notif.notif_type == 'investment' %}bg-blue-50
+                                {% elif notif.notif_type == 'vehicle' %}bg-orange-50
+                                {% elif notif.notif_type == 'kyc' %}bg-yellow-50
+                                {% else %}bg-gray-100{% endif %}">
+                                {% if notif.notif_type == 'deposit' %}
+                                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                {% elif notif.notif_type == 'withdrawal' %}
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                {% elif notif.notif_type == 'stock' %}
+                                <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                </svg>
+                                {% elif notif.notif_type == 'investment' %}
+                                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                                </svg>
+                                {% elif notif.notif_type == 'vehicle' %}
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3" />
+                                    <rect x="9" y="11" width="14" height="10" rx="1" />
+                                </svg>
+                                {% elif notif.notif_type == 'kyc' %}
+                                <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                </svg>
+                                {% else %}
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10" />
+                                </svg>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="text-sm font-semibold text-gray-900">{{ notif.title }}</p>
+                                {% if not notif.is_read %}
+                                <span class="shrink-0 w-2 h-2 rounded-full bg-blue-500 mt-1.5"></span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-500 mt-0.5 leading-relaxed">{{ notif.message }}</p>
+                            <p class="text-xs text-gray-400 mt-1.5">{{ notif.created_at|date:"M d, Y · g:i A" }} · {{
+                                notif.created_at|timesince }} ago</p>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-16 text-gray-400">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
+                        <path
+                            d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                    </svg>
+                    <p class="text-base font-medium text-gray-500">
+                        {% if notif_type_filter %}No {{ notif_type_filter }} notifications{% else %}No notifications
+                        yet{% endif %}
+                    </p>
+                    <p class="text-sm mt-1">Activity on your account will appear here.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+
+        function markRead(pk, el) {
+            if (el.classList.contains('bg-blue-50/30')) {
+                fetch(`/notifications/${pk}/read/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                }).then(() => {
+                    el.classList.remove('bg-blue-50/30');
+                    const dot = el.querySelector('.bg-blue-500.rounded-full');
+                    if (dot) dot.remove();
+                    updateUnreadBadge();
+                });
+            }
+        }
+
+        function markAllRead() {
+            fetch('/notifications/read-all/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            }).then(() => {
+                document.querySelectorAll('.bg-blue-50\\/30').forEach(el => el.classList.remove('bg-blue-50/30'));
+                document.querySelectorAll('.bg-blue-500.rounded-full').forEach(el => el.remove());
+                const badge = document.querySelector('header .bg-red-500');
+                if (badge) badge.remove();
+                const btn = document.querySelector('header button[onclick="markAllRead()"]');
+                if (btn) btn.remove();
+            });
+        }
+
+        function updateUnreadBadge() {
+            fetch('/notifications/count/')
+                .then(r => r.json())
+                .then(data => {
+                    const badge = document.querySelector('header .bg-red-500');
+                    if (badge) {
+                        if (data.count > 0) badge.textContent = `${data.count} unread`;
+                        else badge.remove();
+                    }
+                });
+        }
+
+        function getCookie(name) {
+            const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+            return v ? v[2] : null;
+        }
+    </script>
+
+</body>
+
+</html>

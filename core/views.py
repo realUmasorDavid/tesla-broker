@@ -4,13 +4,16 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
 from django.utils import timezone
 from datetime import timedelta
 import requests
+from .notifications import create_notification
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
@@ -456,51 +459,81 @@ def stock_buy(request, symbol):
 def stock_confirm(request, symbol):
     stock = get_object_or_404(Stock, symbol=symbol.upper())
     order_data = request.session.get('pending_stock_order')
-
+ 
     if not order_data or order_data['symbol'] != symbol:
         messages.error(request, "No pending order found.")
         return redirect('stocks')
-
+ 
     if request.method == 'POST':
-        profile = request.user.profile
-        shares = Decimal(order_data['shares'])
-        total_cost = Decimal(order_data['total_cost'])
-
-        # Execute the purchase
+        profile    = request.user.profile
+        shares     = Decimal(str(order_data['shares']))
+        total_cost = Decimal(str(order_data['total_cost']))
+ 
+        # ── Re-validate balance ───────────────────────────────────────────
+        if total_cost > profile.available_balance:
+            messages.error(request, "Insufficient balance.")
+            del request.session['pending_stock_order']
+            return redirect('stocks')
+ 
+        balance_before = profile.available_balance
+ 
+        # ── Update or create holding ──────────────────────────────────────
         holding, created = StockHolding.objects.get_or_create(
             profile=profile,
             stock=stock,
-            defaults={'shares': 0, 'average_buy_price': stock.current_price}
+            defaults={
+                'shares':           Decimal('0'),
+                'average_buy_price': stock.current_price,
+            }
         )
-
+ 
         if not created:
-            total_shares = holding.shares + shares
+            total_shares     = holding.shares + shares
             total_cost_basis = (holding.shares * holding.average_buy_price) + total_cost
             holding.average_buy_price = total_cost_basis / total_shares
-
+ 
         holding.shares += shares
         holding.save()
-
-        # Deduct balance
+ 
+        # ── Deduct balance ────────────────────────────────────────────────
         profile.available_balance -= total_cost
-        profile.save()
-
-        # Record transaction
+        profile.save(update_fields=['available_balance'])
+ 
+        # ── Wallet transaction (now using valid type 'stock_buy') ─────────
         WalletTransaction.objects.create(
-            profile=profile,
-            transaction_type='stock_buy',
-            amount=-total_cost,
-            balance_before=profile.available_balance + total_cost,
-            balance_after=profile.available_balance,
-            description=f"Bought {shares} shares of {stock.symbol} @ ${stock.current_price:.2f}"
+            profile          = profile,
+            transaction_type = 'stock_buy',           # valid choice now
+            payment_method   = 'internal',
+            amount           = -total_cost,
+            status           = 'completed',
+            balance_before   = balance_before,
+            balance_after    = profile.available_balance,
+            description      = f"Bought {shares} shares of {stock.symbol} @ ${stock.current_price:.2f}",
         )
-
-        # Clear session
+ 
+        # ── Order record ──────────────────────────────────────────────────
+        Order.objects.create(
+            profile      = profile,
+            order_type   = 'stock',
+            stock        = stock,
+            shares       = shares,
+            total_amount = total_cost,
+            status       = 'completed',   # stock orders complete immediately
+        )
+        
+        create_notification(
+            profile,
+            title      = f'📈 Stock Purchase Confirmed',
+            message    = f'You successfully purchased {shares} shares of {stock.symbol} ({stock.name}) at ${stock.current_price:.2f} per share. Total: ${total_cost:,.2f}.',
+            notif_type = 'stock',
+        )
+ 
+        # ── Clear session ─────────────────────────────────────────────────
         del request.session['pending_stock_order']
-
+ 
         messages.success(request, f"Successfully purchased {shares} shares of {stock.symbol}!")
         return redirect('dashboard')
-
+ 
     context = {
         'stock': stock,
         'order': order_data,
@@ -582,6 +615,13 @@ def investment_subscribe(request, plan_id):
             matures_at      = matures_at,
             balance_before  = balance_before,
             balance_after   = profile.available_balance,
+        )
+        
+        create_notification(
+            profile,
+            title      = f'📊 Investment Started',
+            message    = f'You have successfully invested ${amount:,.2f} in the {plan.name}. Expected return: ${expected_return:,.2f}. Matures on {matures_at.strftime("%b %d, %Y")}.',
+            notif_type = 'investment',
         )
  
         # Log as wallet transaction
@@ -773,6 +813,13 @@ def vehicle_order_confirm_view(request, pk):
             total_amount = vehicle.price,
             status       = 'pending',
         )
+        
+        create_notification(
+            profile,
+            title      = f'🚗 Vehicle Order Placed',
+            message    = f'Your order for a {vehicle.model_name} {vehicle.variant} has been placed successfully. Our team will contact you with delivery details shortly.',
+            notif_type = 'vehicle',
+        )
  
         # Wallet transaction
         WalletTransaction.objects.create(
@@ -805,3 +852,110 @@ def vehicle_order_success_view(request, pk):
     """Order success/receipt page."""
     order = get_object_or_404(Order, pk=pk, profile=request.user.profile, order_type='vehicle')
     return render(request, 'vehicle_order_success.html', {'order': order, 'profile': request.user.profile})
+
+@login_required
+def orders_view(request):
+    profile       = request.user.profile
+    status_filter = request.GET.get('status', '').strip().lower()
+ 
+    # ── All orders (vehicle + stock) from Order model ─────────────────────
+    all_orders = Order.objects.filter(profile=profile).select_related(
+        'vehicle', 'stock'
+    ).order_by('-created_at')
+ 
+    if status_filter in ('pending', 'processing', 'completed', 'cancelled'):
+        all_orders = all_orders.filter(status=status_filter)
+ 
+    orders = []
+    for o in all_orders:
+        if o.order_type == 'vehicle' and o.vehicle:
+            name        = f"{o.vehicle.model_name} {o.vehicle.variant}"
+            reorder_url = f"/inventory/{o.vehicle.pk}/"
+        elif o.order_type == 'stock' and o.stock:
+            name        = f"{o.stock.symbol} — {o.shares} share{'s' if o.shares != 1 else ''}"
+            reorder_url = f"/stocks/{o.stock.symbol}/"
+        else:
+            name        = "Order"
+            reorder_url = None
+ 
+        orders.append({
+            'type':        o.order_type,
+            'id':          o.pk,
+            'name':        name,
+            'amount':      o.total_amount,
+            'status':      o.status,
+            'date':        o.created_at,
+            'reorder_url': reorder_url,
+        })
+ 
+    # ── Summary counts (always unfiltered) ───────────────────────────────
+    base         = Order.objects.filter(profile=profile)
+    total_count  = base.count()
+    pending_count    = base.filter(status='pending').count()
+    completed_count  = base.filter(status='completed').count()
+ 
+    context = {
+        'profile':         profile,
+        'orders':          orders,
+        'status_filter':   status_filter,
+        'total_count':     total_count,
+        'pending_count':   pending_count,
+        'completed_count': completed_count,
+    }
+    return render(request, 'orders.html', context)
+
+@login_required
+def notifications_view(request):
+    NOTIFICATION_TYPE_LABELS = [
+        ('deposit',    'Deposits'),
+        ('withdrawal', 'Withdrawals'),
+        ('stock',      'Stocks'),
+        ('investment', 'Investments'),
+        ('vehicle',    'Vehicles'),
+        ('kyc',        'KYC'),
+    ]
+
+    profile = request.user.profile
+    notif_type_filter = request.GET.get('type', '').strip()
+ 
+    notifications = Notification.objects.filter(profile=profile)
+    if notif_type_filter:
+        notifications = notifications.filter(notif_type=notif_type_filter)
+ 
+    unread_count = Notification.objects.filter(profile=profile, is_read=False).count()
+ 
+    context = {
+        'profile':            profile,
+        'notifications':      notifications,
+        'unread_count':       unread_count,
+        'notif_type_filter':  notif_type_filter,
+        'notification_types': NOTIFICATION_TYPE_LABELS,
+    }
+    return render(request, 'notifications.html', context)
+ 
+ 
+@login_required
+@require_POST
+def mark_notification_read(request, pk):
+    notif = get_object_or_404(Notification, pk=pk, profile=request.user.profile)
+    notif.is_read = True
+    notif.save(update_fields=['is_read'])
+    return JsonResponse({'status': 'ok'})
+ 
+ 
+@login_required
+@require_POST
+def mark_all_notifications_read(request):
+    Notification.objects.filter(
+        profile=request.user.profile, is_read=False
+    ).update(is_read=True)
+    return JsonResponse({'status': 'ok'})
+ 
+ 
+@login_required
+def notifications_unread_count(request):
+    """Lightweight endpoint polled by the topbar bell every 30s."""
+    count = Notification.objects.filter(
+        profile=request.user.profile, is_read=False
+    ).count()
+    return JsonResponse({'count': count})

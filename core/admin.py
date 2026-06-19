@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib import admin, messages
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from .notifications import create_notification
 from .models import (
     Profile, KYCVerification, WalletTransaction, Stock, 
     StockHolding, InvestmentPlan, TeslaVehicle, 
@@ -62,72 +63,100 @@ def approve_deposits(modeladmin, request, queryset):
         profile = tx.profile
         balance_before = profile.available_balance
         profile.available_balance += tx.amount
-        profile.total_balance += tx.amount
+        profile.total_balance     += tx.amount
         profile.save(update_fields=['available_balance', 'total_balance'])
-        
-        tx.status = 'completed'
+ 
+        tx.status       = 'completed'
         tx.balance_before = balance_before
-        tx.balance_after = profile.available_balance
-        tx.confirmed_at = timezone.now()
+        tx.balance_after  = profile.available_balance
+        tx.confirmed_at   = timezone.now()
         tx.save()
+ 
+        create_notification(
+            profile,
+            title      = '✅ Deposit Approved',
+            message    = f'Your deposit of ${tx.amount:,.2f} via {tx.get_payment_method_display()} has been approved and credited to your account.',
+            notif_type = 'deposit',
+        )
         approved += 1
     modeladmin.message_user(request, f'✅ {approved} deposit(s) approved.', messages.SUCCESS)
-
-
+ 
+ 
 @admin.action(description='❌ Reject Deposits')
 def reject_deposits(modeladmin, request, queryset):
     rejected = 0
     for tx in queryset.filter(transaction_type='deposit', status='pending'):
         tx.status = 'failed'
         tx.save()
+ 
+        create_notification(
+            tx.profile,
+            title      = '❌ Deposit Rejected',
+            message    = f'Your deposit of ${tx.amount:,.2f} via {tx.get_payment_method_display()} could not be verified and has been rejected. Please contact support if you believe this is an error.',
+            notif_type = 'deposit',
+        )
         rejected += 1
     modeladmin.message_user(request, f'❌ {rejected} deposit(s) rejected.', messages.SUCCESS)
-
-
+ 
+ 
 @admin.action(description='✅ Approve Withdrawals')
 def approve_withdrawals(modeladmin, request, queryset):
     approved = 0
     for tx in queryset.filter(transaction_type='withdrawal', status='pending'):
-        tx.status = 'completed'
+        tx.status       = 'completed'
         tx.confirmed_at = timezone.now()
         tx.save()
+ 
+        create_notification(
+            tx.profile,
+            title      = '✅ Withdrawal Approved',
+            message    = f'Your withdrawal of ${abs(tx.amount):,.2f} to {tx.destination[:40]} has been approved and is being processed.',
+            notif_type = 'withdrawal',
+        )
         approved += 1
     modeladmin.message_user(request, f'✅ {approved} withdrawal(s) approved.', messages.SUCCESS)
-
-
+ 
+ 
 @admin.action(description='❌ Reject Withdrawals (Restore Balance)')
 def reject_withdrawals(modeladmin, request, queryset):
     rejected = 0
     for tx in queryset.filter(transaction_type='withdrawal', status='pending'):
         profile = tx.profile
-        profile.available_balance += abs(tx.amount)  # restore
+        profile.available_balance += abs(tx.amount)
         profile.save()
-        
-        tx.status = 'failed'
-        tx.balance_after = profile.available_balance
-        tx.confirmed_at = timezone.now()
+ 
+        tx.status       = 'failed'
+        tx.balance_after  = profile.available_balance
+        tx.confirmed_at   = timezone.now()
         tx.save()
+ 
+        create_notification(
+            profile,
+            title      = '❌ Withdrawal Rejected',
+            message    = f'Your withdrawal of ${abs(tx.amount):,.2f} was rejected and ${abs(tx.amount):,.2f} has been returned to your balance.',
+            notif_type = 'withdrawal',
+        )
         rejected += 1
     modeladmin.message_user(request, f'❌ {rejected} withdrawal(s) rejected and balance restored.', messages.SUCCESS)
-    
-admin.action(description='✅ Approve & Pay Out Investments')
+ 
+ 
+@admin.action(description='✅ Approve & Pay Out Investments')
 def approve_investment_payouts(modeladmin, request, queryset):
-    from django.utils import timezone
+    from .notifications import create_notification as _notif
     paid = 0
     for inv in queryset.filter(status='active'):
-        profile  = inv.profile
-        payout   = inv.amount + inv.expected_return
+        profile = inv.profile
+        payout  = inv.amount + inv.expected_return
  
         balance_before             = profile.available_balance
         profile.available_balance += payout
-        profile.total_balance     += inv.expected_return   # only profit bumps total
+        profile.total_balance     += inv.expected_return
         profile.save(update_fields=['available_balance', 'total_balance'])
  
         inv.status      = 'completed'
         inv.paid_out_at = timezone.now()
         inv.save()
  
-        # Wallet record for the return
         WalletTransaction.objects.create(
             profile          = profile,
             transaction_type = 'return',
@@ -138,17 +167,25 @@ def approve_investment_payouts(modeladmin, request, queryset):
             balance_after    = profile.available_balance,
             description      = f'Investment payout: {inv.plan.name} — principal ${inv.amount} + return ${inv.expected_return}',
         )
+ 
+        _notif(
+            profile,
+            title      = '💰 Investment Payout Received',
+            message    = f'Your {inv.plan.name} investment has matured! ${inv.amount:,.2f} principal + ${inv.expected_return:,.2f} return (${payout:,.2f} total) has been credited to your account.',
+            notif_type = 'investment',
+        )
         paid += 1
     modeladmin.message_user(request, f'✅ {paid} investment(s) paid out.', messages.SUCCESS)
  
  
 @admin.action(description='❌ Cancel Investments (Restore Principal)')
 def cancel_investments(modeladmin, request, queryset):
+    from .notifications import create_notification as _notif
     cancelled = 0
     for inv in queryset.filter(status='active'):
         profile = inv.profile
         balance_before             = profile.available_balance
-        profile.available_balance += inv.amount   # refund principal only
+        profile.available_balance += inv.amount
         profile.save(update_fields=['available_balance'])
  
         inv.status = 'cancelled'
@@ -164,8 +201,49 @@ def cancel_investments(modeladmin, request, queryset):
             balance_after    = profile.available_balance,
             description      = f'Investment cancelled — principal refunded for {inv.plan.name}',
         )
+ 
+        _notif(
+            profile,
+            title      = '❌ Investment Cancelled',
+            message    = f'Your {inv.plan.name} investment has been cancelled. Your principal of ${inv.amount:,.2f} has been refunded to your account.',
+            notif_type = 'investment',
+        )
         cancelled += 1
     modeladmin.message_user(request, f'❌ {cancelled} investment(s) cancelled and principal restored.', messages.SUCCESS)
+ 
+ 
+# ── Also add a KYC admin action — add this to KYCVerificationAdmin ────────
+ 
+@admin.action(description='✅ Mark KYC as Verified')
+def approve_kyc(modeladmin, request, queryset):
+    from .notifications import create_notification as _notif
+    for kyc in queryset:
+        kyc.profile.kyc_status    = 'verified'
+        kyc.profile.save(update_fields=['kyc_status'])
+        kyc.verification_date = timezone.now()
+        kyc.save()
+        _notif(
+            kyc.profile,
+            title      = '✅ KYC Verified',
+            message    = 'Your identity has been verified successfully. You now have full access to all platform features.',
+            notif_type = 'kyc',
+        )
+    modeladmin.message_user(request, f'✅ {queryset.count()} KYC verification(s) approved.', messages.SUCCESS)
+ 
+ 
+@admin.action(description='❌ Reject KYC')
+def reject_kyc(modeladmin, request, queryset):
+    from .notifications import create_notification as _notif
+    for kyc in queryset:
+        kyc.profile.kyc_status = 'rejected'
+        kyc.profile.save(update_fields=['kyc_status'])
+        _notif(
+            kyc.profile,
+            title      = '❌ KYC Rejected',
+            message    = 'Your KYC submission was rejected. Please re-submit with a clearer photo of your ID and selfie.',
+            notif_type = 'kyc',
+        )
+    modeladmin.message_user(request, f'❌ {queryset.count()} KYC verification(s) rejected.', messages.SUCCESS)
 
 
 # ====================== Main Models ======================

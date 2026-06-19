@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import deposit_confirm_view, index, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout
-from core import views
+from django.views.decorators.http import require_POST
+from .views import deposit_confirm_view, index, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read
 
 urlpatterns = [
     path('', index, name='index'),
@@ -27,4 +27,9 @@ urlpatterns = [
     path('inventory/<int:pk>/order/', vehicle_order_view, name='vehicle_order'),
     path('inventory/<int:pk>/order/confirm/', vehicle_order_confirm_view, name='vehicle_order_confirm'),
     path('inventory/<int:pk>/order/success/', vehicle_order_success_view, name='vehicle_order_success'),
+    path('orders/', orders_view, name='orders'),
+    path('notifications/', notifications_view, name='notifications'),
+    path('notifications/<int:pk>/read/', mark_notification_read, name='notification_read'),
+    path('notifications/read-all/', mark_all_notifications_read, name='notifications_read_all'),
+    path('notifications/count/', notifications_unread_count, name='notifications_count'),
 ]

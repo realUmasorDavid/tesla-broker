@@ -1,0 +1,230 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tesla — Orders</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen">
+
+    {% include 'partials/sidebar.html' %}
+
+    <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
+
+        <!-- Top Bar -->
+        <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 class="text-lg font-semibold text-gray-900">Orders</h1>
+            </div>
+            <div class="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1.5">
+                <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                <span class="text-xs font-semibold text-gray-700">${{ profile.available_balance|floatformat:2|intcomma }}</span>
+            </div>
+        </header>
+
+        <main class="flex-1 px-3 py-6 space-y-5">
+
+            <!-- Stat cards -->
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Total Orders</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ total_count }}</p>
+                    <p class="text-xs text-gray-400 mt-1">All time</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Pending</p>
+                    <p class="text-2xl font-bold text-yellow-500">{{ pending_count }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Awaiting processing</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Completed</p>
+                    <p class="text-2xl font-bold text-green-500">{{ completed_count }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Successfully fulfilled</p>
+                </div>
+            </div>
+
+            <!-- Filter tabs + orders -->
+            <div class="bg-white rounded-xl border border-gray-200">
+
+                <!-- Filter tabs -->
+                <div class="flex items-center gap-1 p-4 border-b border-gray-100 overflow-x-auto">
+                    {% for label, value in filter_tabs %}
+                    {% endfor %}
+                    <a href="{% url 'orders' %}"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
+                        {% if not status_filter %}bg-gray-900 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        All
+                    </a>
+                    <a href="{% url 'orders' %}?status=pending"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
+                        {% if status_filter == 'pending' %}bg-yellow-500 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        Pending
+                    </a>
+                    <a href="{% url 'orders' %}?status=processing"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
+                        {% if status_filter == 'processing' %}bg-blue-500 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        Processing
+                    </a>
+                    <a href="{% url 'orders' %}?status=completed"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
+                        {% if status_filter == 'completed' %}bg-green-500 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        Completed
+                    </a>
+                    <a href="{% url 'orders' %}?status=cancelled"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
+                        {% if status_filter == 'cancelled' %}bg-red-500 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        Cancelled
+                    </a>
+                    <a href="{% url 'orders' %}?status=failed"
+                        class="px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition
+                        {% if status_filter == 'failed' %}bg-red-400 text-white{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                        Failed
+                    </a>
+                </div>
+
+                <!-- Orders list -->
+                {% if orders %}
+                <div class="divide-y divide-gray-50">
+                    {% for order in orders %}
+                    <div
+                        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 hover:bg-gray-50 transition">
+
+                        <!-- Left: icon + info -->
+                        <div class="flex items-center gap-4">
+                            <!-- Type icon -->
+                            <div class="w-11 h-11 rounded-xl flex items-center justify-center shrink-0
+                                {% if order.type == 'vehicle' %}bg-blue-50{% else %}bg-purple-50{% endif %}">
+                                {% if order.type == 'vehicle' %}
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" stroke-width="1.5"
+                                    viewBox="0 0 24 24">
+                                    <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3" />
+                                    <rect x="9" y="11" width="14" height="10" rx="1" />
+                                    <circle cx="12" cy="21" r="1" />
+                                    <circle cx="20" cy="21" r="1" />
+                                </svg>
+                                {% else %}
+                                <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor"
+                                    stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path
+                                        d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                                </svg>
+                                {% endif %}
+                            </div>
+
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="text-sm font-semibold text-gray-900">{{ order.name }}</p>
+                                    <span
+                                        class="text-xs font-medium px-2 py-0.5 rounded-full
+                                        {% if order.type == 'vehicle' %}bg-blue-50 text-blue-600{% else %}bg-purple-50 text-purple-600{% endif %}">
+                                        {{ order.type|capfirst }}
+                                    </span>
+                                </div>
+                                <p class="text-xs text-gray-400 mt-0.5">{{ order.date|date:"M d, Y · g:i A" }} · #{{ order.id }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Right: amount + status + reorder -->
+                        <div class="flex items-center gap-4 sm:gap-5 shrink-0 pl-[60px] sm:pl-0">
+
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-gray-900">${{ order.amount|floatformat:2|intcomma }}
+                                </p>
+                                <span class="inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full mt-0.5
+                                    {% if order.status == 'completed' %}bg-green-50 text-green-600
+                                    {% elif order.status == 'pending' %}bg-yellow-50 text-yellow-600
+                                    {% elif order.status == 'processing' %}bg-blue-50 text-blue-600
+                                    {% elif order.status == 'cancelled' %}bg-red-50 text-red-500
+                                    {% else %}bg-gray-100 text-gray-500{% endif %}">
+                                    {{ order.status|capfirst }}
+                                </span>
+                            </div>
+
+                            <!-- Reorder button -->
+                            {% if order.reorder_url %}
+                            <a href="{{ order.reorder_url }}"
+                                class="shrink-0 border border-gray-200 hover:border-gray-400 text-gray-600 hover:text-gray-900 text-xs font-medium px-3 py-2 rounded-lg transition flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                    viewBox="0 0 24 24">
+                                    <path
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                {% if order.type == 'vehicle' %}Order{% else %}Trade{% endif %}
+                            </a>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% else %}
+                <div class="text-center py-16 text-gray-400">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
+                        <path
+                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                    </svg>
+                    <p class="text-base font-medium text-gray-500">No orders found</p>
+                    <p class="text-sm mt-1 text-gray-400">
+                        {% if status_filter %}
+                        No {{ status_filter }} orders. <a href="{% url 'orders' %}" class="text-gray-700 underline">View all</a>.
+                        {% else %}
+                        You haven't placed any orders yet.
+                        {% endif %}
+                    </p>
+                    <div class="flex items-center justify-center gap-3 mt-6">
+                        <a href="{% url 'inventory' %}"
+                            class="bg-gray-900 hover:bg-black text-white text-sm font-medium px-5 py-2.5 rounded-lg transition">
+                            Browse Vehicles
+                        </a>
+                        <a href="{% url 'stocks' %}"
+                            class="border border-gray-200 hover:border-gray-400 text-gray-700 text-sm font-medium px-5 py-2.5 rounded-lg transition">
+                            Trade Stocks
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
+
+</body>
+
+</html>

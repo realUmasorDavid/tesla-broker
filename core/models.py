@@ -91,6 +91,8 @@ class WalletTransaction(models.Model):
         ('investment', 'Investment'),
         ('return',     'Investment Return'),
         ('purchase',   'Vehicle Purchase'),
+        ('stock_buy',  'Stock Purchase'),   # ← ADD THIS
+        ('stock_sell', 'Stock Sale'),       # ← ADD THIS (for future use)
     ]
  
     STATUS_CHOICES = [
@@ -301,3 +303,27 @@ class ReferralBonus(models.Model):
 
     def __str__(self):
         return f"Referral bonus from {self.referrer.user.username} → {self.referred_user.user.username}"
+    
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('deposit',    'Deposit'),
+        ('withdrawal', 'Withdrawal'),
+        ('stock',      'Stock'),
+        ('investment', 'Investment'),
+        ('vehicle',    'Vehicle Order'),
+        ('kyc',        'KYC'),
+        ('general',    'General'),
+    ]
+ 
+    profile    = models.ForeignKey('Profile', on_delete=models.CASCADE, related_name='notifications')
+    title      = models.CharField(max_length=200)
+    message    = models.TextField()
+    notif_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES, default='general')
+    is_read    = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['-created_at']
+ 
+    def __str__(self):
+        return f"{self.profile.user.username} — {self.title} ({'read' if self.is_read else 'unread'})"
