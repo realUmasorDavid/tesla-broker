@@ -10,99 +10,313 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
     <style>
+        * {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+        }
+
+        .prose-dark h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .prose-dark p {
+            color: #9ca3af;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-size: 0.925rem;
+        }
+
+        .prose-dark ul {
+            color: #9ca3af;
+            font-size: 0.925rem;
+            line-height: 1.8;
+            list-style: none;
+            padding: 0;
+        }
+
+        .prose-dark ul li {
+            padding-left: 1.25rem;
+            position: relative;
+            margin-bottom: 0.4rem;
+        }
+
+        .prose-dark ul li::before {
+            content: '•';
+            color: #6b7280;
+            position: absolute;
+            left: 0;
         }
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-black text-white font-sans antialiased">
 
-    <div class="flex-1 flex flex-col min-h-screen">
-        <nav
-            class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
-            <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
-            <div class="hidden lg:flex items-center gap-8 text-sm text-black">
-                <a href="{% url 'about' %}" class="hover:text-white transition">About Us</a>
-                <a href="{% url 'blog' %}" class="hover:text-white transition">Blog</a>
-                <a href="{% url 'dashboard' %}" class="hover:text-white transition">Dashboard</a>
-                <a href="{% url 'careers' %}" class="hover:text-white transition">Careers</a>
+    <!-- Nav -->
+    <nav
+        class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-white/10 bg-white/90 backdrop-blur sticky top-0 z-50">
+        <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
+        <div class="hidden lg:flex items-center gap-8 text-sm text-black">
+            <a href="{% url 'about' %}" class="hover:opacity-60 transition">About Us</a>
+            <a href="{% url 'blog' %}" class="hover:opacity-60 transition">Blog</a>
+            <a href="{% url 'dashboard' %}" class="hover:opacity-60 transition">Dashboard</a>
+            <a href="{% url 'careers' %}" class="hover:opacity-60 transition">Careers</a>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'index' %}" class="text-sm text-black hover:opacity-60 transition">Hello, {{ user.first_name }}!</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="text-sm text-black hover:opacity-60 transition">Account</a>
+        {% endif %}
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative bg-black overflow-hidden border-b border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative max-w-4xl mx-auto px-5 md:px-10 py-20 md:py-28">
+            <span
+                class="inline-block text-xs font-semibold tracking-widest uppercase text-gray-400 mb-6 border border-white/10 px-4 py-1.5 rounded-full bg-white/5">
+                Legal
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Privacy Policy</h1>
+            <p class="mt-4 text-gray-400 max-w-xl leading-relaxed">
+                How we collect, use, and protect your personal information.
+            </p>
+            <p class="mt-4 text-xs text-gray-600">Last updated: June 2025</p>
+        </div>
+    </section>
+
+    <!-- Content -->
+    <section class="bg-black px-5 md:px-10 py-16">
+        <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-10">
+
+            <!-- Sticky TOC -->
+            <aside class="hidden lg:block">
+                <div class="sticky top-24 bg-white/5 border border-white/10 rounded-xl p-5 space-y-2">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">Contents</p>
+                    <a href="#collection" class="block text-sm text-gray-400 hover:text-white transition py-1">1.
+                        Information We Collect</a>
+                    <a href="#use" class="block text-sm text-gray-400 hover:text-white transition py-1">2. How We Use
+                        It</a>
+                    <a href="#sharing" class="block text-sm text-gray-400 hover:text-white transition py-1">3.
+                        Sharing</a>
+                    <a href="#security" class="block text-sm text-gray-400 hover:text-white transition py-1">4.
+                        Security</a>
+                    <a href="#cookies" class="block text-sm text-gray-400 hover:text-white transition py-1">5.
+                        Cookies</a>
+                    <a href="#rights" class="block text-sm text-gray-400 hover:text-white transition py-1">6. Your
+                        Rights</a>
+                    <a href="#retention" class="block text-sm text-gray-400 hover:text-white transition py-1">7. Data
+                        Retention</a>
+                    <a href="#children" class="block text-sm text-gray-400 hover:text-white transition py-1">8.
+                        Children</a>
+                    <a href="#changes" class="block text-sm text-gray-400 hover:text-white transition py-1">9.
+                        Changes</a>
+                    <a href="#contact" class="block text-sm text-gray-400 hover:text-white transition py-1">10.
+                        Contact</a>
+                </div>
+            </aside>
+
+            <!-- Body -->
+            <div class="lg:col-span-3 prose-dark space-y-2">
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+                    <p class="text-sm text-gray-400 leading-relaxed !mb-0">
+                        This Privacy Policy describes how Tesla Investment Management ("we", "our", or "us") collects,
+                        uses, and shares information about you when you use our platform, services, and website. By
+                        using our services, you agree to the collection and use of information in accordance with this
+                        policy.
+                    </p>
+                </div>
+
+                <div id="collection" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 1</p>
+                    <h3 class="!mt-0">Information We Collect</h3>
+                    <p>We collect information you provide directly to us when you create an account, make transactions,
+                        or contact support:</p>
+                    <ul>
+                        <li>Full name, email address, and password</li>
+                        <li>Date of birth, phone number, and residential address</li>
+                        <li>Government-issued ID and selfie for KYC verification</li>
+                        <li>Financial information including transaction history and wallet addresses</li>
+                        <li>Communications you send to our support team</li>
+                    </ul>
+                    <p class="mt-4">We also automatically collect certain technical data when you use our platform:</p>
+                    <ul>
+                        <li>IP address, browser type, and operating system</li>
+                        <li>Pages visited, time spent, and navigation patterns</li>
+                        <li>Device identifiers and cookie data</li>
+                    </ul>
+                </div>
+
+                <div id="use" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 2</p>
+                    <h3 class="!mt-0">How We Use Your Information</h3>
+                    <p>We use the information we collect to operate and improve our platform:</p>
+                    <ul>
+                        <li>Create and manage your account</li>
+                        <li>Process deposits, withdrawals, stock purchases, and investment plans</li>
+                        <li>Verify your identity through KYC procedures</li>
+                        <li>Send transaction confirmations and account notifications</li>
+                        <li>Detect, prevent, and respond to fraud or security incidents</li>
+                        <li>Comply with legal and regulatory obligations</li>
+                        <li>Improve platform features and user experience</li>
+                    </ul>
+                </div>
+
+                <div id="sharing" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 3</p>
+                    <h3 class="!mt-0">Sharing Your Information</h3>
+                    <p>We do not sell your personal information to third parties. We may share your information with:
+                    </p>
+                    <ul>
+                        <li>Service providers who assist in operating our platform (e.g. cloud hosting, email delivery)
+                        </li>
+                        <li>Regulatory authorities and law enforcement when required by law</li>
+                        <li>KYC and identity verification partners</li>
+                        <li>Financial data providers for market data and pricing (e.g. Finnhub)</li>
+                    </ul>
+                    <p class="mt-4">All third-party service providers are contractually required to handle your data
+                        securely and only for the purposes we specify.</p>
+                </div>
+
+                <div id="security" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 4</p>
+                    <h3 class="!mt-0">Security</h3>
+                    <p>We implement industry-standard security measures to protect your personal information, including:
+                    </p>
+                    <ul>
+                        <li>TLS/SSL encryption for all data in transit</li>
+                        <li>Encrypted storage for sensitive data at rest</li>
+                        <li>Regular security audits and penetration testing</li>
+                        <li>Strict internal access controls and authentication requirements</li>
+                    </ul>
+                    <p class="mt-4">No method of transmission over the internet is 100% secure. While we strive to
+                        protect your information, we cannot guarantee absolute security.</p>
+                </div>
+
+                <div id="cookies" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 5</p>
+                    <h3 class="!mt-0">Cookies</h3>
+                    <p>We use cookies and similar tracking technologies to maintain your session, remember your
+                        preferences, and analyse platform usage. Types of cookies we use:</p>
+                    <ul>
+                        <li><strong class="text-white font-medium">Essential cookies</strong> — required for the
+                            platform to function (e.g. session management)</li>
+                        <li><strong class="text-white font-medium">Analytics cookies</strong> — help us understand how
+                            users interact with the platform</li>
+                        <li><strong class="text-white font-medium">Preference cookies</strong> — remember your settings
+                            and personalisation choices</li>
+                    </ul>
+                    <p class="mt-4">You can control cookie behaviour through your browser settings, though disabling
+                        essential cookies may affect platform functionality.</p>
+                </div>
+
+                <div id="rights" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 6</p>
+                    <h3 class="!mt-0">Your Rights</h3>
+                    <p>Depending on your location, you may have the following rights regarding your personal data:</p>
+                    <ul>
+                        <li>Access — request a copy of the personal data we hold about you</li>
+                        <li>Correction — request correction of inaccurate or incomplete data</li>
+                        <li>Deletion — request deletion of your personal data, subject to legal obligations</li>
+                        <li>Portability — receive your data in a structured, machine-readable format</li>
+                        <li>Objection — object to certain processing activities</li>
+                        <li>Restriction — request that we limit how we use your data</li>
+                    </ul>
+                    <p class="mt-4">To exercise any of these rights, contact us at <span
+                            class="text-white">privacy@teslainvest.com</span>. We will respond within 30 days.</p>
+                </div>
+
+                <div id="retention" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 7</p>
+                    <h3 class="!mt-0">Data Retention</h3>
+                    <p>We retain your personal information for as long as your account is active or as needed to provide
+                        you services. We may retain certain information for longer periods where required by law — for
+                        example, financial transaction records are retained for a minimum of 7 years for regulatory
+                        compliance.</p>
+                    <p>When you close your account, we will delete or anonymise your personal data within 90 days,
+                        except where retention is required by law.</p>
+                </div>
+
+                <div id="children" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 8</p>
+                    <h3 class="!mt-0">Children's Privacy</h3>
+                    <p>Our platform is not directed at individuals under the age of 18. We do not knowingly collect
+                        personal information from minors. If we become aware that a minor has provided us with personal
+                        information, we will delete it immediately. If you believe a minor has registered on our
+                        platform, please contact us at <span class="text-white">privacy@teslainvest.com</span>.</p>
+                </div>
+
+                <div id="changes" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 9</p>
+                    <h3 class="!mt-0">Changes to This Policy</h3>
+                    <p>We may update this Privacy Policy from time to time. We will notify you of significant changes by
+                        email or through a prominent notice on our platform. Your continued use of the platform after
+                        the effective date of the revised policy constitutes your acceptance of the changes.</p>
+                </div>
+
+                <div id="contact" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 10</p>
+                    <h3 class="!mt-0">Contact Us</h3>
+                    <p>If you have any questions about this Privacy Policy or our data practices, please contact us:</p>
+                    <ul>
+                        <li>Email: <span class="text-white">privacy@teslainvest.com</span></li>
+                        <li>Address: Tesla Investment Management, 1 Tesla Road, Austin, TX 78701</li>
+                    </ul>
+                </div>
+
             </div>
-            {% if user.is_authenticated %}
-            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name }}!</a>
-            {% else %}
-            <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
-            {% endif %}
-        </nav>
+        </div>
+    </section>
 
-        <main class="flex-1 p-6 lg:p-12 max-w-3xl mx-auto prose prose-gray">
-            <h1 class="text-4xl font-bold mb-8">Privacy Policy</h1>
-            <p class="text-sm text-gray-500 mb-10">Last updated: June 20, 2026</p>
-
-            <h2 class="text-2xl font-semibold mt-12 mb-4">1. Information We Collect</h2>
-            <p>We collect information you provide directly, such as when you create an account, complete KYC, make
-                deposits, or trade stocks.</p>
-
-            <h2 class="text-2xl font-semibold mt-12 mb-4">2. How We Use Your Information</h2>
-            <p>To provide and improve our services, process transactions, ensure regulatory compliance, and communicate
-                with you.</p>
-
-            <h2 class="text-2xl font-semibold mt-12 mb-4">3. Data Sharing</h2>
-            <p>We do not sell your personal data. We may share information with service providers, regulators, and as
-                required by law.</p>
-
-            <h2 class="text-2xl font-semibold mt-12 mb-4">4. Security</h2>
-            <p>We use industry-standard encryption and security measures to protect your data.</p>
-
-            <div class="mt-16 text-sm text-gray-500 border-t pt-8">
-                For full details, please read our complete Privacy Policy. By using Tesla Invest, you agree to these
-                terms.
-            </div>
-        </main>
-
-        <footer class="relative bg-black text-white py-12">
-            <!-- Background glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
-            <div
-                class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
-            </div>
-        
-            <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-                    <div class="lg:col-span-2 flex flex-col space-y-6">
-                        <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
-                        <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
-                        <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
-                            rights reserved.</p>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Company</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About Us</a>
-                        <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Resources</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
-                        <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Help
-                            Center</a>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Legal</h3>
-                        <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
-                            Policy</a>
-                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms of
-                            Service</a>
-                    </div>
+    <!-- Footer -->
+    <footer class="relative bg-black text-white py-12 border-t border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                <div class="lg:col-span-2 flex flex-col space-y-6">
+                    <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
+                    <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
+                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
+                        rights reserved.</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Company</h3>
+                    <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white transition">About Us</a>
+                    <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white transition">Careers</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Resources</h3>
+                    <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white transition">Blog</a>
+                    <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white transition">Help Center</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Legal</h3>
+                    <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white transition">Privacy
+                        Policy</a>
+                    <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white transition">Terms of
+                        Service</a>
                 </div>
             </div>
-        </footer>
-    </div>
+        </div>
+    </footer>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-        }
+        document.getElementById('year').textContent = new Date().getFullYear();
     </script>
+
 </body>
 
 </html>

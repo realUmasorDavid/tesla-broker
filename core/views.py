@@ -187,36 +187,34 @@ def profile_view(request):
 def kyc_view(request):
     profile = request.user.profile
     
-    # If already verified
-    if profile.kyc_status == 'verified':
-        messages.info(request, "Your KYC is already verified.")
-        return redirect('dashboard')
-    
     try:
         kyc = profile.kyc_verification
     except KYCVerification.DoesNotExist:
         kyc = None
 
     if request.method == 'POST':
-        form = KYCForm(request.POST, request.FILES, instance=kyc)
+        form = KYCForm(request.POST, request.FILES, instance=kyc, tier=profile.kyc_tier)
         if form.is_valid():
             kyc_obj = form.save(commit=False)
             kyc_obj.profile = profile
             kyc_obj.save()
-            
+
+            # Only set to pending — do NOT advance tier here
             profile.kyc_status = 'pending'
             profile.save()
-            
-            messages.success(request, "KYC documents submitted successfully! We will review them shortly.")
+
+            messages.success(request, f"Your documents for {profile.kyc_tier.title()} tier have been submitted and are under review.")
             return redirect('dashboard')
     else:
-        form = KYCForm(instance=kyc)
+        form = KYCForm(instance=kyc, tier=profile.kyc_tier)
 
-    return render(request, 'kyc.html', {
+    context = {
         'form': form,
         'profile': profile,
-        'kyc': kyc
-    })
+        'kyc': kyc,
+        'current_tier': profile.kyc_tier,
+    }
+    return render(request, 'kyc.html', context)
     
 @login_required
 def wallet_view(request):

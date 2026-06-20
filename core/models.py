@@ -36,14 +36,42 @@ class Profile(models.Model):
         default='not_submitted'
     )
     kyc_tier = models.CharField(
+        max_length=10,
+        choices=[
+            ('tier1', 'Tier 1'),
+            ('tier2', 'Tier 2'),
+            ('tier3', 'Tier 3'),
+        ],
+        default='tier1'
+    )
+    kyc_status = models.CharField(
         max_length=20,
         choices=[
-            ('basic', 'Basic'),
-            ('silver', 'Silver'),
-            ('gold', 'Gold'),
-            ('platinum', 'Platinum'),
+            ('not_submitted', 'Not Submitted'),
+            ('pending', 'Under Review'),
+            ('verified', 'Verified'),
+            ('rejected', 'Rejected'),
         ],
-        default='basic'
+        default='not_submitted'
+    )
+
+    # New fields for history display
+    previous_kyc_tier = models.CharField(
+        max_length=10,
+        choices=[('tier1', 'Tier 1'), ('tier2', 'Tier 2'), ('tier3', 'Tier 3')],
+        blank=True,
+        null=True
+    )
+    previous_kyc_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('not_submitted', 'Not Submitted'),
+            ('pending', 'Under Review'),
+            ('verified', 'Verified'),
+            ('rejected', 'Rejected'),
+        ],
+        blank=True,
+        null=True
     )
     
     created_at = models.DateTimeField(auto_now_add=True)
@@ -59,27 +87,38 @@ class Profile(models.Model):
 
 
 class KYCVerification(models.Model):
-    """Detailed KYC information"""
+    """Tiered KYC Verification"""
     profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='kyc_verification')
     
+    # Tier 1 - Basic
     id_type = models.CharField(max_length=50, choices=[
-        ('passport', 'Passport'),
         ('national_id', 'National ID'),
         ('drivers_license', 'Driver’s License'),
-    ])
-    id_number = models.CharField(max_length=100)
+    ], blank=True)
+    id_number = models.CharField(max_length=100, blank=True)
     id_front = models.ImageField(upload_to='kyc/ids/', blank=True)
-    id_back = models.ImageField(upload_to='kyc/ids/', blank=True)
     selfie = models.ImageField(upload_to='kyc/selfies/', blank=True)
-    
+
+    # Tier 2 - Passport
+    passport_number = models.CharField(max_length=100, blank=True)
+    passport_image = models.ImageField(upload_to='kyc/passports/', blank=True)
+
+    # Tier 3 - Proof of Address
+    proof_of_address = models.ImageField(upload_to='kyc/address/', blank=True)
+    address_type = models.CharField(max_length=50, blank=True, choices=[
+        ('utility_bill', 'Utility Bill'),
+        ('bank_statement', 'Bank Statement'),
+        ('rental_agreement', 'Rental Agreement'),
+    ])
+
     verification_date = models.DateTimeField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='kyc_reviews')
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     notes = models.TextField(blank=True)
     
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"KYC - {self.profile.user.username} ({self.profile.kyc_status})"
+        return f"KYC Tier {self.profile.kyc_tier} - {self.profile.user.username}"
 
 
 class WalletTransaction(models.Model):

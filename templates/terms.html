@@ -10,97 +10,370 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
     <style>
+        * {
+            scroll-behavior: smooth;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+        }
+
+        .prose-dark h3 {
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            margin-top: 2rem;
+        }
+
+        .prose-dark p {
+            color: #9ca3af;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+            font-size: 0.925rem;
+        }
+
+        .prose-dark ul {
+            color: #9ca3af;
+            font-size: 0.925rem;
+            line-height: 1.8;
+            list-style: none;
+            padding: 0;
+        }
+
+        .prose-dark ul li {
+            padding-left: 1.25rem;
+            position: relative;
+            margin-bottom: 0.4rem;
+        }
+
+        .prose-dark ul li::before {
+            content: '•';
+            color: #6b7280;
+            position: absolute;
+            left: 0;
         }
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-black text-white font-sans antialiased">
 
-    <div class="flex-1 flex flex-col min-h-screen">
-        <nav
-            class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
-            <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
-            <div class="hidden lg:flex items-center gap-8 text-sm text-black">
-                <a href="{% url 'about' %}" class="hover:text-white transition">About Us</a>
-                <a href="{% url 'blog' %}" class="hover:text-white transition">Blog</a>
-                <a href="{% url 'dashboard' %}" class="hover:text-white transition">Dashboard</a>
-                <a href="{% url 'careers' %}" class="hover:text-white transition">Careers</a>
+    <!-- Nav -->
+    <nav
+        class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-white/10 bg-white/90 backdrop-blur sticky top-0 z-50">
+        <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
+        <div class="hidden lg:flex items-center gap-8 text-sm text-black">
+            <a href="{% url 'about' %}" class="hover:opacity-60 transition">About Us</a>
+            <a href="{% url 'blog' %}" class="hover:opacity-60 transition">Blog</a>
+            <a href="{% url 'dashboard' %}" class="hover:opacity-60 transition">Dashboard</a>
+            <a href="{% url 'careers' %}" class="hover:opacity-60 transition">Careers</a>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'index' %}" class="text-sm text-black hover:opacity-60 transition">Hello, {{ user.first_name }}!</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="text-sm text-black hover:opacity-60 transition">Account</a>
+        {% endif %}
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative bg-black overflow-hidden border-b border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative max-w-4xl mx-auto px-5 md:px-10 py-20 md:py-28">
+            <span
+                class="inline-block text-xs font-semibold tracking-widest uppercase text-gray-400 mb-6 border border-white/10 px-4 py-1.5 rounded-full bg-white/5">
+                Legal
+            </span>
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Terms of Service</h1>
+            <p class="mt-4 text-gray-400 max-w-xl leading-relaxed">
+                Please read these terms carefully before using our platform. By accessing or using our services, you
+                agree to be bound by these terms.
+            </p>
+            <p class="mt-4 text-xs text-gray-600">Last updated: May 2026</p>
+        </div>
+    </section>
+
+    <!-- Content -->
+    <section class="bg-black px-5 md:px-10 py-16">
+        <div class="max-w-4xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-10">
+
+            <!-- Sticky TOC -->
+            <aside class="hidden lg:block">
+                <div class="sticky top-24 bg-white/5 border border-white/10 rounded-xl p-5 space-y-2">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">Contents</p>
+                    <a href="#acceptance" class="block text-sm text-gray-400 hover:text-white transition py-1">1.
+                        Acceptance</a>
+                    <a href="#eligibility" class="block text-sm text-gray-400 hover:text-white transition py-1">2.
+                        Eligibility</a>
+                    <a href="#accounts" class="block text-sm text-gray-400 hover:text-white transition py-1">3.
+                        Accounts</a>
+                    <a href="#services" class="block text-sm text-gray-400 hover:text-white transition py-1">4.
+                        Services</a>
+                    <a href="#wallet" class="block text-sm text-gray-400 hover:text-white transition py-1">5. Wallet &
+                        Funds</a>
+                    <a href="#investments" class="block text-sm text-gray-400 hover:text-white transition py-1">6.
+                        Investments</a>
+                    <a href="#trading" class="block text-sm text-gray-400 hover:text-white transition py-1">7. Stock
+                        Trading</a>
+                    <a href="#vehicles" class="block text-sm text-gray-400 hover:text-white transition py-1">8. Vehicle
+                        Orders</a>
+                    <a href="#prohibited" class="block text-sm text-gray-400 hover:text-white transition py-1">9.
+                        Prohibited Use</a>
+                    <a href="#liability" class="block text-sm text-gray-400 hover:text-white transition py-1">10.
+                        Liability</a>
+                    <a href="#termination" class="block text-sm text-gray-400 hover:text-white transition py-1">11.
+                        Termination</a>
+                    <a href="#governing" class="block text-sm text-gray-400 hover:text-white transition py-1">12.
+                        Governing Law</a>
+                    <a href="#contact" class="block text-sm text-gray-400 hover:text-white transition py-1">13.
+                        Contact</a>
+                </div>
+            </aside>
+
+            <!-- Body -->
+            <div class="lg:col-span-3 prose-dark space-y-2">
+
+                <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-8">
+                    <p class="text-sm text-gray-400 leading-relaxed !mb-0">
+                        These Terms of Service ("Terms") govern your access to and use of the Tesla Investment
+                        Management platform, including all related services, features, and content. By creating an
+                        account or using our services, you agree to these Terms. If you do not agree, do not use our
+                        platform.
+                    </p>
+                </div>
+
+                <div id="acceptance" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 1</p>
+                    <h3 class="!mt-0">Acceptance of Terms</h3>
+                    <p>By accessing or using our platform, you confirm that you have read, understood, and agree to be
+                        bound by these Terms and our Privacy Policy. We may update these Terms at any time. Continued
+                        use of the platform after changes constitutes acceptance of the revised Terms. We will notify
+                        you of material changes via email or platform notification.</p>
+                </div>
+
+                <div id="eligibility" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 2</p>
+                    <h3 class="!mt-0">Eligibility</h3>
+                    <p>To use our platform, you must:</p>
+                    <ul>
+                        <li>Be at least 18 years of age</li>
+                        <li>Have the legal capacity to enter into a binding agreement</li>
+                        <li>Not be prohibited from using financial services under applicable law</li>
+                        <li>Reside in a jurisdiction where our services are permitted</li>
+                        <li>Successfully complete our KYC (Know Your Customer) verification process</li>
+                    </ul>
+                    <p class="mt-4">We reserve the right to refuse service to anyone at our sole discretion.</p>
+                </div>
+
+                <div id="accounts" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 3</p>
+                    <h3 class="!mt-0">Accounts & Security</h3>
+                    <p>You are responsible for maintaining the confidentiality of your account credentials and for all
+                        activity that occurs under your account. You agree to:</p>
+                    <ul>
+                        <li>Provide accurate and complete registration information</li>
+                        <li>Keep your password secure and not share it with third parties</li>
+                        <li>Notify us immediately of any unauthorised access to your account</li>
+                        <li>Not create multiple accounts or impersonate another person</li>
+                        <li>Not use automated tools to access or interact with the platform</li>
+                    </ul>
+                    <p class="mt-4">We are not liable for losses arising from unauthorised account access caused by your
+                        failure to safeguard your credentials.</p>
+                </div>
+
+                <div id="services" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 4</p>
+                    <h3 class="!mt-0">Our Services</h3>
+                    <p>Tesla Investment Management provides the following services through its platform:</p>
+                    <ul>
+                        <li>Crypto-funded wallet for deposits and withdrawals</li>
+                        <li>Fixed-ROI investment plans managed by our team</li>
+                        <li>Real-time stock market data and trading execution</li>
+                        <li>Tesla vehicle marketplace and purchase facilitation</li>
+                        <li>Portfolio tracking and performance analytics</li>
+                    </ul>
+                    <p class="mt-4">We reserve the right to modify, suspend, or discontinue any service at any time with
+                        or without notice. We are not liable for any modification, suspension, or discontinuation of
+                        services.</p>
+                </div>
+
+                <div id="wallet" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 5</p>
+                    <h3 class="!mt-0">Wallet & Funds</h3>
+                    <p>Deposits are accepted via cryptocurrency (Bitcoin, Ethereum, Litecoin) and credited to your
+                        account balance upon admin verification. You acknowledge that:</p>
+                    <ul>
+                        <li>Deposits are subject to review and may be delayed or rejected</li>
+                        <li>Withdrawal requests are processed manually and may take 1–5 business days</li>
+                        <li>We are not responsible for funds lost due to incorrect wallet addresses provided by you</li>
+                        <li>Cryptocurrency transactions are irreversible once broadcast to the network</li>
+                        <li>We reserve the right to hold or freeze funds suspected of fraudulent origin</li>
+                    </ul>
+                    <p class="mt-4">Your account balance is denominated in USD. Cryptocurrency values are converted at
+                        the prevailing market rate at the time of processing.</p>
+                </div>
+
+                <div id="investments" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 6</p>
+                    <h3 class="!mt-0">Investment Plans</h3>
+                    <p>Our investment plans offer fixed ROI returns over defined durations. By subscribing to a plan,
+                        you acknowledge:</p>
+                    <ul>
+                        <li>Returns are not guaranteed and depend on plan terms set by us</li>
+                        <li>Your principal is locked for the duration of the plan</li>
+                        <li>Payouts are processed manually by our team upon plan maturity</li>
+                        <li>Past performance does not guarantee future results</li>
+                        <li>We may cancel plans under exceptional circumstances, refunding your principal</li>
+                    </ul>
+                    <p class="mt-4">Investment plans are not regulated financial instruments. You invest at your own
+                        risk. We strongly recommend only investing funds you can afford to lose.</p>
+                </div>
+
+                <div id="trading" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 7</p>
+                    <h3 class="!mt-0">Stock Trading</h3>
+                    <p>Stock prices and market data are sourced from third-party providers (Finnhub) and are provided
+                        for informational purposes. You acknowledge:</p>
+                    <ul>
+                        <li>Market data may be delayed and is not guaranteed to be accurate or complete</li>
+                        <li>Stock purchases are executed at the prevailing price at time of order</li>
+                        <li>All trading activity is subject to your available account balance</li>
+                        <li>We do not provide investment advice or recommendations</li>
+                        <li>You are solely responsible for your trading decisions and any losses incurred</li>
+                    </ul>
+                </div>
+
+                <div id="vehicles" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 8</p>
+                    <h3 class="!mt-0">Vehicle Orders</h3>
+                    <p>Vehicle purchases through our marketplace are processed as follows:</p>
+                    <ul>
+                        <li>Payment is deducted from your account balance immediately upon order confirmation</li>
+                        <li>Orders are placed in "pending" status until processed by our team</li>
+                        <li>Delivery timelines are estimates and subject to availability</li>
+                        <li>Vehicle specifications and pricing are subject to change without notice</li>
+                        <li>Cancellations must be requested within 24 hours and are subject to approval</li>
+                    </ul>
+                    <p class="mt-4">Tesla Investment Management acts as a marketplace facilitator. Vehicle warranties
+                        and after-sales service are governed by the manufacturer's terms.</p>
+                </div>
+
+                <div id="prohibited" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 9</p>
+                    <h3 class="!mt-0">Prohibited Use</h3>
+                    <p>You agree not to use the platform for any of the following:</p>
+                    <ul>
+                        <li>Money laundering, fraud, or any illegal financial activity</li>
+                        <li>Circumventing KYC/AML requirements</li>
+                        <li>Manipulating market data or exploiting platform vulnerabilities</li>
+                        <li>Creating fake accounts or impersonating other users</li>
+                        <li>Uploading malware or conducting cyberattacks</li>
+                        <li>Violating any applicable local, national, or international law</li>
+                    </ul>
+                    <p class="mt-4">Violation of these prohibitions may result in immediate account suspension, fund
+                        freezing, and reporting to relevant authorities.</p>
+                </div>
+
+                <div id="liability" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 10</p>
+                    <h3 class="!mt-0">Limitation of Liability</h3>
+                    <p>To the maximum extent permitted by law, Tesla Investment Management and its officers, directors,
+                        employees, and agents shall not be liable for any indirect, incidental, special, consequential,
+                        or punitive damages, including but not limited to:</p>
+                    <ul>
+                        <li>Loss of profits, revenue, or investment returns</li>
+                        <li>Loss of data or platform access</li>
+                        <li>Damages arising from market volatility or third-party data errors</li>
+                        <li>Unauthorised access to your account due to your negligence</li>
+                    </ul>
+                    <p class="mt-4">Our total liability to you for any claim arising out of or relating to these Terms
+                        shall not exceed the total fees paid by you to us in the 12 months preceding the claim.</p>
+                </div>
+
+                <div id="termination" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 11</p>
+                    <h3 class="!mt-0">Termination</h3>
+                    <p>We may suspend or terminate your account at any time, with or without cause, including but not
+                        limited to:</p>
+                    <ul>
+                        <li>Violation of these Terms</li>
+                        <li>Suspected fraudulent or illegal activity</li>
+                        <li>Failure to complete KYC verification</li>
+                        <li>Extended period of account inactivity</li>
+                    </ul>
+                    <p class="mt-4">Upon termination, your right to access the platform ceases immediately. Any
+                        outstanding balance will be processed for withdrawal after a review period, subject to
+                        applicable legal holds.</p>
+                    <p>You may close your account at any time by contacting support. Pending transactions will be
+                        completed or reversed before closure is finalised.</p>
+                </div>
+
+                <div id="governing" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 12</p>
+                    <h3 class="!mt-0">Governing Law</h3>
+                    <p>These Terms shall be governed by and construed in accordance with the laws of the State of Texas,
+                        United States, without regard to its conflict of law provisions. Any disputes arising under
+                        these Terms shall be resolved through binding arbitration in Austin, Texas, except where
+                        prohibited by law.</p>
+                    <p>You waive any right to participate in class action lawsuits or class-wide arbitration against
+                        Tesla Investment Management.</p>
+                </div>
+
+                <div id="contact" class="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-1">Section 13</p>
+                    <h3 class="!mt-0">Contact Us</h3>
+                    <p>If you have any questions about these Terms of Service, please reach out to us:</p>
+                    <ul>
+                        <li>Email: <span class="text-white">legal@teslainvest.com</span></li>
+                        <li>Address: Tesla Investment Management, 1 Tesla Road, Austin, TX 78701</li>
+                    </ul>
+                </div>
+
             </div>
-            {% if user.is_authenticated %}
-            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name }}!</a>
-            {% else %}
-            <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
-            {% endif %}
-        </nav>
+        </div>
+    </section>
 
-        <main class="flex-1 p-6 lg:p-12 max-w-3xl mx-auto prose prose-gray">
-            <h1 class="text-4xl font-bold mb-8">Terms of Service</h1>
-            <p class="text-sm text-gray-500 mb-10">Last updated: June 20, 2026</p>
-
-            <h2 class="text-2xl font-semibold mt-10 mb-4">1. Acceptance of Terms</h2>
-            <p>By accessing or using Tesla Invest, you agree to be bound by these Terms of Service.</p>
-
-            <h2 class="text-2xl font-semibold mt-10 mb-4">2. Investment Risks</h2>
-            <p>All investments involve risk. Past performance is not indicative of future results. You may lose some or
-                all of your invested capital.</p>
-
-            <h2 class="text-2xl font-semibold mt-10 mb-4">3. KYC &amp; Compliance</h2>
-            <p>You must complete identity verification before using certain features. You agree to provide accurate
-                information.</p>
-
-            <h2 class="text-2xl font-semibold mt-10 mb-4">4. Prohibited Activities</h2>
-            <p>You may not use the platform for illegal activities, money laundering, or to circumvent sanctions.</p>
-
-            <div class="mt-16 text-sm text-gray-500 border-t pt-8">
-                These Terms constitute the entire agreement between you and Tesla Investment Management.
-            </div>
-        </main>
-
-        <footer class="relative bg-black text-white py-12">
-            <!-- Background glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
-            <div
-                class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
-            </div>
-        
-            <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-                    <div class="lg:col-span-2 flex flex-col space-y-6">
-                        <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
-                        <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
-                        <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
-                            rights reserved.</p>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Company</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About Us</a>
-                        <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Resources</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
-                        <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Help
-                            Center</a>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Legal</h3>
-                        <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
-                            Policy</a>
-                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms of
-                            Service</a>
-                    </div>
+    <!-- Footer -->
+    <footer class="relative bg-black text-white py-12 border-t border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                <div class="lg:col-span-2 flex flex-col space-y-6">
+                    <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
+                    <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
+                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
+                        rights reserved.</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Company</h3>
+                    <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white transition">About Us</a>
+                    <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white transition">Careers</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Resources</h3>
+                    <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white transition">Blog</a>
+                    <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white transition">Help Center</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Legal</h3>
+                    <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white transition">Privacy
+                        Policy</a>
+                    <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white transition">Terms of
+                        Service</a>
                 </div>
             </div>
-        </footer>
-    </div>
+        </div>
+    </footer>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-        }
+        document.getElementById('year').textContent = new Date().getFullYear();
     </script>
+
 </body>
 
 </html>

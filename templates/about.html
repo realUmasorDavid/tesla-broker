@@ -16,115 +16,284 @@
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-black text-white font-sans antialiased">
 
-    <div class="flex-1 flex flex-col min-h-screen">
-        <nav
-            class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
-            <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
-            <div class="hidden lg:flex items-center gap-8 text-sm text-black">
-                <a href="{% url 'about' %}" class="hover:text-white transition">About Us</a>
-                <a href="{% url 'blog' %}" class="hover:text-white transition">Blog</a>
-                <a href="{% url 'dashboard' %}" class="hover:text-white transition">Dashboard</a>
-                <a href="{% url 'careers' %}" class="hover:text-white transition">Careers</a>
+    <!-- Nav -->
+    <nav
+        class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-white/10 bg-white/90 backdrop-blur sticky top-0 z-50">
+        <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
+        <div class="hidden lg:flex items-center gap-8 text-sm text-black">
+            <a href="{% url 'about' %}" class="hover:opacity-60 transition">About Us</a>
+            <a href="{% url 'blog' %}" class="hover:opacity-60 transition">Blog</a>
+            <a href="{% url 'dashboard' %}" class="hover:opacity-60 transition">Dashboard</a>
+            <a href="{% url 'careers' %}" class="hover:opacity-60 transition">Careers</a>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'index' %}" class="text-sm text-black hover:opacity-60 transition">Hello, {{ user.first_name }}!</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="text-sm text-black hover:opacity-60 transition">Account</a>
+        {% endif %}
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative bg-black overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+
+        <div class="relative max-w-5xl mx-auto px-5 md:px-10 py-24 md:py-32 text-center">
+            <span
+                class="inline-block text-xs font-semibold tracking-widest uppercase text-gray-400 mb-6 border border-white/10 px-4 py-1.5 rounded-full bg-white/5">
+                About Us
+            </span>
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
+                Invest. Trade. Drive.
+            </h1>
+            <p class="mt-6 text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                We're building the ultimate all-in-one platform that combines wealth management, stock trading, and
+                Tesla vehicle ownership into one seamless experience.
+            </p>
+            <div class="flex flex-wrap items-center justify-center gap-3 mt-10">
+                <a href="{% url 'dashboard' %}"
+                    class="flex items-center gap-2 bg-white text-black text-sm font-medium px-6 py-3 rounded hover:bg-gray-100 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M13 7l5 5-5 5M6 12h12" />
+                    </svg>
+                    Get Started
+                </a>
+                <a href="{% url 'careers' %}"
+                    class="flex items-center gap-2 border border-white/20 text-sm text-gray-300 px-6 py-3 rounded hover:border-gray-400 hover:text-white transition">
+                    Join Our Team
+                </a>
             </div>
-            {% if user.is_authenticated %}
-            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name }}!</a>
-            {% else %}
-            <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
-            {% endif %}
-        </nav>
+        </div>
+    </section>
 
-        <main class="flex-1 p-6 lg:p-12">
-            <div class="max-w-4xl mx-auto">
-                <div class="text-center mb-16">
-                    <h1 class="text-5xl font-bold tracking-tight">Invest. Trade. Drive.</h1>
-                    <p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto">
-                        We are building the ultimate all-in-one platform that combines wealth management, stock trading,
-                        and Tesla vehicle ownership into one seamless experience.
-                    </p>
-                </div>
-
-                <div class="prose prose-lg max-w-none text-gray-700">
-                    <h2 class="text-3xl font-semibold mb-6">Our Mission</h2>
-                    <p class="text-lg leading-relaxed">
+    <!-- Mission -->
+    <section class="relative bg-black border-t border-white/10 px-5 md:px-10 py-20">
+        <div
+            class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-red-950/10 to-transparent pointer-events-none">
+        </div>
+        <div class="relative max-w-5xl mx-auto">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">Our Mission</p>
+                    <h2 class="text-3xl font-bold tracking-tight mb-6">Built for the future of investing</h2>
+                    <p class="text-gray-400 leading-relaxed">
                         Tesla Investment Management was founded with a simple vision: to democratize access to premium
                         financial tools and make investing in the future effortless. We believe the convergence of
                         sustainable energy, autonomous technology, and intelligent investing will define the next
                         decade.
                     </p>
+                    <p class="text-gray-400 leading-relaxed mt-4">
+                        We are more than just a financial platform — we are deeply integrated with the Tesla ecosystem.
+                        Our goal is to help our users build wealth while participating in the future of sustainable
+                        transportation and energy.
+                    </p>
+                </div>
 
-                    <div class="grid md:grid-cols-2 gap-12 my-16">
-                        <div>
-                            <h3 class="text-2xl font-semibold mb-4">What We Offer</h3>
-                            <ul class="space-y-4 text-lg">
-                                <li class="flex gap-3"><span class="text-emerald-500">•</span> Real-time stock trading
-                                </li>
-                                <li class="flex gap-3"><span class="text-emerald-500">•</span> Crypto-powered wallet
-                                </li>
-                                <li class="flex gap-3"><span class="text-emerald-500">•</span> Automated investment
-                                    plans</li>
-                                <li class="flex gap-3"><span class="text-emerald-500">•</span> Curated Tesla vehicle
-                                    marketplace</li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 class="text-2xl font-semibold mb-4">Why Tesla?</h3>
-                            <p class="text-lg">
-                                We are more than just a financial platform — we are deeply integrated with the Tesla
-                                ecosystem. Our goal is to help our users build wealth while participating in the future
-                                of sustainable transportation and energy.
-                            </p>
-                        </div>
+                <!-- Stat cards -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-3xl font-bold">$2B+</p>
+                        <p class="text-sm text-gray-400 mt-1">Assets managed</p>
+                    </div>
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-3xl font-bold">50K+</p>
+                        <p class="text-sm text-gray-400 mt-1">Active investors</p>
+                    </div>
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-3xl font-bold">120+</p>
+                        <p class="text-sm text-gray-400 mt-1">Countries served</p>
+                    </div>
+                    <div
+                        class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                        <p class="text-3xl font-bold">99.9%</p>
+                        <p class="text-sm text-gray-400 mt-1">Platform uptime</p>
                     </div>
                 </div>
             </div>
-        </main>
+        </div>
+    </section>
 
-
-        <footer class="relative bg-black text-white py-12">
-            <!-- Background glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
-            <div
-                class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+    <!-- What We Offer -->
+    <section class="bg-black border-t border-white/10 px-5 md:px-10 py-20">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">What We Offer</p>
+                <h2 class="text-3xl font-bold tracking-tight">Everything you need, in one place</h2>
             </div>
-        
-            <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-                    <div class="lg:col-span-2 flex flex-col space-y-6">
-                        <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
-                        <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
-                        <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
-                            rights reserved.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                        </svg>
                     </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Company</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About Us</a>
-                        <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Stocks</p>
+                    <h3 class="text-lg font-semibold mb-2">Real-time Trading</h3>
+                    <p class="text-sm text-gray-400">Live quotes, news, watchlists, and instant execution.</p>
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+                        </svg>
                     </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Resources</h3>
-                        <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
-                        <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Help
-                            Center</a>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Wallet</p>
+                    <h3 class="text-lg font-semibold mb-2">Crypto Wallet</h3>
+                    <p class="text-sm text-gray-400">Deposit and withdraw via BTC, ETH, and LTC.</p>
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                        </svg>
                     </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Legal</h3>
-                        <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
-                            Policy</a>
-                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms of
-                            Service</a>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Investments</p>
+                    <h3 class="text-lg font-semibold mb-2">Automated Plans</h3>
+                    <p class="text-sm text-gray-400">Fixed ROI plans with flexible contribution amounts.</p>
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path d="M5 17H3a2 2 0 01-2-2V5a2 2 0 012-2h11a2 2 0 012 2v3" />
+                            <rect x="9" y="11" width="14" height="10" rx="1" />
+                        </svg>
                     </div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Marketplace</p>
+                    <h3 class="text-lg font-semibold mb-2">Tesla Vehicles</h3>
+                    <p class="text-sm text-gray-400">Purchase premium EVs directly from your wallet.</p>
                 </div>
             </div>
-        </footer>
-    </div>
+        </div>
+    </section>
+
+    <!-- Values -->
+    <section class="relative bg-black border-t border-white/10 px-5 md:px-10 py-20">
+        <div
+            class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-red-950/10 to-transparent pointer-events-none">
+        </div>
+        <div class="relative max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <p class="text-xs text-gray-500 uppercase tracking-widest mb-3">Our Values</p>
+                <h2 class="text-3xl font-bold tracking-tight">What drives us</h2>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Trust & Security</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">Every transaction is secured with industry-leading
+                        encryption. Your assets and data are always protected.</p>
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Innovation</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">We constantly push the boundaries of what a
+                        financial platform can be — integrating emerging tech at every layer.</p>
+                </div>
+                <div
+                    class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center mb-4">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="1.5"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-2">Community</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed">We're building more than a platform — a community
+                        of forward-thinking investors and EV enthusiasts.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="bg-black border-t border-white/10 px-5 md:px-10 py-20">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <h2 class="text-3xl font-bold tracking-tight">Ready to start your journey?</h2>
+            <p class="text-gray-400">Join thousands of investors already growing their wealth on our platform.</p>
+            <div class="flex flex-col sm:flex-row items-center gap-4 justify-center pt-4">
+                <a href="{% url 'register' %}"
+                    class="bg-white text-black border border-white hover:bg-transparent hover:text-white transition duration-300 px-8 py-3.5 w-full sm:w-auto rounded">
+                    Get Started
+                </a>
+                <a href="{% url 'login' %}"
+                    class="bg-transparent text-white border border-white hover:bg-white hover:text-black transition duration-300 px-8 py-3.5 w-full sm:w-auto rounded">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative bg-black text-white py-12 border-t border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+
+        <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                <div class="lg:col-span-2 flex flex-col space-y-6">
+                    <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
+                    <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
+                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
+                        rights reserved.</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Company</h3>
+                    <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white transition">About Us</a>
+                    <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white transition">Careers</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Resources</h3>
+                    <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white transition">Blog</a>
+                    <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white transition">Help Center</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Legal</h3>
+                    <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white transition">Privacy
+                        Policy</a>
+                    <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white transition">Terms of
+                        Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-        }
+        document.getElementById('year').textContent = new Date().getFullYear();
     </script>
+
 </body>
 
 </html>

@@ -212,39 +212,61 @@ def cancel_investments(modeladmin, request, queryset):
     modeladmin.message_user(request, f'❌ {cancelled} investment(s) cancelled and principal restored.', messages.SUCCESS)
  
  
-# ── Also add a KYC admin action — add this to KYCVerificationAdmin ────────
- 
-@admin.action(description='✅ Mark KYC as Verified')
+@admin.action(description='✅ Approve KYC & Advance to Next Tier')
 def approve_kyc(modeladmin, request, queryset):
-    from .notifications import create_notification as _notif
-    for kyc in queryset:
-        kyc.profile.kyc_status    = 'verified'
-        kyc.profile.save(update_fields=['kyc_status'])
+    approved = 0
+    for kyc in queryset.select_related('profile'):
+        profile = kyc.profile
+
+        # Save current state as previous
+        profile.previous_kyc_tier = profile.kyc_tier
+        profile.previous_kyc_status = 'verified'
+
+        # Advance to next tier
+        if profile.kyc_tier == 'tier1':
+            profile.kyc_tier = 'tier2'
+        elif profile.kyc_tier == 'tier2':
+            profile.kyc_tier = 'tier3'
+        else:
+            profile.kyc_tier = 'tier3'  # Max tier
+
+        # Reset status so user can submit for next tier
+        profile.kyc_status = 'not_submitted'
+
+        profile.save(update_fields=['kyc_tier', 'kyc_status', 'previous_kyc_tier', 'previous_kyc_status'])
+
         kyc.verification_date = timezone.now()
+        kyc.reviewed_by = request.user
         kyc.save()
-        _notif(
-            kyc.profile,
-            title      = '✅ KYC Verified',
-            message    = 'Your identity has been verified successfully. You now have full access to all platform features.',
-            notif_type = 'kyc',
+
+        create_notification(
+            profile,
+            title='✅ KYC Approved',
+            message=f'Tier {profile.previous_kyc_tier[-1]} approved. You can now submit documents for Tier {profile.kyc_tier[-1]}.',
+            notif_type='kyc'
         )
-    modeladmin.message_user(request, f'✅ {queryset.count()} KYC verification(s) approved.', messages.SUCCESS)
- 
- 
+        approved += 1
+
+    modeladmin.message_user(request, f'✅ {approved} KYC(s) approved. Users advanced to next tier.', messages.SUCCESS)
+
+
 @admin.action(description='❌ Reject KYC')
 def reject_kyc(modeladmin, request, queryset):
-    from .notifications import create_notification as _notif
-    for kyc in queryset:
-        kyc.profile.kyc_status = 'rejected'
-        kyc.profile.save(update_fields=['kyc_status'])
-        _notif(
-            kyc.profile,
-            title      = '❌ KYC Rejected',
-            message    = 'Your KYC submission was rejected. Please re-submit with a clearer photo of your ID and selfie.',
-            notif_type = 'kyc',
-        )
-    modeladmin.message_user(request, f'❌ {queryset.count()} KYC verification(s) rejected.', messages.SUCCESS)
+    rejected = 0
+    for kyc in queryset.select_related('profile'):
+        profile = kyc.profile
+        profile.kyc_status = 'rejected'
+        profile.save(update_fields=['kyc_status'])
 
+        create_notification(
+            profile,
+            title='❌ KYC Rejected',
+            message='Your KYC submission was rejected. Please submit clearer documents and try again.',
+            notif_type='kyc'
+        )
+        rejected += 1
+
+    modeladmin.message_user(request, f'❌ {rejected} KYC(s) rejected.', messages.SUCCESS)
 
 # ====================== Main Models ======================
 
@@ -258,13 +280,23 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(KYCVerification)
 class KYCVerificationAdmin(admin.ModelAdmin):
-    list_display = ('profile', 'id_type', 'kyc_status_display', 'verification_date')
-    list_filter = ('profile__kyc_status', 'id_type')
+    list_display = ('profile', 'current_tier_display', 'kyc_status_display', 'verification_date')
+    list_filter = ('profile__kyc_status', 'profile__kyc_tier')
+    search_fields = ('profile__user__username',)
     readonly_fields = ('verification_date', 'reviewed_by')
+    actions = [approve_kyc, reject_kyc]
+
+    def current_tier_display(self, obj):
+        return obj.profile.kyc_tier.upper()
+    current_tier_display.short_description = 'Tier'
 
     def kyc_status_display(self, obj):
-        return obj.profile.kyc_status
-    kyc_status_display.short_description = 'KYC Status'
+        status = obj.profile.kyc_status
+        colors = {'verified': '#10b981', 'pending': '#f59e0b', 'rejected': '#ef4444'}
+        color = colors.get(status, '#6b7280')
+        return f'<span style="color:{color}; font-weight:600;">{status.upper()}</span>'
+    kyc_status_display.short_description = 'Status'
+    kyc_status_display.allow_tags = True
 
 
 @admin.register(WalletTransaction)

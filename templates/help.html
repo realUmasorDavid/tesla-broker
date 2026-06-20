@@ -10,126 +10,446 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
     <style>
+        * {
+            scroll-behavior: smooth;
+        }
+        
         body {
             font-family: 'Inter', sans-serif;
         }
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-black text-white font-sans antialiased">
 
-    <div class="flex-1 flex flex-col min-h-screen">
-        <nav
-            class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
-            <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
-            <div class="hidden lg:flex items-center gap-8 text-sm text-black">
-                <a href="{% url 'about' %}" class="hover:text-white transition">About Us</a>
-                <a href="{% url 'blog' %}" class="hover:text-white transition">Blog</a>
-                <a href="{% url 'dashboard' %}" class="hover:text-white transition">Dashboard</a>
-                <a href="{% url 'careers' %}" class="hover:text-white transition">Careers</a>
+    <!-- Nav -->
+    <nav
+        class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-white/10 bg-white/90 backdrop-blur sticky top-0 z-50">
+        <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
+        <div class="hidden lg:flex items-center gap-8 text-sm text-black">
+            <a href="{% url 'about' %}" class="hover:opacity-60 transition">About Us</a>
+            <a href="{% url 'blog' %}" class="hover:opacity-60 transition">Blog</a>
+            <a href="{% url 'dashboard' %}" class="hover:opacity-60 transition">Dashboard</a>
+            <a href="{% url 'careers' %}" class="hover:opacity-60 transition">Careers</a>
+        </div>
+        {% if user.is_authenticated %}
+        <a href="{% url 'index' %}" class="text-sm text-black hover:opacity-60 transition">Hello, {{ user.first_name }}!</a>
+        {% else %}
+        <a href="{% url 'login' %}" class="text-sm text-black hover:opacity-60 transition">Account</a>
+        {% endif %}
+    </nav>
+
+    <!-- Hero -->
+    <section class="relative bg-black overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative max-w-5xl mx-auto px-5 md:px-10 py-24 md:py-32 text-center">
+            <span
+                class="inline-block text-xs font-semibold tracking-widest uppercase text-gray-400 mb-6 border border-white/10 px-4 py-1.5 rounded-full bg-white/5">
+                Help Center
+            </span>
+            <h1 class="text-4xl md:text-6xl font-bold tracking-tight leading-tight">How can we help?</h1>
+            <p class="mt-6 text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
+                Find answers to common questions about your account, wallet, investments, and more.
+            </p>
+            <!-- Search -->
+            <div class="mt-10 max-w-xl mx-auto relative">
+                <svg class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
+                    stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input id="faq-search" type="text" placeholder="Search for answers..." oninput="filterFAQs()"
+                    class="w-full bg-white/10 border border-white/10 text-white placeholder-gray-500 pl-12 pr-4 py-4 rounded-xl focus:outline-none focus:border-white/30 transition text-sm" />
             </div>
-            {% if user.is_authenticated %}
-            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name }}!</a>
-            {% else %}
-            <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
-            {% endif %}
-        </nav>
+        </div>
+    </section>
 
-        <main class="flex-1 p-6 lg:p-12">
-            <div class="max-w-4xl mx-auto">
-                <h1 class="text-4xl font-bold mb-10">How can we help you?</h1>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="bg-white rounded-3xl p-8 border border-gray-200">
-                        <h3 class="font-semibold text-xl mb-4">Account &amp; Profile</h3>
-                        <ul class="space-y-3 text-gray-600">
-                            <li class="hover:text-black cursor-pointer">How do I update my profile?</li>
-                            <li class="hover:text-black cursor-pointer">Reset my password</li>
-                            <li class="hover:text-black cursor-pointer">KYC Verification Process</li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-white rounded-3xl p-8 border border-gray-200">
-                        <h3 class="font-semibold text-xl mb-4">Wallet &amp; Deposits</h3>
-                        <ul class="space-y-3 text-gray-600">
-                            <li class="hover:text-black cursor-pointer">How to deposit funds</li>
-                            <li class="hover:text-black cursor-pointer">Supported cryptocurrencies</li>
-                            <li class="hover:text-black cursor-pointer">Withdrawal processing time</li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-white rounded-3xl p-8 border border-gray-200">
-                        <h3 class="font-semibold text-xl mb-4">Trading &amp; Stocks</h3>
-                        <ul class="space-y-3 text-gray-600">
-                            <li class="hover:text-black cursor-pointer">How to buy stocks</li>
-                            <li class="hover:text-black cursor-pointer">Understanding market orders</li>
-                            <li class="hover:text-black cursor-pointer">Portfolio performance tracking</li>
-                        </ul>
-                    </div>
-
-                    <div class="bg-white rounded-3xl p-8 border border-gray-200">
-                        <h3 class="font-semibold text-xl mb-4">Tesla Vehicles</h3>
-                        <ul class="space-y-3 text-gray-600">
-                            <li class="hover:text-black cursor-pointer">How to order a Tesla</li>
-                            <li class="hover:text-black cursor-pointer">Delivery timeline</li>
-                            <li class="hover:text-black cursor-pointer">Vehicle financing options</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="mt-16 text-center">
-                    <p class="text-gray-600">Still need help?</p>
-                    <a href="mailto:support@teslainvest.com"
-                        class="inline-block mt-4 bg-black text-white px-10 py-4 rounded-3xl font-medium hover:bg-zinc-800">
-                        Contact Support
-                    </a>
-                </div>
+    <!-- Category Pills -->
+    <section class="bg-black border-t border-white/10 px-5 md:px-10 py-10">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex flex-wrap gap-3 justify-center">
+                <button onclick="filterCategory('All')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white text-black border-white">All</button>
+                <button onclick="filterCategory('Account')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Account</button>
+                <button onclick="filterCategory('Wallet')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Wallet</button>
+                <button onclick="filterCategory('Deposits')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Deposits</button>
+                <button onclick="filterCategory('Withdrawals')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Withdrawals</button>
+                <button onclick="filterCategory('Stocks')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Stocks</button>
+                <button onclick="filterCategory('Investments')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Investments</button>
+                <button onclick="filterCategory('KYC')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">KYC</button>
+                <button onclick="filterCategory('Security')"
+                    class="category-pill text-xs font-medium px-4 py-2 rounded-full border transition bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white">Security</button>
             </div>
-        </main>
+        </div>
+    </section>
 
-        <footer class="relative bg-black text-white py-12">
-            <!-- Background glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
-            <div
-                class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
-            </div>
-        
-            <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
-                    <div class="lg:col-span-2 flex flex-col space-y-6">
-                        <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
-                        <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
-                        <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
-                            rights reserved.</p>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Company</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About Us</a>
-                        <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Resources</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
-                        <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Help
-                            Center</a>
-                    </div>
-                    <div class="flex flex-col space-y-4">
-                        <h3 class="font-bold text-white mb-2">Legal</h3>
-                        <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
-                            Policy</a>
-                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms of
-                            Service</a>
-                    </div>
+    <!-- FAQ Sections -->
+    <section class="bg-black border-t border-white/10 px-5 md:px-10 py-16">
+        <div class="max-w-3xl mx-auto space-y-4" id="faq-list">
+
+            <!-- Account -->
+            <div class="faq-item" data-category="Account" data-question="how do i create an account">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How do I create an account?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    Click <strong class="text-white">Get Started</strong> on our homepage or visit the Register page.
+                    Fill in your name, email, and password. Once registered, you'll receive a confirmation email.
+                    Complete your KYC verification to unlock full platform features.
                 </div>
             </div>
-        </footer>
-    </div>
+
+            <div class="faq-item" data-category="Account" data-question="how do i reset my password">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How do I reset my password?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    On the login page, click <strong class="text-white">Forgot password?</strong> and enter your email
+                    address. You'll receive a reset link within a few minutes. Check your spam folder if it doesn't
+                    arrive.
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="Account" data-question="can i change my email address">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">Can I change my email address?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    Email changes require identity verification. Go to <strong class="text-white">Account →
+                        Settings</strong> and submit a change request. Our support team will verify and update your
+                    email within 24 hours.
+                </div>
+            </div>
+
+            <!-- Wallet -->
+            <div class="faq-item" data-category="Wallet" data-question="what cryptocurrencies can i deposit with">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">What cryptocurrencies can I deposit with?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    We currently support <strong class="text-white">Bitcoin (BTC)</strong>, <strong
+                        class="text-white">Ethereum (ETH)</strong>, and <strong class="text-white">Litecoin
+                        (LTC)</strong>. Each has its own wallet address — make sure you send the correct coin to the
+                    correct address to avoid permanent loss.
+                </div>
+            </div>
+
+            <!-- Deposits -->
+            <div class="faq-item" data-category="Deposits" data-question="how long does a deposit take">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How long does a deposit take to reflect?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    After you click <strong class="text-white">"I've Sent It"</strong>, your deposit enters a pending
+                    state. Our team confirms it manually after blockchain verification, which typically takes <strong
+                        class="text-white">10–30 minutes</strong>. You can track the status on your deposit confirmation
+                    page.
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="Deposits" data-question="what is the minimum deposit amount">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">What is the minimum deposit amount?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    The minimum deposit is <strong class="text-white">$10 USD</strong> equivalent in cryptocurrency.
+                    Deposits below this threshold will not be credited.
+                </div>
+            </div>
+
+            <!-- Withdrawals -->
+            <div class="faq-item" data-category="Withdrawals" data-question="how long do withdrawals take">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How long do withdrawals take?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    Crypto withdrawals are typically processed within <strong class="text-white">24 hours</strong> after
+                    admin review. Bank transfers may take <strong class="text-white">1–3 business days</strong>
+                    depending on your bank. Your balance is held immediately upon request.
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="Withdrawals" data-question="can i cancel a withdrawal">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">Can I cancel a withdrawal request?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    While your withdrawal is still <strong class="text-white">Pending</strong>, you can contact support
+                    to cancel it. Once it has been approved and sent, it cannot be reversed.
+                </div>
+            </div>
+
+            <!-- Stocks -->
+            <div class="faq-item" data-category="Stocks" data-question="how do i buy stocks">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How do I buy stocks?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    Navigate to <strong class="text-white">Stocks</strong> in the sidebar, click any company to open the
+                    trading page, enter the number of shares, and click <strong class="text-white">Buy</strong>. Confirm
+                    on the next screen. Your balance is deducted immediately and shares are added once our team
+                    processes your order.
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="Stocks" data-question="are stock prices real time">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">Are stock prices real-time?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    Yes. All prices are pulled live from <strong class="text-white">Finnhub</strong> each time you load
+                    a page. Charts are powered by TradingView and update in real time.
+                </div>
+            </div>
+
+            <!-- Investments -->
+            <div class="faq-item" data-category="Investments" data-question="what are investment plans">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">What are investment plans?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    Investment plans are admin-defined packages with a fixed ROI and duration. You deposit a set amount
+                    and earn returns automatically over the plan period. Returns are credited to your wallet once the
+                    cycle completes.
+                </div>
+            </div>
+
+            <!-- KYC -->
+            <div class="faq-item" data-category="KYC" data-question="what is kyc and why do i need it">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">What is KYC and why do I need it?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    KYC (Know Your Customer) is a legal identity verification process required by financial regulations.
+                    It protects you and the platform from fraud. Higher KYC tiers unlock higher withdrawal limits and
+                    access to premium investment plans.
+                </div>
+            </div>
+
+            <div class="faq-item" data-category="KYC" data-question="how long does kyc verification take">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How long does KYC verification take?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    KYC is typically reviewed within <strong class="text-white">24–48 hours</strong>. You'll be notified
+                    by email once your verification is approved or if additional documents are needed.
+                </div>
+            </div>
+
+            <!-- Security -->
+            <div class="faq-item" data-category="Security" data-question="how is my data protected">
+                <button onclick="toggleFAQ(this)"
+                    class="w-full flex items-center justify-between bg-white/5 border border-white/10 rounded-xl px-6 py-4 text-left hover:bg-white/10 transition">
+                    <span class="text-sm font-medium">How is my data protected?</span>
+                    <svg class="faq-icon w-4 h-4 text-gray-400 shrink-0 transition-transform" fill="none"
+                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+                <div
+                    class="faq-answer hidden px-6 py-4 bg-white/[0.03] border border-t-0 border-white/10 rounded-b-xl text-sm text-gray-400 leading-relaxed">
+                    All data is encrypted in transit using <strong class="text-white">TLS/SSL</strong>. Passwords are
+                    hashed and never stored in plain text. KYC documents are stored in encrypted storage and only
+                    accessible by authorised personnel.
+                </div>
+            </div>
+
+            <p id="faq-no-results" class="hidden text-center text-sm text-gray-500 py-10">No results found. Try a
+                different search term.</p>
+
+        </div>
+    </section>
+
+    <!-- Still need help -->
+    <section class="bg-black border-t border-white/10 px-5 md:px-10 py-20">
+        <div class="max-w-2xl mx-auto text-center space-y-4">
+            <h2 class="text-3xl font-bold tracking-tight">Still need help?</h2>
+            <p class="text-gray-400">Our support team is available around the clock to assist you.</p>
+            <div class="flex flex-col sm:flex-row items-center gap-4 justify-center pt-4">
+                <a href="mailto:support@teslainvest.com"
+                    class="bg-white text-black border border-white hover:bg-transparent hover:text-white transition duration-300 px-8 py-3.5 w-full sm:w-auto rounded text-sm font-medium">
+                    Email Support
+                </a>
+                <a href="{% url 'dashboard' %}"
+                    class="bg-transparent text-white border border-white hover:bg-white hover:text-black transition duration-300 px-8 py-3.5 w-full sm:w-auto rounded text-sm font-medium">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="relative bg-black text-white py-12 border-t border-white/10">
+        <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
+        <div
+            class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
+        </div>
+        <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
+                <div class="lg:col-span-2 flex flex-col space-y-6">
+                    <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
+                    <p class="text-gray-300 text-sm">Powered by Tesla Investment Management</p>
+                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Tesla Investment Management. All
+                        rights reserved.</p>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Company</h3>
+                    <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white transition">About Us</a>
+                    <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white transition">Careers</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Resources</h3>
+                    <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white transition">Blog</a>
+                    <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white transition">Help Center</a>
+                </div>
+                <div class="flex flex-col space-y-4">
+                    <h3 class="font-bold text-white mb-2">Legal</h3>
+                    <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white transition">Privacy
+                        Policy</a>
+                    <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white transition">Terms of
+                        Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        function toggleFAQ(btn) {
+            const answer = btn.nextElementSibling;
+            const icon = btn.querySelector('.faq-icon');
+            const isOpen = !answer.classList.contains('hidden');
+            // Close all
+            document.querySelectorAll('.faq-answer').forEach(a => a.classList.add('hidden'));
+            document.querySelectorAll('.faq-icon').forEach(i => i.style.transform = '');
+            // Open clicked (if it was closed)
+            if (!isOpen) {
+                answer.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+            }
+        }
+
+        let activeCategory = 'All';
+
+        function filterCategory(cat) {
+            activeCategory = cat;
+            document.querySelectorAll('.category-pill').forEach(btn => {
+                const isActive = btn.textContent.trim() === cat;
+                btn.classList.toggle('bg-white', isActive);
+                btn.classList.toggle('text-black', isActive);
+                btn.classList.toggle('border-white', isActive);
+                btn.classList.toggle('bg-white/5', !isActive);
+                btn.classList.toggle('text-gray-400', !isActive);
+                btn.classList.toggle('border-white/10', !isActive);
+            });
+            applyFilters();
+        }
+
+        function filterFAQs() { applyFilters(); }
+
+        function applyFilters() {
+            const q = document.getElementById('faq-search').value.toLowerCase();
+            let visible = 0;
+            document.querySelectorAll('.faq-item').forEach(item => {
+                const matchCat = activeCategory === 'All' || item.dataset.category === activeCategory;
+                const matchText = item.dataset.question.includes(q) || item.textContent.toLowerCase().includes(q);
+                const show = matchCat && matchText;
+                item.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            document.getElementById('faq-no-results').classList.toggle('hidden', visible > 0);
         }
     </script>
+
 </body>
 
 </html>
