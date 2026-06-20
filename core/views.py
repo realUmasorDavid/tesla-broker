@@ -25,6 +25,24 @@ def index(request):
     }
     return render(request, 'index.html', context)
 
+def blog(request):
+    return render(request, 'blog.html')
+
+def about(request):
+    return render(request, 'about.html')
+
+def careers(request):
+    return render(request, 'careers.html')
+
+def help(request):
+    return render(request, 'help.html')
+
+def privacy(request):
+    return render(request, 'privacy.html')
+
+def terms(request):
+    return render(request, 'terms.html')
+
 def login(request):
     if request.method == 'POST':
         email = request.POST.get('email')

@@ -1,9 +1,15 @@
 from django.urls import path
 from django.views.decorators.http import require_POST
-from .views import deposit_confirm_view, index, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read
+from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms
 
 urlpatterns = [
     path('', index, name='index'),
+    path('blog/', blog, name='blog'),
+    path('about/', about, name='about'),
+    path('careers/', careers, name='careers'),
+    path('help/', help, name='help'),
+    path('privacy/', privacy, name='privacy'),
+    path('terms/', terms, name='terms'),
     path('login/', login, name='login'),
     path('register/', register, name='register'),
     path('logout/', logout, name='logout'),
