@@ -366,3 +366,23 @@ class Notification(models.Model):
  
     def __str__(self):
         return f"{self.profile.user.username} — {self.title} ({'read' if self.is_read else 'unread'})"
+    
+class EmailVerificationCode(models.Model):
+    """Short-lived 6-digit OTP for login and registration verification."""
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_codes')
+    code       = models.CharField(max_length=6)
+    purpose    = models.CharField(max_length=20, choices=[('login', 'Login'), ('register', 'Register')])
+    is_used    = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+ 
+    class Meta:
+        ordering = ['-created_at']
+ 
+    def __str__(self):
+        return f"{self.user.email} — {self.code} ({self.purpose})"
+ 
+    @property
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at

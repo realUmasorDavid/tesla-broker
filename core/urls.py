@@ -1,6 +1,6 @@
 from django.urls import path
 from django.views.decorators.http import require_POST
-from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms
+from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email
 
 urlpatterns = [
     path('', index, name='index'),
@@ -12,6 +12,7 @@ urlpatterns = [
     path('terms/', terms, name='terms'),
     path('login/', login, name='login'),
     path('register/', register, name='register'),
+    path('verify-email/', verify_email, name='verify_email'),
     path('logout/', logout, name='logout'),
     path('dashboard/', dashboard, name='dashboard'),
     path('profile/', profile_view, name='profile'),

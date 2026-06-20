@@ -279,6 +279,19 @@ wheels = [
 ]
 
 [[package]]
+name = "resend"
+version = "2.32.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/dc/d5/2c46334104cce931170d756c7478263744b3eb168179c329d90a065f9b6b/resend-2.32.2.tar.gz", hash = "sha256:448001810f32e7aea39bab27318263fdc69f5764be16b7c6241ed7714dc07ea3", size = 46202, upload-time = "2026-06-17T19:47:28.243Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c3/e9/64b7f15e4d2b9bc363e1a6e0abc518f7aea4b8dfeab8d15a25e508c31fb2/resend-2.32.2-py2.py3-none-any.whl", hash = "sha256:1a8df5ef54b3a5cb7bb18b745f85fda07f1fa8f79b83dd9a25f6e37fbd625ef2", size = 72664, upload-time = "2026-06-17T19:47:26.915Z" },
+]
+
+[[package]]
 name = "sqlparse"
 version = "0.5.5"
 source = { registry = "https://pypi.org/simple" }
@@ -297,6 +310,7 @@ dependencies = [
     { name = "dotenv" },
     { name = "pillow" },
     { name = "requests" },
+    { name = "resend" },
     { name = "uuid" },
     { name = "whitenoise" },
 ]
@@ -307,8 +321,18 @@ requires-dist = [
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "pillow", specifier = ">=12.2.0" },
     { name = "requests", specifier = ">=2.34.2" },
+    { name = "resend", specifier = ">=2.32.2" },
     { name = "uuid", specifier = ">=1.30" },
     { name = "whitenoise", specifier = ">=6.12.0" },
+]
+
+[[package]]
+name = "typing-extensions"
+version = "4.15.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/94/1a15dd82efb362ac84269196e94cf00f187f7ed21c242792a923cdb1c61f/typing_extensions-4.15.0.tar.gz", hash = "sha256:0cea48d173cc12fa28ecabc3b837ea3cf6f38c6d1136f85cbaaf598984861466", size = 109391, upload-time = "2025-08-25T13:49:26.313Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/18/67/36e9267722cc04a6b9f15c7f3441c2363321a3ea07da7ae0c0707beb2a9c/typing_extensions-4.15.0-py3-none-any.whl", hash = "sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548", size = 44614, upload-time = "2025-08-25T13:49:24.86Z" },
 ]
 
 [[package]]

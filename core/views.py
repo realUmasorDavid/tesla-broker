@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -14,6 +14,9 @@ import requests
 from .notifications import create_notification
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+import random
+import string
+from .email_utils import send_verification_email
 
 User = get_user_model()
 
@@ -43,39 +46,68 @@ def privacy(request):
 def terms(request):
     return render(request, 'terms.html')
 
+def _generate_code():
+    return ''.join(random.choices(string.digits, k=6))
+
+def _issue_code(user, purpose):
+    """Invalidate old codes and issue a fresh one."""
+    from django.utils import timezone
+    EmailVerificationCode.objects.filter(
+        user=user, purpose=purpose, is_used=False
+    ).update(is_used=True)
+ 
+    code = _generate_code()
+    EmailVerificationCode.objects.create(
+        user       = user,
+        code       = code,
+        purpose    = purpose,
+        expires_at = timezone.now() + timedelta(minutes=10),
+    )
+    return code
+
 def login(request):
     if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-
+        email    = request.POST.get('email', '').strip()
+        password = request.POST.get('password', '')
+ 
         user = authenticate(request, username=email, password=password)
         if user is not None and user.is_active:
-            auth_login(request, user)
-            return redirect('dashboard')
-
+            # Don't log in yet — send OTP first
+            code = _issue_code(user, 'login')
+            try:
+                send_verification_email(user.email, code, 'login', user.first_name)
+            except Exception:
+                pass  # log silently; don't block the user
+ 
+            # Store pending user pk in session
+            request.session['pending_login_user_id'] = user.pk
+            return redirect('verify_email')
+ 
         messages.error(request, 'Invalid email or password.')
-
+ 
     return render(request, 'login.html')
-
+ 
+ 
 def register(request):
-    first_name = ''
-    last_name = ''
-    email = ''
+    first_name    = ''
+    last_name     = ''
+    email         = ''
     referral_code = ''
-
+ 
     if request.method == 'POST':
-        first_name = request.POST.get('first_name', '').strip()
-        last_name = request.POST.get('last_name', '').strip()
-        email = request.POST.get('email', '').strip()
+        first_name    = request.POST.get('first_name', '').strip()
+        last_name     = request.POST.get('last_name', '').strip()
+        email         = request.POST.get('email', '').strip()
         referral_code = request.POST.get('referral_code', '').strip()
-        password = request.POST.get('password', '')
-        password2 = request.POST.get('password2', '')
-
+        password      = request.POST.get('password', '')
+        password2     = request.POST.get('password2', '')
+ 
         if not first_name or not last_name or not email or not password or not password2:
             messages.error(request, 'Please complete all fields.')
         elif password != password2:
             messages.error(request, 'Passwords do not match.')
-        elif User.objects.filter(username__iexact=email).exists() or User.objects.filter(email__iexact=email).exists():
+        elif User.objects.filter(username__iexact=email).exists() or \
+             User.objects.filter(email__iexact=email).exists():
             messages.error(request, 'An account with that email already exists.')
         else:
             referrer_profile = None
@@ -84,37 +116,111 @@ def register(request):
                     referrer_profile = Profile.objects.get(referral_code__iexact=referral_code)
                 except Profile.DoesNotExist:
                     messages.error(request, 'Referral code not found. Please check and try again.')
-                    referrer_profile = None
-
-            if not messages.get_messages(request):
+ 
+            if not list(messages.get_messages(request)):
                 try:
                     validate_password(password)
                 except ValidationError as error:
-                    for message in error.messages:
-                        messages.error(request, message)
+                    for msg in error.messages:
+                        messages.error(request, msg)
                 else:
+                    # Create user but don't log in yet
                     user = User.objects.create_user(
-                        username=email,
-                        email=email,
-                        password=password,
-                        first_name=first_name,
-                        last_name=last_name,
+                        username   = email,
+                        email      = email,
+                        password   = password,
+                        first_name = first_name,
+                        last_name  = last_name,
+                        is_active  = True,
                     )
                     profile, _ = Profile.objects.get_or_create(user=user)
                     if referrer_profile:
                         profile.referred_by = referrer_profile
                         profile.save()
-
-                    auth_login(request, user, backend='core.backends.EmailOrUsernameBackend')
-                    messages.success(request, 'Welcome, your account has been created successfully.')
-                    return redirect('dashboard')
-
+ 
+                    # Send OTP
+                    code = _issue_code(user, 'register')
+                    try:
+                        send_verification_email(user.email, code, 'register', user.first_name)
+                    except Exception:
+                        pass
+ 
+                    request.session['pending_login_user_id'] = user.pk
+                    request.session['pending_register']       = True
+                    return redirect('verify_email')
+ 
     return render(request, 'register.html', {
-        'first_name': first_name,
-        'last_name': last_name,
-        'email': email,
+        'first_name':    first_name,
+        'last_name':     last_name,
+        'email':         email,
         'referral_code': referral_code,
     })
+ 
+ 
+def verify_email(request):
+    from django.utils import timezone
+ 
+    user_id = request.session.get('pending_login_user_id')
+    if not user_id:
+        messages.error(request, 'Session expired. Please try again.')
+        return redirect('login')
+ 
+    user        = get_object_or_404(User, pk=user_id)
+    is_register = request.session.get('pending_register', False)
+    purpose     = 'register' if is_register else 'login'
+    error       = None
+ 
+    if request.method == 'POST':
+        action = request.POST.get('action')
+ 
+        # ── Resend ────────────────────────────────────────────────────────
+        if action == 'resend':
+            code = _issue_code(user, purpose)
+            try:
+                send_verification_email(user.email, code, purpose, user.first_name)
+                messages.success(request, 'A new code has been sent to your email.')
+            except Exception:
+                messages.error(request, 'Failed to resend. Please try again.')
+            return redirect('verify_email')
+ 
+        # ── Verify ────────────────────────────────────────────────────────
+        entered = request.POST.get('code', '').strip()
+        otp = EmailVerificationCode.objects.filter(
+            user    = user,
+            purpose = purpose,
+            is_used = False,
+        ).order_by('-created_at').first()
+ 
+        if not otp:
+            error = 'No active code found. Please request a new one.'
+        elif otp.is_expired:
+            error = 'This code has expired. Please request a new one.'
+        elif otp.code != entered:
+            error = 'Incorrect code. Please try again.'
+        else:
+            # ✅ Mark used and log the user in
+            otp.is_used = True
+            otp.save(update_fields=['is_used'])
+ 
+            auth_login(request, user, backend='core.backends.EmailOrUsernameBackend')
+ 
+            # Clean session
+            del request.session['pending_login_user_id']
+            request.session.pop('pending_register', None)
+ 
+            if is_register:
+                messages.success(request, 'Welcome! Your account has been verified.')
+            else:
+                messages.success(request, f'Welcome back, {user.first_name}!')
+ 
+            return redirect('dashboard')
+ 
+    context = {
+        'email':       user.email,
+        'is_register': is_register,
+        'error':       error,
+    }
+    return render(request, 'verify_email.html', context)
     
 def logout(request):
     auth_logout(request)

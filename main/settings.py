@@ -151,3 +151,6 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
+
+RESEND_API_KEY = 're_6i1w8cQf_ChhsmT63PqWPZ4f4sYY8pFcy'
+DEFAULT_FROM_EMAIL = 'Tesla Invest <onboarding@resend.dev>'
