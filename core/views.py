@@ -831,7 +831,7 @@ def portfolio_view(request):
     }
     return render(request, 'portfolio.html', context)
 
-login_required
+@login_required
 def inventory_view(request):
     """Vehicle listing with optional model filter."""
     model_filter = request.GET.get('model', '').strip()
