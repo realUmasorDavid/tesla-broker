@@ -128,7 +128,7 @@ def send_welcome_email(to_email, first_name):
         <p style="color:#9ca3af;font-size:14px;margin:0 0 28px;line-height:1.7;">
             Your account has been successfully created.
             Fund your account and complete your KYC verification to unlock all
-            platform features and begin investing.
+            platform features and start investing.
         </p>
  
         <!-- Steps -->

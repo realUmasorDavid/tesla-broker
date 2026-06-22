@@ -81,6 +81,7 @@ def login(request):
  
             # Store pending user pk in session
             request.session['pending_login_user_id'] = user.pk
+            request.session.modified = True
             return redirect('verify_email')
  
         messages.error(request, 'Invalid email or password.')
@@ -151,7 +152,8 @@ def register(request):
                         pass
  
                     request.session['pending_login_user_id'] = user.pk
-                    request.session['pending_register']       = True
+                    request.session['pending_register'] = True
+                    request.session.modified = True
                     return redirect('verify_email')
  
     return render(request, 'register.html', {
@@ -216,7 +218,7 @@ def verify_email(request):
                     pass
  
             # Clean session
-            del request.session['pending_login_user_id']
+            request.session.pop('pending_login_user_id', None)
             request.session.pop('pending_register', None)
  
             if is_register:
