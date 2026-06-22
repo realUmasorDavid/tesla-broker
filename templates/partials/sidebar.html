@@ -25,27 +25,20 @@
                 {% if profile.kyc_status == 'verified' %}
                 <span
                     class="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 px-3 py-0.5 rounded-full">
-                    {{ profile.kyc_tier.title|slice:"5" }} Verified
+                    {{ current_tier|format_tier }} Verified
                 </span>
                 {% elif profile.kyc_status == 'pending' %}
                 <span
                     class="inline-flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-3 py-0.5 rounded-full">
-                    {{ profile.kyc_tier.title|slice:"5" }} Under Review
+                    {{ current_tier|format_tier }} Under Review
                 </span>
                 {% else %}
                 <span
                     class="inline-flex items-center gap-1.5 text-xs text-gray-400 bg-gray-400/10 px-3 py-0.5 rounded-full">
-                    {{ profile.kyc_tier.title|slice:"5" }} Ready to Submit
+                    {{ current_tier|format_tier }} Ready to Submit
                 </span>
                 {% endif %}
             </div>
-    
-            <!-- Previous Tier -->
-            {% if profile.previous_kyc_tier %}
-            <p class="text-[10px] text-gray-500 mt-1">
-                Previously: {{ profile.previous_kyc_tier.title|slice:"5" }} Verified
-            </p>
-            {% endif %}
         </div>
     </div>
 

@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Market Insights - Tesla Invest</title>
+    <title>Market Insights - Tesla Capital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
@@ -29,7 +29,8 @@
                 <a href="{% url 'careers' %}" class="hover:text-white transition">Careers</a>
             </div>
             {% if user.is_authenticated %}
-            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name }}!</a>
+            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name
+                }}!</a>
             {% else %}
             <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
             {% endif %}
@@ -54,7 +55,7 @@
             <div
                 class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
             </div>
-        
+
             <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
                     <div class="lg:col-span-2 flex flex-col space-y-6">
@@ -65,20 +66,25 @@
                     </div>
                     <div class="flex flex-col space-y-4">
                         <h3 class="font-bold text-white mb-2">Company</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About Us</a>
-                        <a href="{% url 'careers' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
+                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About
+                            Us</a>
+                        <a href="{% url 'careers' %}"
+                            class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
                     </div>
                     <div class="flex flex-col space-y-4">
                         <h3 class="font-bold text-white mb-2">Resources</h3>
-                        <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
+                        <a href="{% url 'blog' %}"
+                            class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
                         <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Help
                             Center</a>
                     </div>
                     <div class="flex flex-col space-y-4">
                         <h3 class="font-bold text-white mb-2">Legal</h3>
-                        <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
+                        <a href="{% url 'privacy' %}"
+                            class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
                             Policy</a>
-                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms of
+                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms
+                            of
                             Service</a>
                     </div>
                 </div>
@@ -96,61 +102,97 @@
         async function loadMarketNews() {
             const container = document.getElementById('news-grid');
             container.innerHTML = `
-                <div class="col-span-full py-20 text-center">
-                    <div class="animate-pulse text-gray-500">Loading latest market news...</div>
-                </div>`;
+        <div class="col-span-full py-20 text-center">
+            <div class="animate-pulse text-gray-500">Loading latest market news...</div>
+        </div>`;
+
+            const to = new Date().toISOString().split('T')[0];
+            const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
             try {
-                const response = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_API_KEY}`);
-                const articles = await response.json();
+                const [teslaRes, spaceXRes, financeRes] = await Promise.all([
+                    fetch(`https://finnhub.io/api/v1/company-news?symbol=TSLA&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`),
+                    fetch(`https://finnhub.io/api/v1/company-news?symbol=SPCE&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`),
+                    fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_API_KEY}`),
+                ]);
 
-                let html = '';
+                const [tesla, spaceX, finance] = await Promise.all([
+                    teslaRes.json(),
+                    spaceXRes.json(),
+                    financeRes.json(),
+                ]);
 
-                articles.slice(0, 12).forEach(article => {
+                const keywords = ['invest', 'market', 'stock', 'fund', 'portfolio', 'rate', 'fed', 'inflation', 'earnings', 'nasdaq', 's&p'];
+                const filteredFinance = finance.filter(a =>
+                    keywords.some(k =>
+                        (a.headline || '').toLowerCase().includes(k) ||
+                        (a.summary || '').toLowerCase().includes(k)
+                    )
+                );
+
+                const seen = new Set();
+                const merged = [...tesla.slice(0, 6), ...spaceX.slice(0, 2), ...filteredFinance.slice(0, 4)]
+                    .filter(a => {
+                        if (!a.headline || seen.has(a.headline)) return false;
+                        seen.add(a.headline);
+                        return true;
+                    })
+                    .slice(0, 12);
+
+                if (!merged.length) {
+                    container.innerHTML = `<div class="col-span-full py-20 text-center text-gray-500">No news available right now.</div>`;
+                    return;
+                }
+
+                container.innerHTML = merged.map(article => {
                     const date = new Date(article.datetime * 1000);
                     const formattedDate = date.toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
+                        year: 'numeric', month: 'short', day: 'numeric'
                     });
 
-                    html += `
-                    <div class="bg-white rounded-3xl overflow-hidden border border-gray-200 hover:shadow-xl transition group">
-                        <div class="h-48 bg-gray-200 relative">
-                            <img src="${article.image || '{% static "modelX.jpg" %}'}" 
-                                 alt="${article.headline}" 
-                                 class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        </div>
-                        <div class="p-6">
-                            <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
-                                <span class="font-medium">${article.source}</span>
-                                <span>•</span>
-                                <span>${formattedDate}</span>
-                            </div>
-                            <h3 class="font-semibold leading-tight line-clamp-3 text-lg mb-3 group-hover:text-blue-600 transition">
-                                ${article.headline}
-                            </h3>
-                            <p class="text-gray-600 text-sm line-clamp-4 mb-6">
-                                ${article.summary || 'No summary available.'}
-                            </p>
-                            <a href="${article.url}" target="_blank" 
-                               class="inline-flex items-center text-sm font-medium text-black hover:text-blue-600 transition">
-                                Read Full Article →
-                            </a>
-                        </div>
-                    </div>`;
-                });
+                    return `
+            <div class="bg-white rounded-3xl overflow-hidden border border-gray-200 hover:shadow-xl transition group">
+                <div class="h-48 bg-gray-100 relative overflow-hidden">
+                    ${article.image
+                            ? `<img src="${article.image}"
+                                alt="${article.headline}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                                onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-10 h-10 text-gray-300\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.5\' viewBox=\'0 0 24 24\'><path d=\'M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z\'/></svg></div>'" />`
+                            : `<div class="w-full h-full flex items-center justify-center">
+                               <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                   <path d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"/>
+                               </svg>
+                           </div>`
+                        }
+                </div>
+                <div class="p-6">
+                    <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
+                        <span class="font-medium">${article.source || 'News'}</span>
+                        <span>•</span>
+                        <span>${formattedDate}</span>
+                    </div>
+                    <h3 class="font-semibold leading-tight line-clamp-3 text-lg mb-3 group-hover:text-blue-600 transition">
+                        ${article.headline}
+                    </h3>
+                    <p class="text-gray-600 text-sm line-clamp-4 mb-6">
+                        ${article.summary || 'No summary available.'}
+                    </p>
+                    <a href="${article.url}" target="_blank" rel="noopener"
+                       class="inline-flex items-center text-sm font-medium text-black hover:text-blue-600 transition">
+                        Read Full Article →
+                    </a>
+                </div>
+            </div>`;
+                }).join('');
 
-                container.innerHTML = html;
-            } catch (error) {
+            } catch (e) {
                 container.innerHTML = `
-                    <div class="col-span-full py-20 text-center text-gray-500">
-                        Unable to load news at the moment. Please try again later.
-                    </div>`;
+            <div class="col-span-full py-20 text-center text-gray-500">
+                Unable to load news at the moment. Please try again later.
+            </div>`;
             }
         }
 
-        // Load news when page loads
         window.onload = loadMarketNews;
     </script>
 </body>

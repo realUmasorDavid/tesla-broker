@@ -1,11 +1,12 @@
 {% load static %}
+{% load user_extras %}
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KYC Verification - Tesla Invest</title>
+    <title>KYC Verification - Tesla Capital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
@@ -39,11 +40,11 @@
                 <div class="bg-white rounded-3xl border border-gray-200 p-10">
                     <div class="flex justify-between items-start mb-8">
                         <div>
-                            <h2 class="text-3xl font-semibold">Tier {{ current_tier|title }} Verification</h2>
+                            <h2 class="text-3xl font-semibold">{{ current_tier|format_tier }} Verification</h2>
                             <p class="text-gray-500 mt-2">Complete the requirements to unlock the next tier</p>
                         </div>
                         <span class="px-5 py-2 bg-blue-100 text-blue-700 rounded-2xl text-sm font-medium">
-                            {{ profile.kyc_tier|title }}
+                            Current Tier: {{ current_tier|format_tier }}
                         </span>
                     </div>
 
@@ -61,26 +62,53 @@
                     
                         <div class="space-y-8">
                             {% if current_tier == 'tier1' %}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-10">
+                                <!-- National ID -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">ID Type</label>
-                                    {{ form.id_type }}
+                                    <h3 class="font-semibold text-lg mb-4">National ID Card</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">National ID Number</label>
+                                            {{ form.national_id_number }}
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Front of National ID</label>
+                                            {{ form.national_id_front }}
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Back of National ID</label>
+                                            {{ form.national_id_back }}
+                                        </div>
+                                    </div>
                                 </div>
+                            
+                                <!-- Driver's License -->
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">ID Number</label>
-                                    {{ form.id_number }}
+                                    <h3 class="font-semibold text-lg mb-4">Driver's License</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Driver's License Number</label>
+                                            {{ form.drivers_license_number }}
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Front of Driver's License</label>
+                                            {{ form.drivers_license_front }}
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Back of Driver's License</label>
+                                            {{ form.drivers_license_back }}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                    
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Front of ID Document</label>
-                                {{ form.id_front }}
-                            </div>
-                    
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Selfie with ID</label>
-                                {{ form.selfie }}
-                            </div>
+                            
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Selfie with ID</label>
+                                    {{ form.selfie }}
+                                </div>
                     
                             {% elif current_tier == 'tier2' %}
                             <div>
@@ -106,7 +134,7 @@
                     
                         <button type="submit"
                             class="w-full bg-black text-white py-5 rounded-3xl text-lg font-semibold hover:bg-zinc-800 transition">
-                            Submit for {{ profile.kyc_tier|title }} Verification
+                            Submit for {{ current_tier|format_tier }} Verification
                         </button>
                     </form>
 

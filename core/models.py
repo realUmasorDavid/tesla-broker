@@ -24,17 +24,6 @@ class Profile(models.Model):
     total_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     available_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
     
-    # KYC Status
-    kyc_status = models.CharField(
-        max_length=20,
-        choices=[
-            ('not_submitted', 'Not Submitted'),
-            ('pending', 'Pending Review'),
-            ('verified', 'Verified'),
-            ('rejected', 'Rejected'),
-        ],
-        default='not_submitted'
-    )
     kyc_tier = models.CharField(
         max_length=10,
         choices=[
@@ -90,13 +79,15 @@ class KYCVerification(models.Model):
     """Tiered KYC Verification"""
     profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='kyc_verification')
     
-    # Tier 1 - Basic
-    id_type = models.CharField(max_length=50, choices=[
-        ('national_id', 'National ID'),
-        ('drivers_license', 'Driver’s License'),
-    ], blank=True)
-    id_number = models.CharField(max_length=100, blank=True)
-    id_front = models.ImageField(upload_to='kyc/ids/', blank=True)
+    # Tier 1 - Both National ID and Driver's License are now required
+    national_id_number = models.CharField(max_length=100, blank=True)
+    national_id_front = models.ImageField(upload_to='kyc/national_id/', blank=True)
+    national_id_back = models.ImageField(upload_to='kyc/national_id/', blank=True)
+
+    drivers_license_number = models.CharField(max_length=100, blank=True)
+    drivers_license_front = models.ImageField(upload_to='kyc/drivers_license/', blank=True)
+    drivers_license_back = models.ImageField(upload_to='kyc/drivers_license/', blank=True)
+
     selfie = models.ImageField(upload_to='kyc/selfies/', blank=True)
 
     # Tier 2 - Passport

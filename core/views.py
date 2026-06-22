@@ -16,7 +16,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import random
 import string
-from .email_utils import send_verification_email
+from .email_utils import send_verification_email, send_welcome_email
 
 User = get_user_model()
 
@@ -98,9 +98,12 @@ def register(request):
         first_name    = request.POST.get('first_name', '').strip()
         last_name     = request.POST.get('last_name', '').strip()
         email         = request.POST.get('email', '').strip()
+        phone_code   = request.POST.get('phone_code', '').strip()
+        phone_number = request.POST.get('phone_number', '').strip()
         referral_code = request.POST.get('referral_code', '').strip()
         password      = request.POST.get('password', '')
         password2     = request.POST.get('password2', '')
+        full_phone   = f"{phone_code}{phone_number}" if phone_number else ''
  
         if not first_name or not last_name or not email or not password or not password2:
             messages.error(request, 'Please complete all fields.')
@@ -134,6 +137,8 @@ def register(request):
                         is_active  = True,
                     )
                     profile, _ = Profile.objects.get_or_create(user=user)
+                    profile.phone_number = full_phone
+                    profile.save(update_fields=['phone_number'])
                     if referrer_profile:
                         profile.referred_by = referrer_profile
                         profile.save()
@@ -203,6 +208,12 @@ def verify_email(request):
             otp.save(update_fields=['is_used'])
  
             auth_login(request, user, backend='core.backends.EmailOrUsernameBackend')
+            
+            if is_register:
+                try:
+                    send_welcome_email(user.email, user.first_name)
+                except Exception:
+                    pass
  
             # Clean session
             del request.session['pending_login_user_id']
@@ -292,7 +303,7 @@ def profile_view(request):
 @login_required
 def kyc_view(request):
     profile = request.user.profile
-    
+
     try:
         kyc = profile.kyc_verification
     except KYCVerification.DoesNotExist:
@@ -305,12 +316,11 @@ def kyc_view(request):
             kyc_obj.profile = profile
             kyc_obj.save()
 
-            # Only set to pending — do NOT advance tier here
             profile.kyc_status = 'pending'
             profile.save()
 
-            messages.success(request, f"Your documents for {profile.kyc_tier.title()} tier have been submitted and are under review.")
-            return redirect('dashboard')
+            messages.success(request, f"Documents for {profile.kyc_tier} submitted successfully and are under review.")
+            return redirect('kyc')   # Stay on KYC page to show "Under Review"
     else:
         form = KYCForm(instance=kyc, tier=profile.kyc_tier)
 
@@ -696,8 +706,7 @@ def investments_view(request):
  
 @login_required
 def investment_subscribe(request, plan_id):
-    """POST only — deducts balance and creates UserInvestment."""
-    plan = get_object_or_404(InvestmentPlan, pk=plan_id, is_active=True)
+    plan    = get_object_or_404(InvestmentPlan, pk=plan_id, is_active=True)
     profile = request.user.profile
  
     if request.method == 'POST':
@@ -706,7 +715,6 @@ def investment_subscribe(request, plan_id):
         except Exception:
             amount = Decimal('0')
  
-        # Validations
         if amount < plan.min_amount:
             messages.error(request, f'Minimum investment for {plan.name} is ${plan.min_amount:,.2f}.')
             return redirect('investments')
@@ -719,16 +727,21 @@ def investment_subscribe(request, plan_id):
             messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
             return redirect('investments')
  
-        # Calculate return
-        expected_return = (amount * plan.roi_percent / Decimal('100')).quantize(Decimal('0.01'))
-        matures_at      = timezone.now() + timedelta(days=plan.duration_days)
+        # ── ROI: flat monthly rate × number of months, no compounding ────────
+        # months = duration_days / 30  (use exact division, not rounding)
+        months          = Decimal(str(plan.duration_days)) / Decimal('30')
+        monthly_rate    = plan.roi_percent / Decimal('100')
+        expected_return = (amount * monthly_rate * months).quantize(Decimal('0.01'))
+        # Example: $100,000 × 10% × 12 months = $120,000 profit
+        # Total payout = $100,000 + $120,000 = $220,000
+ 
+        matures_at = timezone.now() + timedelta(days=plan.duration_days)
  
         # Deduct balance
         balance_before             = profile.available_balance
         profile.available_balance -= amount
         profile.save(update_fields=['available_balance'])
  
-        # Create investment record
         UserInvestment.objects.create(
             profile         = profile,
             plan            = plan,
@@ -738,15 +751,20 @@ def investment_subscribe(request, plan_id):
             balance_before  = balance_before,
             balance_after   = profile.available_balance,
         )
-        
+ 
         create_notification(
             profile,
-            title      = f'📊 Investment Started',
-            message    = f'You have successfully invested ${amount:,.2f} in the {plan.name}. Expected return: ${expected_return:,.2f}. Matures on {matures_at.strftime("%b %d, %Y")}.',
+            title      = '📊 Investment Started',
+            message    = (
+                f'You have successfully invested ${amount:,.2f} in {plan.name}. '
+                f'Expected profit: ${expected_return:,.2f} '
+                f'({plan.roi_percent}%/month × {float(months):.1f} months). '
+                f'Total payout: ${amount + expected_return:,.2f}. '
+                f'Matures on {matures_at.strftime("%b %d, %Y")}.'
+            ),
             notif_type = 'investment',
         )
  
-        # Log as wallet transaction
         WalletTransaction.objects.create(
             profile          = profile,
             transaction_type = 'investment',
@@ -755,10 +773,20 @@ def investment_subscribe(request, plan_id):
             status           = 'completed',
             balance_before   = balance_before,
             balance_after    = profile.available_balance,
-            description      = f'Invested ${amount:,.2f} in {plan.name} ({plan.roi_percent}% ROI)',
+            description      = (
+                f'Invested ${amount:,.2f} in {plan.name} '
+                f'({plan.roi_percent}%/month × {float(months):.1f} months = '
+                f'${expected_return:,.2f} profit)'
+            ),
         )
  
-        messages.success(request, f'🎉 Successfully invested ${amount:,.2f} in {plan.name}! It matures on {matures_at.strftime("%b %d, %Y")}.')
+        messages.success(
+            request,
+            f'🎉 Successfully invested ${amount:,.2f} in {plan.name}! '
+            f'Expected profit: ${expected_return:,.2f}. '
+            f'Total payout: ${amount + expected_return:,.2f}. '
+            f'Matures on {matures_at.strftime("%b %d, %Y")}.'
+        )
         return redirect('investments')
  
     return redirect('investments')

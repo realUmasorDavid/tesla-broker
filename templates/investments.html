@@ -389,7 +389,7 @@
             <!-- Plan summary box -->
             <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 space-y-2 text-sm">
                 <div class="flex justify-between">
-                    <span class="text-gray-500">ROI</span>
+                    <span class="text-gray-500">Monthly ROI</span>
                     <span class="font-semibold text-gray-900" id="modal-roi">—</span>
                 </div>
                 <div class="flex justify-between">
@@ -400,9 +400,15 @@
                     <span class="text-gray-500">Min. Amount</span>
                     <span class="font-semibold text-gray-900" id="modal-min">—</span>
                 </div>
-                <div class="flex justify-between border-t border-gray-200 pt-2">
-                    <span class="text-gray-500">Expected Return</span>
-                    <span class="font-bold text-green-600" id="modal-expected">$0.00</span>
+                <div class="border-t border-gray-200 pt-2 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Expected Profit</span>
+                        <span class="font-bold text-green-600" id="modal-expected">$0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Total Payout</span>
+                        <span class="font-bold text-gray-900" id="modal-payout">$0.00</span>
+                    </div>
                 </div>
             </div>
 
@@ -451,22 +457,24 @@
         });
 
         // ── Modal state ────────────────────────────────────────────────────────
-        let _roi = 0, _min = 0, _max = null;
+        let _roi = 0, _min = 0, _max = null, _months = 0;
 
-        function openModal(planId, planName, roi, duration, min, max) {
+        function openModal(planId, planName, roi, durationDays, min, max) {
             _roi = parseFloat(roi);
             _min = parseFloat(min);
             _max = max ? parseFloat(max) : null;
+            _months = durationDays / 30;   // e.g. 365 days → 12.17 months
 
-            document.getElementById('modal-title').textContent   = 'Invest in ' + planName;
+            document.getElementById('modal-title').textContent = 'Invest in ' + planName;
             document.getElementById('modal-subtitle').textContent = 'Enter the amount you want to invest.';
-            document.getElementById('modal-roi').textContent      = roi + '%';
-            document.getElementById('modal-duration').textContent = duration + ' days';
-            document.getElementById('modal-min').textContent      = '$' + parseFloat(min).toLocaleString('en-US', {minimumFractionDigits: 2});
-            document.getElementById('modal-amount').min           = min;
-            document.getElementById('modal-amount').value         = '';
+            document.getElementById('modal-roi').textContent = roi + '% / month';
+            document.getElementById('modal-duration').textContent = durationDays + ' days (' + _months.toFixed(1) + ' months)';
+            document.getElementById('modal-min').textContent = '$' + parseFloat(min).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('modal-amount').min = min;
+            document.getElementById('modal-amount').value = '';
             document.getElementById('modal-expected').textContent = '$0.00';
-            document.getElementById('invest-form').action         = '/investments/subscribe/' + planId + '/';
+            document.getElementById('modal-payout').textContent = '$0.00';
+            document.getElementById('invest-form').action = '/investments/subscribe/' + planId + '/';
 
             const modal = document.getElementById('invest-modal');
             modal.classList.remove('hidden');
@@ -481,11 +489,16 @@
 
         function recalcReturn() {
             const amt = parseFloat(document.getElementById('modal-amount').value) || 0;
-            const ret = (amt * _roi / 100).toFixed(2);
-            document.getElementById('modal-expected').textContent = '$' + parseFloat(ret).toLocaleString('en-US', {minimumFractionDigits: 2});
+            // Flat monthly: amount × (roi% / 100) × months  — no compounding
+            const profit = amt * (_roi / 100) * _months;
+            const payout = amt + profit;
+
+            document.getElementById('modal-expected').textContent =
+                '$' + profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modal-payout').textContent =
+                '$' + payout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // Close modal on backdrop click
         document.getElementById('invest-modal').addEventListener('click', function (e) {
             if (e.target === this) closeModal();
         });

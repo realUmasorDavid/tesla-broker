@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile - Tesla Invest</title>
+    <title>Profile - Tesla Capital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
@@ -43,13 +43,17 @@
                 <div class="bg-white rounded-2xl border border-gray-200 p-8 lg:p-10">
                     <h2 class="text-3xl font-semibold mb-8">Personal Information</h2>
 
+                    <!-- Inside the form -->
                     <form method="POST" class="space-y-8">
                         {% csrf_token %}
-
+                    
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {% for field in form %}
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">{{ field.label }}</label>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">
+                                    {{ field.label }}
+                                    {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                                </label>
                                 {{ field }}
                                 {% if field.help_text %}
                                 <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
@@ -57,9 +61,9 @@
                             </div>
                             {% endfor %}
                         </div>
-
+                    
                         <button type="submit"
-                            class="mt-6 w-full md:w-auto bg-black text-white px-10 py-4 rounded-2xl font-semibold hover:bg-zinc-800 transition">
+                            class="mt-6 w-full md:w-auto bg-black text-white px-10 py-4 rounded-3xl font-semibold hover:bg-zinc-800 transition">
                             Save Changes
                         </button>
                     </form>

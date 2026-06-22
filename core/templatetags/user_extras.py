@@ -21,3 +21,10 @@ def initials(user):
     else:
         # Fallback to username
         return user.username[:2].upper()
+    
+@register.filter
+def format_tier(tier):
+    """Convert 'tier1' to 'Tier 1'"""
+    if not tier:
+        return "Tier 1"
+    return tier.replace('tier', 'Tier ')
