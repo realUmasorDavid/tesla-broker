@@ -3,7 +3,7 @@ from django.conf import settings
 
 resend.api_key = settings.RESEND_API_KEY
 
-LOGO_URL = 'https://collection.cloudinary.com/dqqgr0j4l/407447687b81317d03a425cff10784dd'
+LOGO_URL = 'https://res.cloudinary.com/dqqgr0j4l/image/upload/v1782115061/logo2_dsyojj.svg'
 
 def _base_wrapper(content_html):
     """Shared outer shell for all emails."""
