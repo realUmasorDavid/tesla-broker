@@ -42,7 +42,7 @@ class WalletTransactionInline(admin.TabularInline):
 class UserAdmin(BaseUserAdmin):
     inlines = [ProfileInline, KYCVerificationInline]
     list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_kyc_status')
-    list_filter = ('is_staff', 'is_superuser', 'is_active', 'profile__kyc_status', 'profile__kyc_tier')
+    list_filter = ('is_staff', 'is_superuser', 'is_active', 'profile__kyc_status',)
     search_fields = ('username', 'email', 'first_name', 'last_name', 'profile__referral_code')
 
     def get_kyc_status(self, obj):
@@ -212,91 +212,97 @@ def cancel_investments(modeladmin, request, queryset):
     modeladmin.message_user(request, f'❌ {cancelled} investment(s) cancelled and principal restored.', messages.SUCCESS)
  
  
-@admin.action(description='✅ Approve KYC & Advance to Next Tier')
+@admin.action(description='✅ Approve KYC — mark as verified')
 def approve_kyc(modeladmin, request, queryset):
     approved = 0
     for kyc in queryset.select_related('profile'):
-        profile = kyc.profile
-
-        # Save current state as previous
-        profile.previous_kyc_tier = profile.kyc_tier
-        profile.previous_kyc_status = 'verified'
-
-        # Advance to next tier
-        if profile.kyc_tier == 'tier1':
-            profile.kyc_tier = 'tier2'
-        elif profile.kyc_tier == 'tier2':
-            profile.kyc_tier = 'tier3'
-        else:
-            profile.kyc_tier = 'tier3'  # Max tier
-
-        # Reset status so user can submit for next tier
-        profile.kyc_status = 'not_submitted'
-
-        profile.save(update_fields=['kyc_tier', 'kyc_status', 'previous_kyc_tier', 'previous_kyc_status'])
-
-        kyc.verification_date = timezone.now()
-        kyc.reviewed_by = request.user
-        kyc.save()
-
-        create_notification(
-            profile,
-            title='✅ KYC Approved',
-            message=f'Tier {profile.previous_kyc_tier[-1]} approved. You can now submit documents for Tier {profile.kyc_tier[-1]}.',
-            notif_type='kyc'
-        )
+        if kyc.profile.kyc_status != 'pending':
+            continue
+        kyc.profile.kyc_status  = 'verified'
+        kyc.profile.save(update_fields=['kyc_status'])
+        kyc.verification_date   = timezone.now()
+        kyc.reviewed_by         = request.user
+        kyc.save(update_fields=['verification_date', 'reviewed_by'])
         approved += 1
-
-    modeladmin.message_user(request, f'✅ {approved} KYC(s) approved. Users advanced to next tier.', messages.SUCCESS)
-
-
-@admin.action(description='❌ Reject KYC')
+    if approved:
+        modeladmin.message_user(request, f'✅ {approved} KYC submission(s) approved.', messages.SUCCESS)
+ 
+ 
+@admin.action(description='❌ Reject KYC — request resubmission')
 def reject_kyc(modeladmin, request, queryset):
     rejected = 0
     for kyc in queryset.select_related('profile'):
-        profile = kyc.profile
-        profile.kyc_status = 'rejected'
-        profile.save(update_fields=['kyc_status'])
-
-        create_notification(
-            profile,
-            title='❌ KYC Rejected',
-            message='Your KYC submission was rejected. Please submit clearer documents and try again.',
-            notif_type='kyc'
-        )
+        if kyc.profile.kyc_status not in ('pending', 'verified'):
+            continue
+        kyc.profile.kyc_status = 'rejected'
+        kyc.profile.save(update_fields=['kyc_status'])
+        kyc.reviewed_by = request.user
+        kyc.save(update_fields=['reviewed_by'])
         rejected += 1
-
-    modeladmin.message_user(request, f'❌ {rejected} KYC(s) rejected.', messages.SUCCESS)
+    if rejected:
+        modeladmin.message_user(request, f'❌ {rejected} KYC submission(s) rejected.', messages.SUCCESS)
 
 # ====================== Main Models ======================
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'referral_code', 'kyc_status', 'kyc_tier', 'available_balance', 'total_balance')
-    list_filter = ('kyc_status', 'kyc_tier')
-    search_fields = ('user__username', 'user__email', 'referral_code')
+    list_display    = ('user', 'referral_code', 'kyc_status', 'available_balance', 'total_balance', 'created_at')
+    list_filter     = ('kyc_status',)
+    search_fields   = ('user__username', 'user__email', 'referral_code')
     readonly_fields = ('referral_code', 'created_at', 'updated_at')
+    ordering        = ('-created_at',)
 
 
 @admin.register(KYCVerification)
 class KYCVerificationAdmin(admin.ModelAdmin):
-    list_display = ('profile', 'current_tier_display', 'kyc_status_display', 'verification_date')
-    list_filter = ('profile__kyc_status', 'profile__kyc_tier')
-    search_fields = ('profile__user__username',)
-    readonly_fields = ('verification_date', 'reviewed_by')
-    actions = [approve_kyc, reject_kyc]
-
-    def current_tier_display(self, obj):
-        return obj.profile.kyc_tier.upper()
-    current_tier_display.short_description = 'Tier'
-
-    def kyc_status_display(self, obj):
-        status = obj.profile.kyc_status
-        colors = {'verified': '#10b981', 'pending': '#f59e0b', 'rejected': '#ef4444'}
-        color = colors.get(status, '#6b7280')
-        return f'<span style="color:{color}; font-weight:600;">{status.upper()}</span>'
-    kyc_status_display.short_description = 'Status'
-    kyc_status_display.allow_tags = True
+    list_display    = ('get_username', 'get_email', 'id_type', 'id_number', 'kyc_status_badge', 'created_at', 'verification_date')
+    list_filter     = ('profile__kyc_status', 'id_type')
+    search_fields   = ('profile__user__username', 'profile__user__email', 'id_number')
+    readonly_fields = ('created_at', 'updated_at', 'verification_date',
+                       'id_front', 'id_back', 'selfie', 'proof_of_address')
+    ordering        = ('-created_at',)
+    actions         = [approve_kyc, reject_kyc]
+ 
+    fieldsets = (
+        ('User', {
+            'fields': ('profile',)
+        }),
+        ('ID Document', {
+            'fields': ('id_type', 'id_number', 'id_front', 'id_back', 'selfie')
+        }),
+        ('Proof of Address', {
+            'fields': ('address_type', 'proof_of_address'),
+            'classes': ('collapse',),
+        }),
+        ('Review', {
+            'fields': ('notes', 'reviewed_by', 'verification_date')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+ 
+    @admin.display(description='Username')
+    def get_username(self, obj):
+        return obj.profile.user.username
+ 
+    @admin.display(description='Email')
+    def get_email(self, obj):
+        return obj.profile.user.email
+ 
+    @admin.display(description='Status')
+    def kyc_status_badge(self, obj):
+        colours = {
+            'not_submitted': '#9ca3af',
+            'pending':       '#f59e0b',
+            'verified':      '#10b981',
+            'rejected':      '#ef4444',
+        }
+        colour = colours.get(obj.profile.kyc_status, '#9ca3af')
+        label  = obj.profile.get_kyc_status_display()
+        return f'<span style="color:{colour};font-weight:600;text-transform:uppercase;font-size:11px">{label}</span>'
+    kyc_status_badge.allow_tags = True
 
 
 @admin.register(WalletTransaction)

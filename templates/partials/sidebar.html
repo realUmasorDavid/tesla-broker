@@ -25,17 +25,17 @@
                 {% if profile.kyc_status == 'verified' %}
                 <span
                     class="inline-flex items-center gap-1.5 text-xs text-emerald-400 bg-emerald-400/10 px-3 py-0.5 rounded-full">
-                    {{ current_tier|format_tier }} Verified
+                    KYC Verified
                 </span>
                 {% elif profile.kyc_status == 'pending' %}
                 <span
                     class="inline-flex items-center gap-1.5 text-xs text-amber-400 bg-amber-400/10 px-3 py-0.5 rounded-full">
-                    {{ current_tier|format_tier }} Under Review
+                    KYC Under Review
                 </span>
                 {% else %}
                 <span
                     class="inline-flex items-center gap-1.5 text-xs text-gray-400 bg-gray-400/10 px-3 py-0.5 rounded-full">
-                    {{ current_tier|format_tier }} Ready to Submit
+                    KYC Ready to Submit
                 </span>
                 {% endif %}
             </div>

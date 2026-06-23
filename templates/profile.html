@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,18 +14,34 @@
         body {
             font-family: 'Inter', sans-serif;
         }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        /* Added borders */
+        input:not([type="hidden"]),
+        select {
+            border: 1px solid #d1d5db !important;
+            border-radius: 0.75rem !important;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #111827 !important;
+            box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.1) !important;
+        }
     </style>
 </head>
 
 <body class="bg-gray-100 min-h-screen">
 
-    <!-- Sidebar -->
     {% include 'partials/sidebar.html' %}
 
-    <!-- Main Content -->
     <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
 
-        <!-- Top Header -->
+        <!-- Top Bar -->
         <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
@@ -38,63 +55,432 @@
             </div>
         </header>
 
-        <main class="flex-1 px-3 py-6 lg:p-8">
-            <div class="max-w-3xl mx-auto">
-                <div class="bg-white rounded-2xl border border-gray-200 p-8 lg:p-10">
-                    <h2 class="text-3xl font-semibold mb-8">Personal Information</h2>
+        <main class="flex-1 px-3 py-6 lg:p-8 space-y-5">
+            <div class="max-w-2xl mx-auto space-y-5">
 
-                    <!-- Inside the form -->
-                    <form method="POST" class="space-y-8">
-                        {% csrf_token %}
-                    
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {% for field in form %}
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ field.label }}
-                                    {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
-                                </label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                <p class="text-xs text-gray-500 mt-1">{{ field.help_text }}</p>
-                                {% endif %}
-                            </div>
-                            {% endfor %}
+                {% if messages %}
+                <div class="space-y-2">
+                    {% for message in messages %}
+                    <div class="rounded-xl px-5 py-3 text-sm font-medium
+                        {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+                        {% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+                        {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Avatar card -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col items-center gap-4">
+                    <div class="relative">
+                        {% if profile.avatar %}
+                        <img src="{{ profile.avatar.url }}" alt="Avatar"
+                            class="w-24 h-24 rounded-full object-cover border-2 border-gray-200" id="avatar-preview" />
+                        {% else %}
+                        <div class="w-24 h-24 rounded-full bg-gray-900 flex items-center justify-center text-white text-3xl font-bold"
+                            id="avatar-placeholder">
+                            {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
                         </div>
-                    
-                        <button type="submit"
-                            class="mt-6 w-full md:w-auto bg-black text-white px-10 py-4 rounded-3xl font-semibold hover:bg-zinc-800 transition">
-                            Save Changes
-                        </button>
-                    </form>
+                        <img src="" alt="" class="w-24 h-24 rounded-full object-cover border-2 border-gray-200 hidden"
+                            id="avatar-preview" />
+                        {% endif %}
 
-                    <!-- Referral -->
-                    <div class="mt-12 pt-8 border-t border-gray-200">
-                        <h3 class="font-semibold mb-3">Your Referral Code</h3>
-                        <div
-                            class="bg-zinc-100 border border-gray-200 rounded-2xl p-6 font-mono text-2xl tracking-widest text-center">
-                            {{ profile.referral_code }}
+                        <label for="avatar-input"
+                            class="absolute bottom-0 right-0 w-8 h-8 bg-gray-900 hover:bg-black text-white rounded-full flex items-center justify-center cursor-pointer transition shadow-md">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
+                            </svg>
+                        </label>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-lg font-bold text-gray-900">{{ user.get_full_name|default:user.username }}</p>
+                        <p class="text-sm text-gray-400">{{ user.email }}</p>
+                    </div>
+
+                    <form method="POST" enctype="multipart/form-data" id="avatar-form">
+                        {% csrf_token %}
+                        <input type="file" name="avatar" id="avatar-input" accept="image/*" class="hidden"
+                            onchange="submitAvatar(this)" />
+                    </form>
+                </div>
+
+                <!-- KYC status pill -->
+                <div class="bg-white rounded-2xl border border-gray-200 px-5 py-4 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center">
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-gray-900">KYC Verification</p>
+                            <p class="text-xs text-gray-400">Identity verification status</p>
                         </div>
                     </div>
+                    <span class="text-xs font-semibold px-3 py-1.5 rounded-full
+                        {% if profile.kyc_status == 'verified' %}bg-green-50 text-green-700
+                        {% elif profile.kyc_status == 'pending' %}bg-yellow-50 text-yellow-700
+                        {% elif profile.kyc_status == 'rejected' %}bg-red-50 text-red-600
+                        {% else %}bg-gray-100 text-gray-500{% endif %}">
+                        {% if profile.kyc_status == 'not_submitted' %}Not Submitted
+                        {% elif profile.kyc_status == 'pending' %}Under Review
+                        {% elif profile.kyc_status == 'verified' %}Verified
+                        {% elif profile.kyc_status == 'rejected' %}Rejected{% endif %}
+                    </span>
                 </div>
+
+                <!-- Profile form -->
+                <form method="POST" class="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                    {% csrf_token %}
+
+                    <div class="px-6 py-5 border-b border-gray-100">
+                        <p class="text-sm font-semibold text-gray-900">Personal Information</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Update your account details</p>
+                    </div>
+
+                    <div class="divide-y divide-gray-50">
+
+                        <!-- First Name -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">First Name</label>
+                            <input type="text" name="first_name" value="{{ user.first_name }}"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black"
+                                placeholder="Enter first name" required />
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">Last Name</label>
+                            <input type="text" name="last_name" value="{{ user.last_name }}"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black"
+                                placeholder="Enter last name" required />
+                        </div>
+
+                        <!-- Email -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">Email Address</label>
+                            <input type="email" name="email" value="{{ user.email }}"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black"
+                                placeholder="email@example.com" required />
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">Phone Number</label>
+                            <div class="flex items-center gap-2">
+                                <div class="relative shrink-0" id="profile-country-picker">
+                                    <input type="hidden" name="phone_code" id="profile-phone-code" value="+234" />
+                                    <button type="button" onclick="toggleProfilePicker()"
+                                        class="flex items-center gap-1.5 bg-gray-50 border border-gray-300 rounded-xl px-3 py-3 text-sm hover:bg-gray-100 transition">
+                                        <img id="profile-selected-flag" src="https://flagcdn.com/w20/ng.png" alt=""
+                                            class="w-5 h-3.5 object-cover rounded-sm" />
+                                        <span id="profile-selected-code"
+                                            class="text-xs font-medium text-gray-700">+234</span>
+                                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor"
+                                            stroke-width="2" viewBox="0 0 24 24">
+                                            <path d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    <div id="profile-picker-dropdown"
+                                        class="hidden absolute left-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden w-56">
+                                        <div class="p-2 border-b">
+                                            <input type="text" id="profile-country-search"
+                                                placeholder="Search country..."
+                                                oninput="filterProfileCountries(this.value)"
+                                                class="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg">
+                                        </div>
+                                        <ul id="profile-country-list" class="overflow-y-auto max-h-52"></ul>
+                                    </div>
+                                </div>
+
+                                <input type="tel" name="phone_number"
+                                    value="{% if profile.phone_number %}{{ profile.phone_number }}{% endif %}"
+                                    class="flex-1 text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black"
+                                    placeholder="800 000 0000" />
+                            </div>
+                        </div>
+
+                        <!-- Date of Birth -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">Date of Birth</label>
+                            <input type="date" name="date_of_birth"
+                                value="{{ profile.date_of_birth|date:'Y-m-d'|default:'' }}"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black" />
+                        </div>
+
+                        <!-- Address -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">Residential Address</label>
+                            <input type="text" name="address" value="{{ profile.address }}"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black"
+                                placeholder="123 Main St, Apt 4B" />
+                        </div>
+
+                        <!-- City -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">City</label>
+                            <input type="text" name="city" value="{{ profile.city }}"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black"
+                                placeholder="City" />
+                        </div>
+
+                        <!-- Country -->
+                        <div class="px-6 py-4">
+                            <label class="block text-xs font-medium text-gray-500 mb-1.5">Country</label>
+                            <select name="country"
+                                class="w-full text-sm text-gray-900 border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:border-black">
+                                <option value="">Select country</option>
+                                {% for value, label in form.fields.country.choices %}
+                                {% if value %}
+                                <option value="{{ value }}" {% if profile.country == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="px-6 py-5 border-t border-gray-100">
+                        <button type="submit"
+                            class="w-full bg-gray-900 hover:bg-black text-white font-semibold py-3.5 rounded-xl transition text-sm">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Referral Code -->
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                    <p class="text-sm font-semibold text-gray-900 mb-1">Your Referral Code</p>
+                    <p class="text-xs text-gray-400 mb-4">Share this code to earn rewards when friends sign up</p>
+                    <div class="flex items-center gap-3">
+                        <div id="referral-display"
+                            class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-5 py-3.5 font-mono text-lg tracking-widest text-gray-900 text-center">
+                            {{ profile.referral_code }}
+                        </div>
+                        <button onclick="copyReferralCode()"
+                            class="shrink-0 border border-gray-200 hover:border-gray-400 text-gray-600 hover:text-gray-900 px-4 py-3.5 rounded-xl transition text-sm font-medium flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <rect x="9" y="9" width="13" height="13" rx="2" />
+                                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                            </svg>
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </main>
     </div>
 
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('-translate-x-full');
+        // Copy Referral Code
+        function copyReferralCode() {
+            const code = "{{ profile.referral_code }}";
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.currentTarget;
+                const original = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                }, 2000);
+            });
         }
-
-        // Close sidebar when clicking outside on mobile
+        // ── Sidebar ────────────────────────────────────────────────────────────
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        }
         document.addEventListener('click', function (e) {
             const sidebar = document.getElementById('sidebar');
             if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
                 sidebar.classList.add('-translate-x-full');
             }
         });
+
+        // ── Avatar preview & submit ────────────────────────────────────────────
+        function submitAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const preview = document.getElementById('avatar-preview');
+                const placeholder = document.getElementById('avatar-placeholder');
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                if (placeholder) placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+            document.getElementById('avatar-form').submit();
+        }
+
+        // ── Referral copy ──────────────────────────────────────────────────────
+        function copyReferral() {
+            navigator.clipboard.writeText('{{ profile.referral_code }}').then(() => {
+                const btn = event.currentTarget;
+                btn.textContent = 'Copied!';
+                setTimeout(() => {
+                    btn.innerHTML = `<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>Copy`;
+                }, 2000);
+            });
+        }
+
+        // ── Phone country picker ───────────────────────────────────────────────
+        const PROFILE_COUNTRIES = [
+                { name: 'Algeria', code: '+213', iso: 'dz' },
+                { name: 'Angola', code: '+244', iso: 'ao' },
+                { name: 'Argentina', code: '+54', iso: 'ar' },
+                { name: 'Armenia', code: '+374', iso: 'am' },
+                { name: 'Australia', code: '+61', iso: 'au' },
+                { name: 'Austria', code: '+43', iso: 'at' },
+                { name: 'Azerbaijan', code: '+994', iso: 'az' },
+                { name: 'Bahrain', code: '+973', iso: 'bh' },
+                { name: 'Bangladesh', code: '+880', iso: 'bd' },
+                { name: 'Belarus', code: '+375', iso: 'by' },
+                { name: 'Belgium', code: '+32', iso: 'be' },
+                { name: 'Bolivia', code: '+591', iso: 'bo' },
+                { name: 'Bosnia & Herzegovina', code: '+387', iso: 'ba' },
+                { name: 'Botswana', code: '+267', iso: 'bw' },
+                { name: 'Brazil', code: '+55', iso: 'br' },
+                { name: 'Bulgaria', code: '+359', iso: 'bg' },
+                { name: 'Cameroon', code: '+237', iso: 'cm' },
+                { name: 'Canada', code: '+1', iso: 'ca' },
+                { name: 'Chile', code: '+56', iso: 'cl' },
+                { name: 'China', code: '+86', iso: 'cn' },
+                { name: 'Colombia', code: '+57', iso: 'co' },
+                { name: 'Croatia', code: '+385', iso: 'hr' },
+                { name: 'Czech Republic', code: '+420', iso: 'cz' },
+                { name: 'Denmark', code: '+45', iso: 'dk' },
+                { name: 'Ecuador', code: '+593', iso: 'ec' },
+                { name: 'Egypt', code: '+20', iso: 'eg' },
+                { name: 'Ethiopia', code: '+251', iso: 'et' },
+                { name: 'Finland', code: '+358', iso: 'fi' },
+                { name: 'France', code: '+33', iso: 'fr' },
+                { name: 'Georgia', code: '+995', iso: 'ge' },
+                { name: 'Germany', code: '+49', iso: 'de' },
+                { name: 'Ghana', code: '+233', iso: 'gh' },
+                { name: 'Greece', code: '+30', iso: 'gr' },
+                { name: 'Guatemala', code: '+502', iso: 'gt' },
+                { name: 'Hungary', code: '+36', iso: 'hu' },
+                { name: 'India', code: '+91', iso: 'in' },
+                { name: 'Indonesia', code: '+62', iso: 'id' },
+                { name: 'Iran', code: '+98', iso: 'ir' },
+                { name: 'Iraq', code: '+964', iso: 'iq' },
+                { name: 'Ireland', code: '+353', iso: 'ie' },
+                { name: 'Israel', code: '+972', iso: 'il' },
+                { name: 'Italy', code: '+39', iso: 'it' },
+                { name: 'Japan', code: '+81', iso: 'jp' },
+                { name: 'Jordan', code: '+962', iso: 'jo' },
+                { name: 'Kazakhstan', code: '+7', iso: 'kz' },
+                { name: 'Kenya', code: '+254', iso: 'ke' },
+                { name: 'Kuwait', code: '+965', iso: 'kw' },
+                { name: 'Lebanon', code: '+961', iso: 'lb' },
+                { name: 'Libya', code: '+218', iso: 'ly' },
+                { name: 'Malaysia', code: '+60', iso: 'my' },
+                { name: 'Mexico', code: '+52', iso: 'mx' },
+                { name: 'Morocco', code: '+212', iso: 'ma' },
+                { name: 'Mozambique', code: '+258', iso: 'mz' },
+                { name: 'Myanmar', code: '+95', iso: 'mm' },
+                { name: 'Nepal', code: '+977', iso: 'np' },
+                { name: 'Netherlands', code: '+31', iso: 'nl' },
+                { name: 'New Zealand', code: '+64', iso: 'nz' },
+                { name: 'Nigeria', code: '+234', iso: 'ng' },
+                { name: 'Norway', code: '+47', iso: 'no' },
+                { name: 'Oman', code: '+968', iso: 'om' },
+                { name: 'Pakistan', code: '+92', iso: 'pk' },
+                { name: 'Panama', code: '+507', iso: 'pa' },
+                { name: 'Paraguay', code: '+595', iso: 'py' },
+                { name: 'Peru', code: '+51', iso: 'pe' },
+                { name: 'Philippines', code: '+63', iso: 'ph' },
+                { name: 'Poland', code: '+48', iso: 'pl' },
+                { name: 'Portugal', code: '+351', iso: 'pt' },
+                { name: 'Qatar', code: '+974', iso: 'qa' },
+                { name: 'Romania', code: '+40', iso: 'ro' },
+                { name: 'Russia', code: '+7', iso: 'ru' },
+                { name: 'Rwanda', code: '+250', iso: 'rw' },
+                { name: 'Saudi Arabia', code: '+966', iso: 'sa' },
+                { name: 'Senegal', code: '+221', iso: 'sn' },
+                { name: 'Serbia', code: '+381', iso: 'rs' },
+                { name: 'Singapore', code: '+65', iso: 'sg' },
+                { name: 'Slovakia', code: '+421', iso: 'sk' },
+                { name: 'Slovenia', code: '+386', iso: 'si' },
+                { name: 'Somalia', code: '+252', iso: 'so' },
+                { name: 'South Africa', code: '+27', iso: 'za' },
+                { name: 'South Korea', code: '+82', iso: 'kr' },
+                { name: 'Spain', code: '+34', iso: 'es' },
+                { name: 'Sri Lanka', code: '+94', iso: 'lk' },
+                { name: 'Sudan', code: '+249', iso: 'sd' },
+                { name: 'Sweden', code: '+46', iso: 'se' },
+                { name: 'Switzerland', code: '+41', iso: 'ch' },
+                { name: 'Syria', code: '+963', iso: 'sy' },
+                { name: 'Taiwan', code: '+886', iso: 'tw' },
+                { name: 'Tanzania', code: '+255', iso: 'tz' },
+                { name: 'Thailand', code: '+66', iso: 'th' },
+                { name: 'Tunisia', code: '+216', iso: 'tn' },
+                { name: 'Turkey', code: '+90', iso: 'tr' },
+                { name: 'UAE', code: '+971', iso: 'ae' },
+                { name: 'Uganda', code: '+256', iso: 'ug' },
+                { name: 'Ukraine', code: '+380', iso: 'ua' },
+                { name: 'United Kingdom', code: '+44', iso: 'gb' },
+                { name: 'United States', code: '+1', iso: 'us' },
+                { name: 'Uruguay', code: '+598', iso: 'uy' },
+                { name: 'Uzbekistan', code: '+998', iso: 'uz' },
+                { name: 'Venezuela', code: '+58', iso: 've' },
+                { name: 'Vietnam', code: '+84', iso: 'vn' },
+                { name: 'Yemen', code: '+967', iso: 'ye' },
+                { name: 'Zambia', code: '+260', iso: 'zm' },
+                { name: 'Zimbabwe', code: '+263', iso: 'zw' },
+            ];
+
+        function renderProfileList(items) {
+            document.getElementById('profile-country-list').innerHTML = items.map(c => `
+                <li onclick="selectProfileCountry('${c.code}','${c.iso}','${c.name}')"
+                    class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 cursor-pointer text-sm text-gray-800">
+                    <img src="https://flagcdn.com/w20/${c.iso}.png" class="w-5 h-3.5 object-cover rounded-sm shrink-0" />
+                    <span class="flex-1 truncate">${c.name}</span>
+                    <span class="text-gray-400 text-xs">${c.code}</span>
+                </li>`).join('');
+        }
+
+        function selectProfileCountry(code, iso, name) {
+            document.getElementById('profile-phone-code').value = code;
+            document.getElementById('profile-selected-code').textContent = code;
+            document.getElementById('profile-selected-flag').src = `https://flagcdn.com/w20/${iso}.png`;
+            document.getElementById('profile-picker-dropdown').classList.add('hidden');
+            document.getElementById('profile-country-search').value = '';
+            renderProfileList(PROFILE_COUNTRIES);
+        }
+
+        function toggleProfilePicker() {
+            const dd = document.getElementById('profile-picker-dropdown');
+            dd.classList.toggle('hidden');
+            if (!dd.classList.contains('hidden')) document.getElementById('profile-country-search').focus();
+        }
+
+        function filterProfileCountries(q) {
+            renderProfileList(PROFILE_COUNTRIES.filter(c =>
+                c.name.toLowerCase().includes(q.toLowerCase()) || c.code.includes(q)
+            ));
+        }
+
+        document.addEventListener('click', function (e) {
+            const picker = document.getElementById('profile-country-picker');
+            if (picker && !picker.contains(e.target)) {
+                document.getElementById('profile-picker-dropdown').classList.add('hidden');
+            }
+        });
+
+        renderProfileList(PROFILE_COUNTRIES);
+
+        // Pre-select country code if phone number already has one
+        {% if profile.phone_number %}
+        const existingPhone = '{{ profile.phone_number }}';
+        const matched = PROFILE_COUNTRIES.find(c => existingPhone.startsWith(c.code));
+        if (matched) selectProfileCountry(matched.code, matched.iso, matched.name);
+        {% endif %}
     </script>
+
 </body>
 
 </html>

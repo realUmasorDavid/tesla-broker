@@ -8,109 +8,103 @@ import secrets
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    
-    # Referral System
+ 
+    # ── Referral ───────────────────────────────────────────────────────────
     referral_code = models.CharField(max_length=12, unique=True, blank=True)
-    referred_by = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='referrals')
-    
-    # Personal Info
-    phone_number = models.CharField(max_length=20, blank=True)
-    date_of_birth = models.DateField(null=True, blank=True)
-    address = models.TextField(blank=True)
-    city = models.CharField(max_length=100, blank=True)
-    country = models.CharField(max_length=100, blank=True)
-    
-    # Financial
-    total_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    available_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
-    
-    kyc_tier = models.CharField(
-        max_length=10,
-        choices=[
-            ('tier1', 'Tier 1'),
-            ('tier2', 'Tier 2'),
-            ('tier3', 'Tier 3'),
-        ],
-        default='tier1'
+    referred_by   = models.ForeignKey(
+        'self', on_delete=models.SET_NULL,
+        null=True, blank=True, related_name='referrals'
     )
+ 
+    # ── Personal Info ──────────────────────────────────────────────────────
+    phone_number  = models.CharField(max_length=20, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
+    address       = models.TextField(blank=True)
+    city          = models.CharField(max_length=100, blank=True)
+    country       = models.CharField(max_length=100, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+ 
+    # ── Financial ──────────────────────────────────────────────────────────
+    total_balance     = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+    available_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
+ 
+    # ── KYC ───────────────────────────────────────────────────────────────
+    # No tiers — single one-time verification
     kyc_status = models.CharField(
         max_length=20,
         choices=[
             ('not_submitted', 'Not Submitted'),
-            ('pending', 'Under Review'),
-            ('verified', 'Verified'),
-            ('rejected', 'Rejected'),
+            ('pending',       'Under Review'),
+            ('verified',      'Verified'),
+            ('rejected',      'Rejected'),
         ],
         default='not_submitted'
     )
-
-    # New fields for history display
-    previous_kyc_tier = models.CharField(
-        max_length=10,
-        choices=[('tier1', 'Tier 1'), ('tier2', 'Tier 2'), ('tier3', 'Tier 3')],
-        blank=True,
-        null=True
-    )
-    previous_kyc_status = models.CharField(
-        max_length=20,
-        choices=[
-            ('not_submitted', 'Not Submitted'),
-            ('pending', 'Under Review'),
-            ('verified', 'Verified'),
-            ('rejected', 'Rejected'),
-        ],
-        blank=True,
-        null=True
-    )
-    
+ 
+    # ── Timestamps ─────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+ 
     def save(self, *args, **kwargs):
         if not self.referral_code:
             self.referral_code = secrets.token_urlsafe(8).upper()[:12]
         super().save(*args, **kwargs)
-
+ 
+    @property
+    def is_kyc_verified(self):
+        return self.kyc_status == 'verified'
+ 
     def __str__(self):
         return f"{self.user.username}'s Profile"
 
 
 class KYCVerification(models.Model):
-    """Tiered KYC Verification"""
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='kyc_verification')
-    
-    # Tier 1 - Both National ID and Driver's License are now required
-    national_id_number = models.CharField(max_length=100, blank=True)
-    national_id_front = models.ImageField(upload_to='kyc/national_id/', blank=True)
-    national_id_back = models.ImageField(upload_to='kyc/national_id/', blank=True)
-
-    drivers_license_number = models.CharField(max_length=100, blank=True)
-    drivers_license_front = models.ImageField(upload_to='kyc/drivers_license/', blank=True)
-    drivers_license_back = models.ImageField(upload_to='kyc/drivers_license/', blank=True)
-
-    selfie = models.ImageField(upload_to='kyc/selfies/', blank=True)
-
-    # Tier 2 - Passport
-    passport_number = models.CharField(max_length=100, blank=True)
-    passport_image = models.ImageField(upload_to='kyc/passports/', blank=True)
-
-    # Tier 3 - Proof of Address
+    """
+    Single one-time KYC verification.
+    User picks ONE document type and uploads front + back + selfie.
+    """
+ 
+    ID_TYPE_CHOICES = [
+        ('national_id',       'National ID Card'),
+        ('drivers_license',   "Driver's License"),
+    ]
+ 
+    ADDRESS_TYPE_CHOICES = [
+        ('utility_bill',      'Utility Bill'),
+        ('bank_statement',    'Bank Statement'),
+        ('rental_agreement',  'Rental Agreement'),
+        ('government_letter', 'Government Letter'),
+    ]
+ 
+    profile = models.OneToOneField(
+        'Profile', on_delete=models.CASCADE, related_name='kyc_verification'
+    )
+ 
+    # ── ID document (user picks one type) ─────────────────────────────────
+    id_type        = models.CharField(max_length=30, choices=ID_TYPE_CHOICES, blank=True)
+    id_number      = models.CharField(max_length=100, blank=True)
+    id_front       = models.ImageField(upload_to='kyc/ids/', blank=True)
+    id_back        = models.ImageField(upload_to='kyc/ids/', blank=True)  # not required for passport
+ 
+    # ── Selfie ─────────────────────────────────────────────────────────────
+    selfie         = models.ImageField(upload_to='kyc/selfies/', blank=True)
+ 
+    # ── Proof of address (optional but useful for higher limits) ───────────
+    address_type   = models.CharField(max_length=30, choices=ADDRESS_TYPE_CHOICES, blank=True)
     proof_of_address = models.ImageField(upload_to='kyc/address/', blank=True)
-    address_type = models.CharField(max_length=50, blank=True, choices=[
-        ('utility_bill', 'Utility Bill'),
-        ('bank_statement', 'Bank Statement'),
-        ('rental_agreement', 'Rental Agreement'),
-    ])
-
+ 
+    # ── Admin fields ───────────────────────────────────────────────────────
     verification_date = models.DateTimeField(null=True, blank=True)
-    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    notes = models.TextField(blank=True)
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-
+    reviewed_by    = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='kyc_reviews'
+    )
+    notes          = models.TextField(blank=True)
+    created_at     = models.DateTimeField(auto_now_add=True)
+    updated_at     = models.DateTimeField(auto_now=True)
+ 
     def __str__(self):
-        return f"KYC Tier {self.profile.kyc_tier} - {self.profile.user.username}"
-
+        return f"KYC — {self.profile.user.username} ({self.profile.kyc_status})"
 
 class WalletTransaction(models.Model):
  

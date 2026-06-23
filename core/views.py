@@ -290,49 +290,63 @@ def dashboard(request):
 @login_required
 def profile_view(request):
     profile = request.user.profile
+ 
     if request.method == 'POST':
-        form = ProfileUpdateForm(request.POST, instance=profile)
+        # ── Avatar upload ──────────────────────────────────────────────────
+        if 'avatar' in request.FILES:
+            profile.avatar = request.FILES['avatar']
+            profile.save(update_fields=['avatar'])
+            messages.success(request, 'Profile photo updated.')
+            return redirect('profile')
+ 
+        # ── Profile form ───────────────────────────────────────────────────
+        form = ProfileUpdateForm(request.POST, instance=profile, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "Profile updated successfully!")
+            form.save_user(request.user)
+            messages.success(request, 'Profile updated successfully.')
             return redirect('profile')
     else:
-        form = ProfileUpdateForm(instance=profile)
-    
+        form = ProfileUpdateForm(instance=profile, user=request.user)
+ 
     return render(request, 'profile.html', {'form': form, 'profile': profile})
 
 
 @login_required
 def kyc_view(request):
     profile = request.user.profile
-
+ 
     try:
         kyc = profile.kyc_verification
     except KYCVerification.DoesNotExist:
         kyc = None
-
+ 
     if request.method == 'POST':
-        form = KYCForm(request.POST, request.FILES, instance=kyc, tier=profile.kyc_tier)
+        # Block resubmission if already pending or verified
+        if profile.kyc_status in ('pending', 'verified'):
+            messages.error(request, 'Your KYC has already been submitted.')
+            return redirect('kyc')
+ 
+        form = KYCForm(request.POST, request.FILES, instance=kyc)
         if form.is_valid():
             kyc_obj = form.save(commit=False)
             kyc_obj.profile = profile
             kyc_obj.save()
-
+ 
             profile.kyc_status = 'pending'
-            profile.save()
-
-            messages.success(request, f"Documents for {profile.kyc_tier} submitted successfully and are under review.")
-            return redirect('kyc')   # Stay on KYC page to show "Under Review"
+            profile.save(update_fields=['kyc_status'])
+ 
+            messages.success(request, 'Your documents have been submitted and are under review.')
+            return redirect('kyc')
+        # form invalid — fall through to re-render with errors
     else:
-        form = KYCForm(instance=kyc, tier=profile.kyc_tier)
-
-    context = {
-        'form': form,
+        form = KYCForm(instance=kyc)
+ 
+    return render(request, 'kyc.html', {
+        'form':    form,
         'profile': profile,
-        'kyc': kyc,
-        'current_tier': profile.kyc_tier,
-    }
-    return render(request, 'kyc.html', context)
+        'kyc':     kyc,
+    })
     
 @login_required
 def wallet_view(request):
