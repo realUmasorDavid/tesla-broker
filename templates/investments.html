@@ -8,10 +8,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tesla — Investments</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .progress-bar { transition: width 0.6s ease; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .progress-bar {
+            transition: width 0.6s ease;
+        }
     </style>
 </head>
 
@@ -25,8 +31,10 @@
         <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
                 <h1 class="text-lg font-semibold text-gray-900">Investments</h1>
@@ -45,18 +53,19 @@
                     </span>
                     {% endif %}
                 </button>
-            
+
                 <!-- Dropdown -->
                 <div id="notif-dropdown"
                     class="hidden absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
-            
+
                     <!-- Header -->
                     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                         <p class="text-sm font-semibold text-gray-900">Notifications</p>
-                        <button onclick="markAllRead()" class="text-xs text-gray-400 hover:text-gray-700 transition">Mark all
+                        <button onclick="markAllRead()"
+                            class="text-xs text-gray-400 hover:text-gray-700 transition">Mark all
                             read</button>
                     </div>
-            
+
                     <!-- List -->
                     <div class="divide-y divide-gray-50 max-h-72 overflow-y-auto">
                         {% if recent_notifications %}
@@ -84,8 +93,8 @@
                         {% endfor %}
                         {% else %}
                         <div class="px-4 py-8 text-center text-gray-400">
-                            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5"
-                                viewBox="0 0 24 24">
+                            <svg class="w-8 h-8 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor"
+                                stroke-width="1.5" viewBox="0 0 24 24">
                                 <path
                                     d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                             </svg>
@@ -93,7 +102,7 @@
                         </div>
                         {% endif %}
                     </div>
-            
+
                     <!-- Footer -->
                     <div class="px-4 py-3 border-t border-gray-100">
                         <a href="{% url 'notifications' %}"
@@ -126,7 +135,8 @@
 
                 <div class="bg-white rounded-xl border border-gray-200 p-5">
                     <p class="text-xs text-gray-500 mb-1">Available Balance</p>
-                    <p class="text-xl font-bold text-gray-900">${{ profile.available_balance|floatformat:2|intcomma }}</p>
+                    <p class="text-xl font-bold text-gray-900">${{ profile.available_balance|floatformat:2|intcomma }}
+                    </p>
                     <p class="text-xs text-gray-400 mt-1">Ready to invest</p>
                 </div>
 
@@ -211,7 +221,7 @@
 
                         <!-- Subscribe button triggers modal -->
                         <button
-                            onclick="openModal({{ plan.id }}, '{{ plan.name }}', {{ plan.roi_percent }}, {{ plan.duration_days }}, {{ plan.min_amount }}, {{ plan.max_amount|default:'null' }})"
+                            onclick="openModal({{ plan.id }}, '{{ plan.name }}', {{ plan.roi_percent }}, {{ plan.duration_days }}, {{ plan.min_amount }}, {{ plan.max_amount|default:'null' }}, '{{ plan.cycle }}')"
                             class="mt-auto w-full bg-gray-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-lg transition">
                             Invest Now
                         </button>
@@ -222,7 +232,8 @@
                 </div>
                 {% else %}
                 <div class="text-center py-12 text-gray-400">
-                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
                         <path d="M12 8v4l3 3m9-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <p class="text-sm">No investment plans available yet. Check back soon.</p>
@@ -249,8 +260,10 @@
                             <!-- Left: plan info -->
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
-                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                        <path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor"
+                                        stroke-width="1.5" viewBox="0 0 24 24">
+                                        <path
+                                            d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
                                     </svg>
                                 </div>
                                 <div>
@@ -283,9 +296,9 @@
                                 <span>Progress</span>
                                 <span>
                                     {% if inv.is_matured %}
-                                        <span class="text-green-500 font-medium">Matured — awaiting payout</span>
+                                    <span class="text-green-500 font-medium">Matured — awaiting payout</span>
                                     {% else %}
-                                        {{ inv.progress_percent }}% · {{ inv.plan.roi_percent }}% ROI
+                                    {{ inv.progress_percent }}% · {{ inv.plan.roi_percent }}% ROI
                                     {% endif %}
                                 </span>
                             </div>
@@ -302,8 +315,10 @@
                 </div>
                 {% else %}
                 <div class="text-center py-10 text-gray-400">
-                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
+                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
+                        <path
+                            d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
                     </svg>
                     <p class="text-sm">No active investments. Pick a plan above to get started.</p>
                 </div>
@@ -337,15 +352,19 @@
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="py-3 text-gray-900 font-medium">{{ inv.plan.name }}</td>
                                 <td class="py-3 text-right text-gray-700">${{ inv.amount|floatformat:2|intcomma }}</td>
-                                <td class="py-3 text-right
+                                <td
+                                    class="py-3 text-right
                                     {% if inv.status == 'completed' %}text-green-600{% else %}text-gray-400{% endif %}">
-                                    {% if inv.status == 'completed' %}+${{ inv.expected_return|floatformat:2|intcomma }}{% else %}—{% endif %}
+                                    {% if inv.status == 'completed' %}+${{ inv.expected_return|floatformat:2|intcomma
+                                    }}{% else %}—{% endif %}
                                 </td>
                                 <td class="py-3 text-right font-semibold text-gray-900">
-                                    {% if inv.status == 'completed' %}${{ inv.total_payout|floatformat:2|intcomma }}{% else %}—{% endif %}
+                                    {% if inv.status == 'completed' %}${{ inv.total_payout|floatformat:2|intcomma }}{%
+                                    else %}—{% endif %}
                                 </td>
                                 <td class="py-3 text-right text-gray-400 text-xs">
-                                    {% if inv.paid_out_at %}{{ inv.paid_out_at|date:"M d, Y" }}{% else %}{{ inv.started_at|date:"M d, Y" }}{% endif %}
+                                    {% if inv.paid_out_at %}{{ inv.paid_out_at|date:"M d, Y" }}{% else %}{{
+                                    inv.started_at|date:"M d, Y" }}{% endif %}
                                 </td>
                                 <td class="py-3 text-right">
                                     <span class="inline-block text-xs font-semibold px-2.5 py-1 rounded-full
@@ -361,8 +380,10 @@
                 </div>
                 {% else %}
                 <div class="text-center py-10 text-gray-400">
-                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                        <path d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
+                    <svg class="w-10 h-10 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor"
+                        stroke-width="1.5" viewBox="0 0 24 24">
+                        <path
+                            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z" />
                     </svg>
                     <p class="text-sm">No investment history yet.</p>
                 </div>
@@ -373,7 +394,8 @@
     </div>
 
     <!-- ── Subscribe Modal ── -->
-    <div id="invest-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+    <div id="invest-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm px-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative">
 
             <!-- Close -->
@@ -386,10 +408,9 @@
             <h2 class="text-lg font-semibold text-gray-900 mb-1" id="modal-title">Invest in Plan</h2>
             <p class="text-xs text-gray-400 mb-5" id="modal-subtitle">Enter the amount you want to invest.</p>
 
-            <!-- Plan summary box -->
             <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 space-y-2 text-sm">
                 <div class="flex justify-between">
-                    <span class="text-gray-500">Monthly ROI</span>
+                    <span class="text-gray-500">Weekly ROI</span>
                     <span class="font-semibold text-gray-900" id="modal-roi">—</span>
                 </div>
                 <div class="flex justify-between">
@@ -400,7 +421,11 @@
                     <span class="text-gray-500">Min. Amount</span>
                     <span class="font-semibold text-gray-900" id="modal-min">—</span>
                 </div>
-                <div class="border-t border-gray-200 pt-2 space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">Max. Amount</span>
+                    <span class="font-semibold text-gray-900" id="modal-max">—</span>
+                </div>
+                <div class="border-t border-gray-200 pt-2 space-y-1.5">
                     <div class="flex justify-between">
                         <span class="text-gray-500">Expected Profit</span>
                         <span class="font-bold text-green-600" id="modal-expected">$0.00</span>
@@ -418,17 +443,10 @@
                 <label class="block text-xs font-medium text-gray-700 mb-1.5">Investment Amount (USD)</label>
                 <div class="relative mb-4">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                    <input
-                        type="number"
-                        name="amount"
-                        id="modal-amount"
-                        min="0"
-                        step="0.01"
-                        placeholder="0.00"
+                    <input type="number" name="amount" id="modal-amount" min="0" step="0.01" placeholder="0.00"
                         oninput="recalcReturn()"
                         class="w-full pl-7 pr-4 py-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                        required
-                    />
+                        required />
                 </div>
 
                 <p class="text-xs text-gray-400 mb-5">
@@ -457,19 +475,42 @@
         });
 
         // ── Modal state ────────────────────────────────────────────────────────
-        let _roi = 0, _min = 0, _max = null, _months = 0;
+        let _roi = 0, _periods = 0, _min = 0, _max = null, _cycleLabel = '';
 
-        function openModal(planId, planName, roi, durationDays, min, max) {
+        const CYCLE_DIVISORS = {
+            'daily': 1,
+            'weekly': 7,
+            'monthly': 30,
+            'bi-annually': 182,
+            'annually': 365,
+        };
+
+        const CYCLE_LABELS = {
+            'daily': 'day',
+            'weekly': 'week',
+            'monthly': 'month',
+            'bi-annually': 'half-year',
+            'annually': 'year',
+        };
+
+        function openModal(planId, planName, roi, durationDays, min, max, cycle) {
             _roi = parseFloat(roi);
             _min = parseFloat(min);
             _max = max ? parseFloat(max) : null;
-            _months = durationDays / 30;   // e.g. 365 days → 12.17 months
+
+            const divisor = CYCLE_DIVISORS[cycle] || 7;
+            _periods = Math.floor(durationDays / divisor);
+            _cycleLabel = CYCLE_LABELS[cycle] || 'week';
 
             document.getElementById('modal-title').textContent = 'Invest in ' + planName;
             document.getElementById('modal-subtitle').textContent = 'Enter the amount you want to invest.';
-            document.getElementById('modal-roi').textContent = roi + '% / month';
-            document.getElementById('modal-duration').textContent = durationDays + ' days (' + _months.toFixed(1) + ' months)';
-            document.getElementById('modal-min').textContent = '$' + parseFloat(min).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('modal-roi').textContent = roi + '% / ' + _cycleLabel;
+            document.getElementById('modal-duration').textContent =
+                durationDays + ' days (' + _periods + ' ' + _cycleLabel + 's)';
+            document.getElementById('modal-min').textContent =
+                '$' + parseFloat(min).toLocaleString('en-US', { minimumFractionDigits: 2 });
+            document.getElementById('modal-max').textContent =
+                max ? '$' + parseFloat(max).toLocaleString('en-US', { minimumFractionDigits: 2 }) : 'No limit';
             document.getElementById('modal-amount').min = min;
             document.getElementById('modal-amount').value = '';
             document.getElementById('modal-expected').textContent = '$0.00';
@@ -482,21 +523,17 @@
         }
 
         function closeModal() {
-            const modal = document.getElementById('invest-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
+            document.getElementById('invest-modal').classList.add('hidden');
+            document.getElementById('invest-modal').classList.remove('flex');
         }
 
         function recalcReturn() {
             const amt = parseFloat(document.getElementById('modal-amount').value) || 0;
-            // Flat monthly: amount × (roi% / 100) × months  — no compounding
-            const profit = amt * (_roi / 100) * _months;
+            const profit = amt * (_roi / 100) * _periods;
             const payout = amt + profit;
-
-            document.getElementById('modal-expected').textContent =
-                '$' + profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            document.getElementById('modal-payout').textContent =
-                '$' + payout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const fmt = n => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('modal-expected').textContent = fmt(profit);
+            document.getElementById('modal-payout').textContent = fmt(payout);
         }
 
         document.getElementById('invest-modal').addEventListener('click', function (e) {
@@ -555,4 +592,5 @@
     </script>
 
 </body>
+
 </html>

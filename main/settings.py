@@ -169,3 +169,9 @@ RESEND_API_KEY = 're_6i1w8cQf_ChhsmT63PqWPZ4f4sYY8pFcy'
 DEFAULT_FROM_EMAIL = 'Tesla Capital <onboarding@legitonlinetrading.com>'
 
 SESSION_SAVE_EVERY_REQUEST = True
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}

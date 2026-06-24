@@ -743,20 +743,29 @@ def investment_subscribe(request, plan_id):
             messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
             return redirect('investments')
  
-        # ── ROI: flat monthly rate × number of months, no compounding ────────
-        # months = duration_days / 30  (use exact division, not rounding)
-        months          = Decimal(str(plan.duration_days)) / Decimal('30')
-        monthly_rate    = plan.roi_percent / Decimal('100')
-        expected_return = (amount * monthly_rate * months).quantize(Decimal('0.01'))
-        # Example: $100,000 × 10% × 12 months = $120,000 profit
-        # Total payout = $100,000 + $120,000 = $220,000
- 
-        matures_at = timezone.now() + timedelta(days=plan.duration_days)
+        # ── Formula: floor(duration_days / 7) whole weeks × weekly ROI ───────
+        import math
+
+        CYCLE_DIVISORS = {
+            'daily':       1,
+            'weekly':      7,
+            'monthly':     30,
+            'bi-annually': 182,
+            'annually':    365,
+        }
+
+        divisor = CYCLE_DIVISORS.get(plan.cycle, 7)
+        periods = Decimal(str(math.floor(plan.duration_days / divisor)))
+        rate    = plan.roi_percent / Decimal('100')
+        expected_return = (amount * rate * periods).quantize(Decimal('0.01'))
+        matures_at   = timezone.now() + timedelta(days=plan.duration_days)
  
         # Deduct balance
         balance_before             = profile.available_balance
         profile.available_balance -= amount
         profile.save(update_fields=['available_balance'])
+        
+        cycle_label = plan.get_cycle_display().lower()
  
         UserInvestment.objects.create(
             profile         = profile,
@@ -773,8 +782,7 @@ def investment_subscribe(request, plan_id):
             title      = '📊 Investment Started',
             message    = (
                 f'You have successfully invested ${amount:,.2f} in {plan.name}. '
-                f'Expected profit: ${expected_return:,.2f} '
-                f'({plan.roi_percent}%/month × {float(months):.1f} months). '
+                f'{plan.roi_percent}%/{cycle_label} × {int(periods)} {cycle_label} periods = ${expected_return:,.2f} profit'
                 f'Total payout: ${amount + expected_return:,.2f}. '
                 f'Matures on {matures_at.strftime("%b %d, %Y")}.'
             ),
@@ -791,8 +799,7 @@ def investment_subscribe(request, plan_id):
             balance_after    = profile.available_balance,
             description      = (
                 f'Invested ${amount:,.2f} in {plan.name} '
-                f'({plan.roi_percent}%/month × {float(months):.1f} months = '
-                f'${expected_return:,.2f} profit)'
+                f'({plan.roi_percent}%/week × {int(weeks)} weeks = ${expected_return:,.2f} profit)'
             ),
         )
  
