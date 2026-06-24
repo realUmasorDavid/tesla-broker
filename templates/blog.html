@@ -16,46 +16,73 @@
     </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-white min-h-screen">
 
     <div class="flex-1 flex flex-col min-h-screen">
+
+        <!-- Nav -->
         <nav
-            class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
+            class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-gray-100 bg-white/90 backdrop-blur sticky top-0 z-50">
             <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
             <div class="hidden lg:flex items-center gap-8 text-sm text-black">
-                <a href="{% url 'about' %}" class="hover:text-white transition">About Us</a>
-                <a href="{% url 'blog' %}" class="hover:text-white transition">Blog</a>
-                <a href="{% url 'dashboard' %}" class="hover:text-white transition">Dashboard</a>
-                <a href="{% url 'careers' %}" class="hover:text-white transition">Careers</a>
+                <a href="{% url 'about' %}" class="hover:opacity-60 transition">About Us</a>
+                <a href="{% url 'blog' %}" class="hover:opacity-60 transition">Blog</a>
+                <a href="{% url 'dashboard' %}" class="hover:opacity-60 transition">Dashboard</a>
+                <a href="{% url 'careers' %}" class="hover:opacity-60 transition">Careers</a>
             </div>
             {% if user.is_authenticated %}
-            <a href="{% url 'index' %}" class="text-sm text-black hover:text-white transition">Hello, {{ user.first_name
+            <a href="{% url 'index' %}" class="text-sm text-black hover:opacity-60 transition">Hello, {{ user.first_name
                 }}!</a>
             {% else %}
-            <a href="{% url 'login' %}" class="text-sm text-black hover:text-white transition">Account</a>
+            <a href="{% url 'login' %}" class="text-sm text-black hover:opacity-60 transition">Account</a>
             {% endif %}
         </nav>
 
-        <main class="flex-1 p-6 lg:p-8">
+        <main class="flex-1 px-5 md:px-10 py-12 md:py-16">
             <div class="max-w-7xl mx-auto">
-                <div class="mb-10">
-                    <h2 class="text-4xl font-semibold">Latest Market News</h2>
-                    <p class="text-gray-500 mt-2">Stay updated with financial news and market analysis</p>
+
+                <!-- Header -->
+                <div class="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                    <div>
+                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Market Insights
+                        </p>
+                        <h1 class="text-4xl font-bold text-gray-900 tracking-tight">Latest Market News</h1>
+                        <p class="text-gray-500 mt-2 text-sm">Stay updated with financial news and market analysis.</p>
+                    </div>
+                    <p id="cache-status" class="text-xs text-gray-400 shrink-0"></p>
                 </div>
 
-                <div id="news-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Populated by JavaScript -->
+                <!-- Skeleton grid -->
+                <div id="news-skeleton" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {% for i in "123456789" %}
+                    <div class="animate-pulse bg-gray-100 rounded-2xl overflow-hidden border border-gray-100">
+                        <div class="h-48 bg-gray-200"></div>
+                        <div class="p-5 space-y-3">
+                            <div class="flex gap-2">
+                                <div class="h-3 bg-gray-200 rounded w-16"></div>
+                                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                            </div>
+                            <div class="h-4 bg-gray-200 rounded w-full"></div>
+                            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                            <div class="h-3 bg-gray-200 rounded w-3/4"></div>
+                            <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
+
+                <!-- News grid -->
+                <div id="news-grid" class="hidden grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
             </div>
         </main>
 
+        <!-- Footer -->
         <footer class="relative bg-black text-white py-12">
-            <!-- Background glow -->
             <div class="absolute inset-0 bg-gradient-to-br from-zinc-900 via-black to-black"></div>
             <div
                 class="absolute right-0 top-0 w-full lg:w-1/2 h-full bg-gradient-to-l from-red-950/20 to-transparent pointer-events-none">
             </div>
-
             <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
                     <div class="lg:col-span-2 flex flex-col space-y-6">
@@ -66,25 +93,22 @@
                     </div>
                     <div class="flex flex-col space-y-4">
                         <h3 class="font-bold text-white mb-2">Company</h3>
-                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">About
+                        <a href="{% url 'about' %}" class="text-gray-300 text-sm hover:text-white transition">About
                             Us</a>
                         <a href="{% url 'careers' %}"
-                            class="text-gray-300 text-sm hover:text-white cursor-pointer">Careers</a>
+                            class="text-gray-300 text-sm hover:text-white transition">Careers</a>
                     </div>
                     <div class="flex flex-col space-y-4">
                         <h3 class="font-bold text-white mb-2">Resources</h3>
-                        <a href="{% url 'blog' %}"
-                            class="text-gray-300 text-sm hover:text-white cursor-pointer">Blog</a>
-                        <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Help
+                        <a href="{% url 'blog' %}" class="text-gray-300 text-sm hover:text-white transition">Blog</a>
+                        <a href="{% url 'help' %}" class="text-gray-300 text-sm hover:text-white transition">Help
                             Center</a>
                     </div>
                     <div class="flex flex-col space-y-4">
                         <h3 class="font-bold text-white mb-2">Legal</h3>
-                        <a href="{% url 'privacy' %}"
-                            class="text-gray-300 text-sm hover:text-white cursor-pointer">Privacy
+                        <a href="{% url 'privacy' %}" class="text-gray-300 text-sm hover:text-white transition">Privacy
                             Policy</a>
-                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white cursor-pointer">Terms
-                            of
+                        <a href="{% url 'terms' %}" class="text-gray-300 text-sm hover:text-white transition">Terms of
                             Service</a>
                     </div>
                 </div>
@@ -93,108 +117,163 @@
     </div>
 
     <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        const MARKETAUX_API_KEY = 'jDfbFW6UgAlsSkjuwxmcMdXyGep96Z0MO56U8u8H';
+        const CACHE_KEY = 'marketaux_blog_cache';
+        const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour — max ~24 calls/day
+
+        // ── Sentiment badge ───────────────────────────────────────────────────
+        function sentimentBadge(score) {
+            if (score === null || score === undefined) return '';
+            if (score > 0.1) return `<span class="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">↑ Positive</span>`;
+            if (score < -0.1) return `<span class="text-xs font-semibold text-red-500 bg-red-50 px-2 py-0.5 rounded-full">↓ Negative</span>`;
+            return `<span class="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">→ Neutral</span>`;
         }
 
-        const FINNHUB_API_KEY = 'd8l9239r01qut1f9ro7gd8l9239r01qut1f9ro80';
+        // ── Format date ───────────────────────────────────────────────────────
+        function fmtDate(str) {
+            return new Date(str).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
 
+        // ── Build card ────────────────────────────────────────────────────────
+        function buildCard(article) {
+            const img = article.image_url || '';
+            const title = (article.title || '').replace(/"/g, '&quot;');
+            const snippet = article.description || article.snippet || '';
+            const source = article.source || '';
+            const date = fmtDate(article.published_at);
+            const url = article.url || '#';
+            const sentiment = article.entities?.[0]?.sentiment_score ?? null;
+
+            const tickers = (article.entities || [])
+                .filter(e => e.symbol)
+                .slice(0, 3)
+                .map(e => `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-medium">${e.symbol}</span>`)
+                .join('');
+
+            const fallbackSvg = `<div class="w-full h-full flex items-center justify-center bg-gray-100">
+                <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"/>
+                </svg>
+            </div>`;
+
+            return `
+            <a href="${url}" target="_blank" rel="noopener"
+                class="group flex flex-col bg-white rounded-2xl overflow-hidden border border-gray-200 hover:shadow-xl hover:-translate-y-0.5 transition duration-200 cursor-pointer">
+
+                <!-- Image -->
+                <div class="relative h-48 bg-gray-100 overflow-hidden shrink-0">
+                    ${img
+                    ? `<img src="${img}" alt="${title}"
+                                class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                                onerror="this.parentElement.innerHTML='${fallbackSvg.replace(/'/g, "\\'")}`
+                    : fallbackSvg
+                }
+                    ${sentiment !== null ? `
+                    <div class="absolute top-3 right-3">
+                        ${sentimentBadge(sentiment)}
+                    </div>` : ''}
+                </div>
+
+                <!-- Content -->
+                <div class="flex flex-col flex-1 p-5 gap-3">
+
+                    <!-- Meta -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${tickers}
+                        <span class="text-xs text-gray-400 font-medium">${source}</span>
+                        <span class="text-gray-300 text-xs">•</span>
+                        <span class="text-xs text-gray-400">${date}</span>
+                    </div>
+
+                    <!-- Title -->
+                    <h3 class="text-base font-semibold text-gray-900 leading-snug line-clamp-3 group-hover:text-blue-600 transition">
+                        ${article.title || ''}
+                    </h3>
+
+                    <!-- Snippet -->
+                    <p class="text-sm text-gray-500 leading-relaxed line-clamp-3 flex-1">
+                        ${snippet || 'No summary available.'}
+                    </p>
+
+                    <!-- CTA -->
+                    <div class="flex items-center gap-1 text-sm font-medium text-gray-900 group-hover:text-blue-600 transition mt-1">
+                        Read Full Article
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M13 7l5 5-5 5M6 12h12"/>
+                        </svg>
+                    </div>
+
+                </div>
+            </a>`;
+        }
+
+        // ── Load news with caching ─────────────────────────────────────────────
         async function loadMarketNews() {
-            const container = document.getElementById('news-grid');
-            container.innerHTML = `
-        <div class="col-span-full py-20 text-center">
-            <div class="animate-pulse text-gray-500">Loading latest market news...</div>
-        </div>`;
+            const skeleton = document.getElementById('news-skeleton');
+            const grid = document.getElementById('news-grid');
+            const cacheStatus = document.getElementById('cache-status');
 
-            const to = new Date().toISOString().split('T')[0];
-            const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
+            // Check cache
             try {
-                const [teslaRes, spaceXRes, financeRes] = await Promise.all([
-                    fetch(`https://finnhub.io/api/v1/company-news?symbol=TSLA&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`),
-                    fetch(`https://finnhub.io/api/v1/company-news?symbol=SPCE&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`),
-                    fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_API_KEY}`),
-                ]);
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const { timestamp, articles } = JSON.parse(cached);
+                    const ageMs = Date.now() - timestamp;
+                    const ageMins = Math.floor(ageMs / 60000);
+                    if (ageMs < CACHE_TTL_MS && articles?.length) {
+                        grid.innerHTML = articles.map(buildCard).join('');
+                        skeleton.classList.add('hidden');
+                        grid.classList.remove('hidden');
+                        grid.classList.add('grid');
+                        cacheStatus.textContent = `Updated ${ageMins < 1 ? 'just now' : ageMins + ' min ago'}`;
+                        return;
+                    }
+                }
+            } catch (e) {
+                localStorage.removeItem(CACHE_KEY);
+            }
 
-                const [tesla, spaceX, finance] = await Promise.all([
-                    teslaRes.json(),
-                    spaceXRes.json(),
-                    financeRes.json(),
-                ]);
+            // Fetch fresh
+            try {
+                const url = `https://api.marketaux.com/v1/news/all`
+                    + `?symbols=TSLA,SPCX`
+                    + `&filter_entities=true`
+                    + `&language=en`
+                    + `&limit=9`
+                    + `&api_token=${MARKETAUX_API_KEY}`;
 
-                const keywords = ['invest', 'market', 'stock', 'fund', 'portfolio', 'rate', 'fed', 'inflation', 'earnings', 'nasdaq', 's&p'];
-                const filteredFinance = finance.filter(a =>
-                    keywords.some(k =>
-                        (a.headline || '').toLowerCase().includes(k) ||
-                        (a.summary || '').toLowerCase().includes(k)
-                    )
-                );
+                const res = await fetch(url);
+                const data = await res.json();
 
-                const seen = new Set();
-                const merged = [...tesla.slice(0, 6), ...spaceX.slice(0, 2), ...filteredFinance.slice(0, 4)]
-                    .filter(a => {
-                        if (!a.headline || seen.has(a.headline)) return false;
-                        seen.add(a.headline);
-                        return true;
-                    })
-                    .slice(0, 12);
-
-                if (!merged.length) {
-                    container.innerHTML = `<div class="col-span-full py-20 text-center text-gray-500">No news available right now.</div>`;
+                if (!data.data?.length) {
+                    skeleton.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">No news available right now.</div>`;
                     return;
                 }
 
-                container.innerHTML = merged.map(article => {
-                    const date = new Date(article.datetime * 1000);
-                    const formattedDate = date.toLocaleDateString('en-US', {
-                        year: 'numeric', month: 'short', day: 'numeric'
-                    });
+                // Save to cache
+                try {
+                    localStorage.setItem(CACHE_KEY, JSON.stringify({
+                        timestamp: Date.now(),
+                        articles: data.data,
+                    }));
+                } catch (e) { /* localStorage full — skip caching */ }
 
-                    return `
-            <div class="bg-white rounded-3xl overflow-hidden border border-gray-200 hover:shadow-xl transition group">
-                <div class="h-48 bg-gray-100 relative overflow-hidden">
-                    ${article.image
-                            ? `<img src="${article.image}"
-                                alt="${article.headline}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                                onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><svg class=\'w-10 h-10 text-gray-300\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'1.5\' viewBox=\'0 0 24 24\'><path d=\'M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z\'/></svg></div>'" />`
-                            : `<div class="w-full h-full flex items-center justify-center">
-                               <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
-                                   <path d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"/>
-                               </svg>
-                           </div>`
-                        }
-                </div>
-                <div class="p-6">
-                    <div class="flex items-center gap-3 text-xs text-gray-500 mb-3">
-                        <span class="font-medium">${article.source || 'News'}</span>
-                        <span>•</span>
-                        <span>${formattedDate}</span>
-                    </div>
-                    <h3 class="font-semibold leading-tight line-clamp-3 text-lg mb-3 group-hover:text-blue-600 transition">
-                        ${article.headline}
-                    </h3>
-                    <p class="text-gray-600 text-sm line-clamp-4 mb-6">
-                        ${article.summary || 'No summary available.'}
-                    </p>
-                    <a href="${article.url}" target="_blank" rel="noopener"
-                       class="inline-flex items-center text-sm font-medium text-black hover:text-blue-600 transition">
-                        Read Full Article →
-                    </a>
-                </div>
-            </div>`;
-                }).join('');
+                grid.innerHTML = data.data.map(buildCard).join('');
+                skeleton.classList.add('hidden');
+                grid.classList.remove('hidden');
+                grid.classList.add('grid');
+                cacheStatus.textContent = 'Updated just now';
 
             } catch (e) {
-                container.innerHTML = `
-            <div class="col-span-full py-20 text-center text-gray-500">
-                Unable to load news at the moment. Please try again later.
-            </div>`;
+                skeleton.innerHTML = `<div class="col-span-full py-20 text-center text-gray-400">Unable to load news at the moment. Please try again later.</div>`;
             }
         }
 
-        window.onload = loadMarketNews;
+        loadMarketNews();
     </script>
+
 </body>
 
 </html>
