@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['umasordavid.pythonanywhere.com', 'localhost', '127.0.0.1', 'tesla-broker.fly.dev', 'teslaprivatecapital.com']
+ALLOWED_HOSTS = ['teslaprivatecapital.com', 'localhost', '127.0.0.1', 'tesla-broker.fly.dev']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.dev',
