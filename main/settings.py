@@ -145,11 +145,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-AWS_ACCESS_KEY_ID = os.getenv("SUPABASE_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("SUPABASE_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = os.getenv("SUPABASE_STORAGE_BUCKET_NAME")  
-AWS_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL")          
-AWS_S3_REGION = os.getenv("SUPABASE_S3_REGION")          
+AWS_ACCESS_KEY_ID = os.getenv("SUPABASE_ACCESS_KEY_ID", "placeholder-key")
+AWS_SECRET_ACCESS_KEY = os.getenv("SUPABASE_SECRET_ACCESS_KEY", "placeholder-secret")
+AWS_STORAGE_BUCKET_NAME = os.getenv("SUPABASE_STORAGE_BUCKET_NAME", "placeholder-bucket")  
+AWS_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL", "https://supabase.co")          
+AWS_S3_REGION = os.getenv("SUPABASE_S3_REGION", "eu-central-1")           
 
 AWS_S3_SIGNATURE_VERSION = 's3v4'   
 AWS_S3_ADDRESSING_STYLE = 'path'    
