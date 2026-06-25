@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -22,7 +23,6 @@
 
     <div class="lg:ml-56 flex-1 flex flex-col min-h-screen">
 
-        <!-- Top Bar -->
         <header class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
             <div class="flex items-center gap-4">
                 <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-black">
@@ -45,8 +45,9 @@
 
                 {% if messages %}
                 {% for message in messages %}
-                <div
-                    class="px-4 py-3 rounded-xl text-sm {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200{% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
+                <div class="px-4 py-3 rounded-xl text-sm
+              {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+              {% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
                     {{ message }}
                 </div>
                 {% endfor %}
@@ -62,7 +63,7 @@
                     </div>
                     <div class="bg-white/10 rounded-xl mt-4 sm:mt-0 p-4 sm:text-right">
                         <p class="text-xs text-gray-400 mb-1">Current Balance</p>
-                        <p class="text-2xl font-bold">${{ profile.available_balance|floatformat:2|default:"0.00" }}</p>
+                        <p class="text-2xl font-bold">${{ profile.available_balance|floatformat:2|intcomma|default:"0.00" }}</p>
                     </div>
                 </div>
 
@@ -74,72 +75,48 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Deposit Amount</label>
                         <div class="relative">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
-                            <input id="amount-input" type="number" name="amount" step="0.01" min="1" placeholder="0.00"
+                            <input id="amount-input" type="number" step="0.01" min="1" placeholder="0.00"
                                 oninput="updateFees()"
                                 class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-xl text-lg font-semibold focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition" />
                         </div>
                     </div>
 
-                    <!-- Payment Method -->
+                    <!-- Payment Methods — dynamically rendered from DB -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
+
+                        {% if payment_methods %}
                         <div class="space-y-3">
-
-                            <label id="method-btc" onclick="selectMethod('btc')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-orange-400 hover:bg-orange-50/30 transition">
+                            {% for method in payment_methods %}
+                            <div id="method-card-{{ method.pk }}"
+                                onclick="selectMethod({{ method.pk }}, '{{ method.name }}', '{{ method.ticker }}', '{{ method.network_label|default:method.get_network_key_display }}', '{{ method.color }}', '{{ method.address }}', '{{ method.icon_symbol }}')"
+                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50/50 transition">
                                 <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="btc" class="w-4 h-4 accent-orange-500" />
+                                    <input type="radio" name="method" value="{{ method.pk }}" class="w-4 h-4" />
+                                    <!-- Icon circle -->
                                     <div
-                                        class="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                                        ₿</div>
+                                        class="w-9 h-9 rounded-full {{ method.color }} flex items-center justify-center text-white font-bold text-sm shrink-0">
+                                        {% if method.icon_symbol %}{{ method.icon_symbol }}{% else %}{{ method.ticker|slice:":1" }}{% endif %}
+                                    </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Bitcoin</p>
-                                        <p class="text-xs text-gray-400">BTC Network</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ method.name }}</p>
+                                        <p class="text-xs text-gray-400">{{ method.network_label|default:method.get_network_key_display }}</p>
                                     </div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor"
+                                    stroke-width="2" viewBox="0 0 24 24">
                                     <path d="M9 18l6-6-6-6" />
                                 </svg>
-                            </label>
-
-                            <label id="method-eth" onclick="selectMethod('eth')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="eth" class="w-4 h-4 accent-blue-500" />
-                                    <div
-                                        class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                                        Ξ</div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">Ethereum</p>
-                                        <p class="text-xs text-gray-400">ERC-20 Network</p>
-                                    </div>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </label>
-
-                            <label id="method-ltc" onclick="selectMethod('ltc')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="ltc" class="w-4 h-4 accent-gray-600" />
-                                    <div
-                                        class="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm">
-                                        Ł</div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">Litecoin</p>
-                                        <p class="text-xs text-gray-400">LTC Network</p>
-                                    </div>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </label>
-
+                            </div>
+                            {% endfor %}
                         </div>
+
+                        {% else %}
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+                            <p class="text-sm text-gray-400">No payment methods available right now. Please check back
+                                soon.</p>
+                        </div>
+                        {% endif %}
                     </div>
 
                     <!-- Fee Breakdown -->
@@ -155,15 +132,14 @@
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between text-gray-600"><span>Deposit Amount:</span><span
                                     id="fee-amount">$0.00</span></div>
-                            <div class="flex justify-between text-red-500"><span>Processing Fee (0%):</span><span
-                                    id="fee-processing">$0.00</span></div>
+                            <div class="flex justify-between text-red-500"><span>Processing Fee
+                                    (0%):</span><span>$0.00</span></div>
                             <div
                                 class="border-t border-green-200 pt-2 flex justify-between font-semibold text-gray-900">
                                 <span>Total Amount:</span><span id="fee-total">$0.00</span></div>
                         </div>
                     </div>
 
-                    <!-- Submit -->
                     <button onclick="openModal()"
                         class="w-full bg-black text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -178,16 +154,12 @@
         </main>
     </div>
 
-    <!-- ── Crypto Address Modal ─────────────────────────────────────────────── -->
+    <!-- ── Crypto Address Modal ──────────────────────────────────────────────── -->
     <div id="crypto-modal" class="fixed inset-0 z-50 hidden">
-        <!-- Backdrop -->
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeModal()"></div>
-
-        <!-- Panel -->
         <div
             class="absolute inset-x-4 top-1/2 -translate-y-1/2 max-w-md mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-            <!-- Header -->
             <div
                 class="bg-gradient-to-r from-gray-900 to-gray-700 px-6 py-5 text-white flex items-center justify-between">
                 <div>
@@ -206,14 +178,15 @@
                 <!-- Coin info -->
                 <div class="flex items-center gap-3">
                     <div id="modal-icon"
-                        class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"></div>
+                        class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
+                    </div>
                     <div>
                         <p id="modal-coin-name" class="font-semibold text-gray-900"></p>
                         <p id="modal-network" class="text-xs text-gray-400"></p>
                     </div>
                 </div>
 
-                <!-- QR Code placeholder -->
+                <!-- QR Code -->
                 <div class="flex justify-center">
                     <div
                         class="w-36 h-36 bg-gray-100 rounded-xl flex items-center justify-center border border-gray-200">
@@ -256,11 +229,11 @@
                     <span>Only send the exact amount. Sending a different amount may delay your deposit.</span>
                 </div>
 
-                <!-- I've sent it form -->
+                <!-- Submit form — posts method_id (DB pk) not a hardcoded string -->
                 <form method="POST" action="{% url 'deposit' %}">
                     {% csrf_token %}
                     <input type="hidden" name="amount" id="hidden-amount" />
-                    <input type="hidden" name="method" id="hidden-method" />
+                    <input type="hidden" name="method_id" id="hidden-method-id" />
                     <button type="submit"
                         class="w-full bg-black text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition">
                         ✓ I've Sent It — Track My Deposit
@@ -274,46 +247,48 @@
     </div>
 
     <script>
-        const CRYPTO = {
-            btc: { name: 'Bitcoin', ticker: 'BTC', network: 'BTC Network', color: 'bg-orange-500', address: '{{ btc_address|default:"bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh" }}' },
-            eth: { name: 'Ethereum', ticker: 'ETH', network: 'ERC-20 Network', color: 'bg-blue-600', address: '{{ eth_address|default:"0x71C7656EC7ab88b098defB751B7401B5f6d8976F" }}' },
-            ltc: { name: 'Litecoin', ticker: 'LTC', network: 'LTC Network', color: 'bg-gray-500', address: '{{ ltc_address|default:"ltc1qhf7s7ajrj8ncrx8ewrzmk8aqv8rmujq2ell9x0" }}' },
-        };
+        let selectedMethodId = null;
+        let selectedMethodData = {};
 
-        let selectedMethod = null;
+        function selectMethod(id, name, ticker, network, color, address, iconSymbol) {
+            selectedMethodId = id;
+            selectedMethodData = { name, ticker, network, color, address, iconSymbol };
 
-        function selectMethod(method) {
-            selectedMethod = method;
-            document.querySelectorAll('.method-card').forEach(el => el.classList.remove('border-black', 'bg-gray-50'));
-            document.getElementById('method-' + method).classList.add('border-black', 'bg-gray-50');
+            // Highlight selected card
+            document.querySelectorAll('.method-card').forEach(el =>
+                el.classList.remove('border-black', 'bg-gray-50', 'ring-1', 'ring-black'));
+            document.getElementById('method-card-' + id).classList.add('border-black', 'bg-gray-50', 'ring-1', 'ring-black');
+
+            // Check the radio
+            document.querySelector(`input[value="${id}"]`).checked = true;
         }
 
         function updateFees() {
             const amount = parseFloat(document.getElementById('amount-input').value) || 0;
             document.getElementById('fee-amount').textContent = '$' + amount.toFixed(2);
-            document.getElementById('fee-processing').textContent = '$0.00';
             document.getElementById('fee-total').textContent = '$' + amount.toFixed(2);
         }
 
         function openModal() {
             const amount = parseFloat(document.getElementById('amount-input').value);
             if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
-            if (!selectedMethod) { alert('Please select a payment method.'); return; }
+            if (!selectedMethodId) { alert('Please select a payment method.'); return; }
 
-            const coin = CRYPTO[selectedMethod];
+            const { name, ticker, network, color, address, iconSymbol } = selectedMethodData;
+
             document.getElementById('modal-amount-display').textContent = '$' + amount.toFixed(2);
-            document.getElementById('modal-icon').textContent = selectedMethod === 'btc' ? '₿' : selectedMethod === 'eth' ? 'Ξ' : 'Ł';
-            document.getElementById('modal-icon').className = 'w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ' + coin.color;
-            document.getElementById('modal-coin-name').textContent = coin.name;
-            document.getElementById('modal-network').textContent = coin.network;
-            document.getElementById('modal-coin-ticker').textContent = coin.ticker;
-            document.getElementById('modal-address').textContent = coin.address;
+            document.getElementById('modal-icon').textContent = iconSymbol || ticker.charAt(0);
+            document.getElementById('modal-icon').className = `w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0 ${color}`;
+            document.getElementById('modal-coin-name').textContent = name;
+            document.getElementById('modal-network').textContent = network;
+            document.getElementById('modal-coin-ticker').textContent = ticker;
+            document.getElementById('modal-address').textContent = address;
             document.getElementById('hidden-amount').value = amount;
-            document.getElementById('hidden-method').value = selectedMethod;
+            document.getElementById('hidden-method-id').value = selectedMethodId;
 
-            // QR code via public API
+            // QR code
             const qr = document.getElementById('modal-qr');
-            qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(coin.address)}`;
+            qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=128x128&data=${encodeURIComponent(address)}`;
             qr.classList.remove('hidden');
             document.getElementById('modal-qr-placeholder').classList.add('hidden');
 
@@ -333,16 +308,7 @@
             });
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('-translate-x-full');
-        }
-
-        document.addEventListener('click', function (e) {
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
-                sidebar.classList.add('-translate-x-full');
-            }
-        });
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
     </script>
 
 </body>

@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -383,20 +383,14 @@ def wallet_view(request):
     }
     return render(request, 'wallet.html', context)
 
-CRYPTO_ADDRESSES = {
-    'btc': 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    'eth': '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
-    'ltc': 'ltc1qhf7s7ajrj8ncrx8ewrzmk8aqv8rmujq2ell9x0',
-}
- 
- 
-@login_required
+login_required
 def deposit_view(request):
-    profile = request.user.profile
+    profile         = request.user.profile
+    payment_methods = PaymentMethod.objects.filter(is_active=True)
  
     if request.method == 'POST':
         raw_amount = request.POST.get('amount', '0')
-        method     = request.POST.get('method', '').strip().lower()
+        method_id  = request.POST.get('method_id', '').strip()
  
         try:
             amount = Decimal(raw_amount)
@@ -407,32 +401,30 @@ def deposit_view(request):
             messages.error(request, 'Please enter a valid amount greater than $0.')
             return redirect('deposit')
  
-        if method not in CRYPTO_ADDRESSES:
+        # Fetch the selected method from DB — validates it exists and is active
+        try:
+            payment_method = PaymentMethod.objects.get(pk=method_id, is_active=True)
+        except PaymentMethod.DoesNotExist:
             messages.error(request, 'Please select a valid payment method.')
             return redirect('deposit')
  
-        # Create a PENDING transaction — balance is NOT touched yet
         transaction = WalletTransaction.objects.create(
-            profile=profile,
-            transaction_type='deposit',
-            payment_method=method,
-            amount=amount,
-            status='pending',
-            balance_before=profile.available_balance,
-            balance_after=profile.available_balance,   # unchanged until approved
-            description=f'{method.upper()} deposit of ${amount}',
+            profile          = profile,
+            transaction_type = 'deposit',
+            payment_method   = payment_method.network_key,
+            amount           = amount,
+            status           = 'pending',
+            balance_before   = profile.available_balance,
+            balance_after    = profile.available_balance,
+            description      = f'{payment_method.ticker} deposit of ${amount}',
         )
  
         return redirect('deposit_confirm', pk=transaction.pk)
  
-    # GET — pass crypto addresses so the template can inject them into JS
-    context = {
-        'profile':     profile,
-        'btc_address': CRYPTO_ADDRESSES['btc'],
-        'eth_address': CRYPTO_ADDRESSES['eth'],
-        'ltc_address': CRYPTO_ADDRESSES['ltc'],
-    }
-    return render(request, 'deposit.html', context)
+    return render(request, 'deposit.html', {
+        'profile':         profile,
+        'payment_methods': payment_methods,
+    })
  
  
 @login_required

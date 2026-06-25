@@ -371,3 +371,51 @@ class EmailVerificationCode(models.Model):
     def is_expired(self):
         from django.utils import timezone
         return timezone.now() > self.expires_at
+    
+class PaymentMethod(models.Model):
+    """
+    Admin-managed deposit payment methods.
+    Each network variant of a coin is a separate row —
+    e.g. USDT TRC-20, USDT ERC-20, USDT BEP-20 are three separate rows.
+    """
+ 
+    NETWORK_CHOICES = [
+        ('btc',  'Bitcoin (BTC)'),
+        ('eth',  'Ethereum (ERC-20)'),
+        ('ltc',  'Litecoin (LTC)'),
+        ('usdt', 'Tether (USDT)'),
+        ('usdc', 'USD Coin (USDC)'),
+        ('bnb',  'BNB Smart Chain (BEP-20)'),
+        ('sol',  'Solana (SOL)'),
+        ('trx',  'Tron (TRC-20)'),
+        ('xrp',  'Ripple (XRP)'),
+        ('doge', 'Dogecoin (DOGE)'),
+        ('other','Other'),
+    ]
+ 
+    # ── Display ───────────────────────────────────────────────────────────────
+    name          = models.CharField(max_length=60)      # e.g. "USDT (TRC-20)"
+    ticker        = models.CharField(max_length=10)      # e.g. "USDT"
+    network_label = models.CharField(max_length=60, blank=True)  # e.g. "Tron TRC-20"
+    network_key   = models.CharField(max_length=10, choices=NETWORK_CHOICES, default='other')
+ 
+    # ── Wallet ────────────────────────────────────────────────────────────────
+    address       = models.CharField(max_length=200)
+ 
+    # ── Icon — use a Tailwind bg colour class and a unicode symbol ────────────
+    color         = models.CharField(max_length=40, default='bg-gray-500')
+    # e.g. "bg-orange-500", "bg-green-500", "bg-blue-600"
+    icon_symbol   = models.CharField(max_length=10, blank=True)
+    # e.g. "₿", "Ξ", "₮", "Ł", "Ð", "◎"
+ 
+    # ── Settings ──────────────────────────────────────────────────────────────
+    is_active     = models.BooleanField(default=True)
+    sort_order    = models.PositiveIntegerField(default=0)
+    created_at    = models.DateTimeField(auto_now_add=True)
+    updated_at    = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['sort_order', 'name']
+ 
+    def __str__(self):
+        return f'{self.name} ({self.ticker})'

@@ -7,7 +7,7 @@ from .notifications import create_notification
 from .models import (
     Profile, KYCVerification, WalletTransaction, Stock, 
     StockHolding, InvestmentPlan, TeslaVehicle, 
-    Order, ReferralBonus, InvestmentPlan, UserInvestment
+    Order, ReferralBonus, InvestmentPlan, UserInvestment, PaymentMethod
 )
 
 
@@ -398,3 +398,27 @@ class OrderAdmin(admin.ModelAdmin):
 class ReferralBonusAdmin(admin.ModelAdmin):
     list_display = ('referrer', 'referred_user', 'amount', 'is_claimed', 'created_at')
     list_filter = ('is_claimed',)
+    
+@admin.register(PaymentMethod)
+class PaymentMethodAdmin(admin.ModelAdmin):
+    list_display  = ('name', 'ticker', 'network_key', 'short_address', 'is_active', 'sort_order')
+    list_editable = ('is_active', 'sort_order')
+    list_filter   = ('is_active', 'network_key')
+    search_fields = ('name', 'ticker', 'address')
+    ordering      = ('sort_order', 'name')
+ 
+    fieldsets = (
+        ('Display', {
+            'fields': ('name', 'ticker', 'network_label', 'network_key', 'icon_symbol', 'color')
+        }),
+        ('Wallet', {
+            'fields': ('address',)
+        }),
+        ('Settings', {
+            'fields': ('is_active', 'sort_order')
+        }),
+    )
+ 
+    @admin.display(description='Address')
+    def short_address(self, obj):
+        return obj.address[:20] + '…' if len(obj.address) > 20 else obj.address
