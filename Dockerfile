@@ -22,6 +22,7 @@ RUN poetry install --only main --no-root --no-interaction
 COPY . /code
 
 ENV SECRET_KEY "6Z51xXtWDXSod11fY6eyAokGjyhUYrXvx9fpgYg3w5SyUQ5Ev1"
+RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
