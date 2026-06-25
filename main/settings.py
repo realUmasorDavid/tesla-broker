@@ -28,13 +28,14 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['umasordavid.pythonanywhere.com', 'localhost', '127.0.0.1', 'tesla-broker.fly.dev']
+ALLOWED_HOSTS = ['umasordavid.pythonanywhere.com', 'localhost', '127.0.0.1', 'tesla-broker.fly.dev', 'teslaprivatecapital.com']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.dev',
     'https://*.ngrok.io',
     'https://umasordavid.pythonanywhere.com',
     'https://tesla-broker.fly.dev',
+    'https://teslaprivatecapital.com',
 ]
 
 
@@ -205,8 +206,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 
-RESEND_API_KEY = 're_6i1w8cQf_ChhsmT63PqWPZ4f4sYY8pFcy'
-DEFAULT_FROM_EMAIL = 'Tesla Capital <onboarding@legitonlinetrading.com>'
+RESEND_API_KEY = 're_aUuku585_LeBS7Loroxs57ryig3pnp295'
+DEFAULT_FROM_EMAIL = 'Tesla Private Capital <onboarding@teslaprivatecapital.com>'
 
 SESSION_SAVE_EVERY_REQUEST = True
 

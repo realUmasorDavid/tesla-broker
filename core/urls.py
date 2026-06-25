@@ -1,6 +1,7 @@
 from django.urls import path
+from django.contrib.auth import views as auth_views
 from django.views.decorators.http import require_POST
-from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email
+from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email, settings_view, password_reset_confirm, password_reset_done, password_reset_request
 
 urlpatterns = [
     path('', index, name='index'),
@@ -15,6 +16,7 @@ urlpatterns = [
     path('verify-email/', verify_email, name='verify_email'),
     path('logout/', logout, name='logout'),
     path('dashboard/', dashboard, name='dashboard'),
+    path('settings/', settings_view, name='settings'),
     path('profile/', profile_view, name='profile'),
     path('kyc/', kyc_view, name='kyc'),
     path('wallet/', wallet_view, name='wallet'),
@@ -39,4 +41,8 @@ urlpatterns = [
     path('notifications/<int:pk>/read/', mark_notification_read, name='notification_read'),
     path('notifications/read-all/', mark_all_notifications_read, name='notifications_read_all'),
     path('notifications/count/', notifications_unread_count, name='notifications_count'),
+
+    path('password-reset/', password_reset_request, name='password_reset'),
+    path('password-reset/done/', password_reset_done, name='password_reset_done'),
+    path('password-reset-confirm/<uuid:token>/', password_reset_confirm, name='password_reset_confirm'),
 ]

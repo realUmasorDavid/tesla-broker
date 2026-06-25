@@ -40,7 +40,7 @@ class KYCForm(forms.ModelForm):
             'id_type':    'Document Type',
             'id_number':  'Document Number',
             'id_front':   'Front of Document',
-            'id_back':    'Back of Document (not required for passport)',
+            'id_back':    'Back of Document',
             'selfie':     'Selfie Holding Your Document',
             'address_type':      'Address Document Type',
             'proof_of_address':  'Proof of Address',

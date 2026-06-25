@@ -1,10 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, get_user_model, login as auth_login, logout as auth_logout
+from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod, PasswordResetToken
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -16,7 +17,9 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import random
 import string
-from .email_utils import send_verification_email, send_welcome_email
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.hashers import make_password
+from .email_utils import send_verification_email, send_welcome_email, send_password_changed_email, send_2fa_code_email, send_login_notification_email, send_password_reset_email
 
 User = get_user_model()
 
@@ -210,6 +213,13 @@ def verify_email(request):
             otp.save(update_fields=['is_used'])
  
             auth_login(request, user, backend='core.backends.EmailOrUsernameBackend')
+            send_login_notification_email(
+                to_email=request.user.email,
+                first_name=request.user.get_full_name() or request.user.username,
+                login_time=timezone.now(),
+                ip_address=request.META.get('REMOTE_ADDR'),
+                location="Unknown"  # You can improve this with geoip later
+            )
             
             if is_register:
                 try:
@@ -1124,3 +1134,134 @@ def notifications_unread_count(request):
         profile=request.user.profile, is_read=False
     ).count()
     return JsonResponse({'count': count})
+ 
+@login_required
+def settings_view(request):
+    profile = request.user.profile
+
+    # ====================== PROFILE FORM ======================
+    if request.method == 'POST' and 'save_profile' in request.POST:
+        profile_form = ProfileUpdateForm(request.POST, instance=profile, user=request.user)
+        if profile_form.is_valid():
+            profile_form.save()
+            profile_form.save_user(request.user)
+            messages.success(request, "Profile updated successfully.")
+            return redirect('settings')
+    else:
+        profile_form = ProfileUpdateForm(instance=profile, user=request.user)
+
+    # ====================== KYC FORM ======================
+    try:
+        kyc = profile.kyc_verification
+    except:
+        kyc = None
+
+    if request.method == 'POST' and 'submit_kyc' in request.POST:
+        kyc_form = KYCForm(request.POST, request.FILES, instance=kyc)
+        if kyc_form.is_valid():
+            kyc_obj = kyc_form.save(commit=False)
+            kyc_obj.profile = profile
+            kyc_obj.save()
+            profile.kyc_status = 'pending'
+            profile.save()
+            messages.success(request, "KYC documents submitted successfully and are under review.")
+            return redirect('settings')
+    else:
+        kyc_form = KYCForm(instance=kyc)
+
+    # ====================== CHANGE PASSWORD ======================
+    if request.method == 'POST' and 'change_password' in request.POST:
+        password_form = PasswordChangeForm(user=request.user, data=request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            update_session_auth_hash(request, request.user)
+            send_password_changed_email(request.user.email, request.user.get_full_name())
+            messages.success(request, "Your password has been changed successfully.")
+            return redirect('settings')
+        else:
+            messages.error(request, "Please correct the errors below.")
+
+    # ====================== 2FA (Simple Version) ======================
+    if request.method == 'POST' and 'toggle_2fa' in request.POST:
+        if profile.is_2fa_enabled:
+            # Disable 2FA
+            profile.is_2fa_enabled = False
+            profile.save()
+            messages.success(request, "Two-Factor Authentication has been disabled.")
+        else:
+            # Enable 2FA - send verification code
+            code = str(random.randint(100000, 999999))
+            request.session['2fa_setup_code'] = code
+            request.session['2fa_pending'] = True
+            send_2fa_code_email(request.user.email, code, request.user.get_full_name())
+            messages.info(request, "A verification code has been sent to your email to enable 2FA.")
+        return redirect('settings')
+
+    # Verify 2FA Code (during setup)
+    if request.method == 'POST' and 'verify_2fa_code' in request.POST:
+        entered_code = request.POST.get('2fa_code')
+        if entered_code == request.session.get('2fa_setup_code'):
+            profile.is_2fa_enabled = True
+            profile.save()
+            request.session.pop('2fa_setup_code', None)
+            request.session.pop('2fa_pending', None)
+            messages.success(request, "Two-Factor Authentication has been successfully enabled!")
+        else:
+            messages.error(request, "Invalid verification code. Please try again.")
+        return redirect('settings')
+
+    context = {
+        'profile_form': profile_form,
+        'kyc_form': kyc_form,
+        'password_form': PasswordChangeForm(user=request.user),
+        'profile': profile,
+        'kyc': kyc,
+    }
+    return render(request, 'settings.html', context)
+
+def password_reset_request(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            # Create reset token
+            token = PasswordResetToken.objects.create(user=user)
+            reset_url = request.build_absolute_uri(f'/password-reset-confirm/{token.token}/')
+            
+            send_password_reset_email(user.email, user.get_full_name(), reset_url)
+            messages.success(request, "Password reset link has been sent to your email.")
+            return redirect('password_reset_done')
+        except User.DoesNotExist:
+            messages.error(request, "No account found with this email address.")
+    
+    return render(request, 'password_reset.html')
+
+
+def password_reset_confirm(request, token):
+    reset_token = get_object_or_404(PasswordResetToken, token=token)
+    
+    if reset_token.is_used or reset_token.is_expired():
+        messages.error(request, "This reset link has expired or been used.")
+        return redirect('password_reset')
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+
+        if new_password == confirm_password:
+            reset_token.user.password = make_password(new_password)
+            reset_token.user.save()
+            
+            reset_token.is_used = True
+            reset_token.save()
+            
+            messages.success(request, "Your password has been reset successfully.")
+            return redirect('login')
+        else:
+            messages.error(request, "Passwords do not match.")
+
+    return render(request, 'password_reset_confirm.html', {'token': token})
+
+
+def password_reset_done(request):
+    return render(request, 'password_reset_done.html')

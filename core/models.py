@@ -44,6 +44,8 @@ class Profile(models.Model):
     # ── Timestamps ─────────────────────────────────────────────────────────
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    is_2fa_enabled = models.BooleanField(default=False)
  
     def save(self, *args, **kwargs):
         if not self.referral_code:
@@ -419,3 +421,15 @@ class PaymentMethod(models.Model):
  
     def __str__(self):
         return f'{self.name} ({self.ticker})'
+
+class PasswordResetToken(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timezone.timedelta(hours=24)
+
+    def __str__(self):
+        return f"Reset token for {self.user.email}"
