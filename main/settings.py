@@ -101,9 +101,7 @@ DATABASES = {
         'PASSWORD': os.getenv('PROD_DB_PASSWORD'),
         'HOST': os.getenv('PROD_DB_HOST'),
         'PORT': os.getenv('PROD_DB_PORT'),
-        'OPTIONS': {
-            'sslmode': 'disable',
-        },
+        "DISABLE_SERVER_SIDE_CURSORS": True,
     }
 }
 
