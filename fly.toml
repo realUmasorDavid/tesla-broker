@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for tesla-broker on 2026-06-23T17:53:10+01:00
+# fly.toml app configuration file generated for tesla-broker on 2026-06-23T17:06:49Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -25,6 +25,7 @@ console_command = '/code/manage.py shell'
 
 [[vm]]
   memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 1024
 
