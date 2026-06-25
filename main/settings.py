@@ -160,42 +160,42 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=315360000',
 }
 
-# STORAGES = {
-#     "staticfiles": {
-#         "BACKEND": "storages.backends.s3.S3Storage",
-#         "OPTIONS": {
-#             "endpoint_url": AWS_S3_ENDPOINT_URL,
-#             "bucket_name": AWS_STORAGE_BUCKET_NAME,
-#             "location": "static",
-#             "addressing_style": "path",
-#             "default_acl": None,
-#             "querystring_auth": True,
-#             "file_overwrite": True,
-#         },
-#     },
-#     "default": {
-#         "BACKEND": "storages.backends.s3.S3Storage",
-#         "OPTIONS": {
-#             "access_key": AWS_ACCESS_KEY_ID,
-#             "secret_key": AWS_SECRET_ACCESS_KEY,
-#             "bucket_name": AWS_STORAGE_BUCKET_NAME,
-#             "endpoint_url": AWS_S3_ENDPOINT_URL,
-#             "location": "media",
-#             "region_name": AWS_S3_REGION,
-#             "signature_version": AWS_S3_SIGNATURE_VERSION,
-#         },
-#     },
-# }
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "endpoint_url": AWS_S3_ENDPOINT_URL,
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "location": "static",
+            "addressing_style": "path",
+            "default_acl": None,
+            "querystring_auth": True,
+            "file_overwrite": True,
+        },
+    },
+    "default": {
+        "BACKEND": "storages.backends.s3.S3Storage",
+        "OPTIONS": {
+            "access_key": AWS_ACCESS_KEY_ID,
+            "secret_key": AWS_SECRET_ACCESS_KEY,
+            "bucket_name": AWS_STORAGE_BUCKET_NAME,
+            "endpoint_url": AWS_S3_ENDPOINT_URL,
+            "location": "media",
+            "region_name": AWS_S3_REGION,
+            "signature_version": AWS_S3_SIGNATURE_VERSION,
+        },
+    },
+}
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
-# STATIC_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/"
-STATIC_URL = '/static/'
+STATIC_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/"
+# STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
-MEDIA_URL = '/media/' 
+MEDIA_URL = f"{AWS_S3_ENDPOINT_URL}/storage/v1/object/public/{AWS_STORAGE_BUCKET_NAME}/"
+# MEDIA_URL = '/media/' 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 # Default primary key field type
