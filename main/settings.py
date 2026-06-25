@@ -147,11 +147,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 # ============== Supabase S3 Settings ==============
-AWS_ACCESS_KEY_ID = os.getenv("SUPABASE_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("SUPABASE_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = os.getenv("SUPABASE_STORAGE_BUCKET_NAME")
-AWS_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL")
-AWS_S3_REGION_NAME = os.getenv("SUPABASE_S3_REGION", "eu-central-1")
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", "dummy_build_key")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", "dummy_build_secret")
+AWS_STORAGE_BUCKET_NAME = os.getenv("BUCKET_NAME", "empty-paper-5438")
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_ENDPOINT_URL_S3", "https://tigris.dev")
+AWS_S3_REGION_NAME = os.getenv("AWS_REGION", "auto")
+
 
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_ADDRESSING_STYLE = 'path'
