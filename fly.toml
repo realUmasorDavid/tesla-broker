@@ -1,10 +1,10 @@
-# fly.toml app configuration file generated for tesla-broker on 2026-06-23T17:06:49Z
+# fly.toml app configuration file generated for tesla-broker on 2026-06-25T10:31:15Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
 app = 'tesla-broker'
-primary_region = 'sjc'
+primary_region = 'jnb'
 console_command = '/code/manage.py shell'
 
 [build]
