@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.staticfiles',
     'core',
-    # 'storages',
+    'storages',
 ]
 
 MIDDLEWARE = [
