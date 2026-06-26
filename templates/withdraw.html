@@ -44,8 +44,9 @@
 
                 {% if messages %}
                 {% for message in messages %}
-                <div
-                    class="px-4 py-3 rounded-xl text-sm {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200{% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
+                <div class="px-4 py-3 rounded-xl text-sm
+              {% if message.tags == 'error' %}bg-red-50 text-red-600 border border-red-200
+              {% else %}bg-green-50 text-green-600 border border-green-200{% endif %}">
                     {{ message }}
                 </div>
                 {% endfor %}
@@ -56,7 +57,7 @@
                     class="bg-gradient-to-r from-gray-900 to-gray-700 rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center justify-between text-white">
                     <div>
                         <h2 class="text-xl font-semibold">Withdraw Funds</h2>
-                        <p class="text-sm text-gray-400 mt-1">Transfer your funds to a crypto wallet or bank account</p>
+                        <p class="text-sm text-gray-400 mt-1">Transfer funds to your external wallet or bank account</p>
                     </div>
                     <div class="bg-white/10 rounded-xl mt-4 sm:mt-0 p-4 sm:text-right">
                         <p class="text-xs text-gray-400 mb-1">Available Balance</p>
@@ -87,113 +88,50 @@
                     <!-- Withdrawal Method -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-3">Withdrawal Method</label>
+
+                        {% if payment_methods %}
                         <div class="space-y-3">
-
-                            <div id="method-btc" onclick="selectMethod('btc')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-orange-400 hover:bg-orange-50/30 transition">
+                            {% for method in payment_methods %}
+                            <div id="method-card-{{ method.pk }}"
+                                onclick="selectMethod({{ method.pk }}, '{{ method.name }}', '{{ method.ticker }}', '{{ method.network_label|default:method.get_network_key_display }}', '{{ method.color }}', '{{ method.icon_symbol }}')"
+                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50/50 transition">
                                 <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="btc" class="w-4 h-4 accent-orange-500" />
+                                    <input type="radio" name="method" value="{{ method.pk }}" class="w-4 h-4" />
                                     <div
-                                        class="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-sm">
-                                        ₿</div>
+                                        class="w-9 h-9 rounded-full {{ method.color }} flex items-center justify-center text-white font-bold text-xs shrink-0">
+                                        {% if method.icon_symbol %}{{ method.icon_symbol }}{% else %}{{ method.ticker|slice:":3" }}{% endif %}
+                                    </div>
                                     <div>
-                                        <p class="text-sm font-semibold text-gray-900">Bitcoin</p>
-                                        <p class="text-xs text-gray-400">BTC Network · ~10 min</p>
+                                        <p class="text-sm font-semibold text-gray-900">{{ method.name }}</p>
+                                        <p class="text-xs text-gray-400">{{ method.network_label|default:method.get_network_key_display }}</p>
                                     </div>
                                 </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" stroke="currentColor"
+                                    stroke-width="2" viewBox="0 0 24 24">
                                     <path d="M9 18l6-6-6-6" />
                                 </svg>
                             </div>
-
-                            <div id="method-eth" onclick="selectMethod('eth')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="eth" class="w-4 h-4 accent-blue-500" />
-                                    <div
-                                        class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-                                        Ξ</div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">Ethereum</p>
-                                        <p class="text-xs text-gray-400">ERC-20 Network · ~5 min</p>
-                                    </div>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </div>
-
-                            <div id="method-ltc" onclick="selectMethod('ltc')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="ltc" class="w-4 h-4 accent-gray-600" />
-                                    <div
-                                        class="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold text-sm">
-                                        Ł</div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">Litecoin</p>
-                                        <p class="text-xs text-gray-400">LTC Network · ~2 min</p>
-                                    </div>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </div>
-
-                            <div id="method-bank" onclick="selectMethod('bank')"
-                                class="method-card flex items-center justify-between p-4 border border-gray-200 rounded-xl cursor-pointer hover:border-green-400 hover:bg-green-50/30 transition">
-                                <div class="flex items-center gap-3">
-                                    <input type="radio" name="method" value="bank" class="w-4 h-4 accent-green-600" />
-                                    <div
-                                        class="w-9 h-9 rounded-full bg-green-600 flex items-center justify-center text-white">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <rect x="2" y="5" width="20" height="14" rx="2" />
-                                            <path d="M2 10h20" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-sm font-semibold text-gray-900">Bank Transfer</p>
-                                        <p class="text-xs text-gray-400">Wire / ACH · 1–3 business days</p>
-                                    </div>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path d="M9 18l6-6-6-6" />
-                                </svg>
-                            </div>
-
+                            {% endfor %}
                         </div>
+                        {% else %}
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6 text-center">
+                            <p class="text-sm text-gray-400">No withdrawal methods available. Please contact support.
+                            </p>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <!-- Destination fields -->
-                    <div id="crypto-address-field" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Your <span
-                                id="coin-label">Crypto</span> Wallet Address</label>
+                    <!-- Destination address — shown after method is selected -->
+                    <div id="destination-field" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Your <span id="dest-coin-label">Wallet</span> Address
+                        </label>
+                        <p class="text-xs text-gray-400 mb-2">Enter the <span id="dest-network-label"></span> address
+                            you want to receive funds at.</p>
                         <input id="wallet-address" type="text" placeholder="Paste your wallet address here..."
                             class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm font-mono focus:outline-none focus:ring-1 focus:ring-black focus:border-black transition" />
-                        <p class="text-xs text-gray-400 mt-1.5">Make sure the address matches the selected network.</p>
-                    </div>
-
-                    <div id="bank-fields" class="hidden space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Account Holder Name</label>
-                            <input id="bank-name" type="text" placeholder="Full name on account"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-black transition" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Bank Account Number</label>
-                            <input id="bank-account" type="text" placeholder="e.g. 1234567890"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-black transition" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Routing / Sort Code</label>
-                            <input id="bank-routing" type="text" placeholder="e.g. 021000021"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-black transition" />
-                        </div>
+                        <p class="text-xs text-red-500 mt-1 hidden" id="address-error">Please enter a valid wallet
+                            address.</p>
                     </div>
 
                     <!-- Summary -->
@@ -211,7 +149,8 @@
                             <div class="flex justify-between text-gray-500"><span>Processing Fee
                                     (0%):</span><span>$0.00</span></div>
                             <div class="border-t border-red-200 pt-2 flex justify-between font-semibold text-gray-900">
-                                <span>You Will Receive:</span><span id="summary-total">$0.00</span></div>
+                                <span>You Will Receive:</span><span id="summary-total">$0.00</span>
+                            </div>
                         </div>
                     </div>
 
@@ -250,10 +189,20 @@
 
             <div class="p-6 space-y-5">
 
+                <!-- Summary -->
                 <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Method</span>
-                        <span id="modal-method" class="font-semibold text-gray-900"></span>
+                        <div class="flex items-center gap-2">
+                            <div id="modal-method-icon"
+                                class="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
+                            </div>
+                            <span id="modal-method-name" class="font-semibold text-gray-900 text-xs"></span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Network</span>
+                        <span id="modal-network" class="text-xs text-gray-700 font-medium"></span>
                     </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Destination</span>
@@ -266,6 +215,7 @@
                     </div>
                 </div>
 
+                <!-- Warning -->
                 <div
                     class="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 flex gap-2 text-xs text-yellow-700">
                     <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2"
@@ -274,14 +224,15 @@
                         <line x1="12" y1="9" x2="12" y2="13" />
                         <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
-                    <span>Please double-check your destination details. Withdrawals cannot be reversed once
-                        processed.</span>
+                    <span>Double-check your wallet address. Withdrawals sent to a wrong address cannot be
+                        recovered.</span>
                 </div>
 
-                <form id="withdraw-form" method="POST" action="{% url 'withdraw' %}">
+                <!-- Form -->
+                <form method="POST" action="{% url 'withdraw' %}" id="withdraw-form">
                     {% csrf_token %}
                     <input type="hidden" name="amount" id="hidden-amount" />
-                    <input type="hidden" name="method" id="hidden-method" />
+                    <input type="hidden" name="method_id" id="hidden-method-id" />
                     <input type="hidden" name="destination" id="hidden-destination" />
                     <button type="submit"
                         class="w-full bg-black text-white py-3 rounded-xl text-sm font-semibold hover:bg-gray-800 transition">
@@ -298,21 +249,24 @@
     </div>
 
     <script>
-        const AVAILABLE = parseFloat("{{ profile.available_balance|default:'0' }}");
-        let selectedMethod = null;
-        const METHOD_LABELS = { btc: 'Bitcoin (BTC)', eth: 'Ethereum (ETH)', ltc: 'Litecoin (LTC)', bank: 'Bank Transfer' };
+        const AVAILABLE = parseFloat('{{ profile.available_balance|default:0 }}');
+        let selectedMethodId = null;
+        let selectedMethodData = {};
 
-        function selectMethod(method) {
-            selectedMethod = method;
+        function selectMethod(id, name, ticker, network, color, iconSymbol) {
+            selectedMethodId = id;
+            selectedMethodData = { name, ticker, network, color, iconSymbol };
+
+            // Highlight card
             document.querySelectorAll('.method-card').forEach(el =>
-                el.classList.remove('border-black', 'ring-1', 'ring-black'));
-            document.getElementById('method-' + method).classList.add('border-black', 'ring-1', 'ring-black');
-            document.querySelector(`input[value="${method}"]`).checked = true;
-            const isCrypto = ['btc', 'eth', 'ltc'].includes(method);
-            document.getElementById('crypto-address-field').classList.toggle('hidden', !isCrypto);
-            document.getElementById('bank-fields').classList.toggle('hidden', method !== 'bank');
-            const labels = { btc: 'Bitcoin', eth: 'Ethereum', ltc: 'Litecoin' };
-            if (isCrypto) document.getElementById('coin-label').textContent = labels[method];
+                el.classList.remove('border-black', 'ring-1', 'ring-black', 'bg-gray-50'));
+            document.getElementById('method-card-' + id).classList.add('border-black', 'ring-1', 'ring-black', 'bg-gray-50');
+            document.querySelector(`input[value="${id}"]`).checked = true;
+
+            // Show destination address field
+            document.getElementById('destination-field').classList.remove('hidden');
+            document.getElementById('dest-coin-label').textContent = name;
+            document.getElementById('dest-network-label').textContent = network;
         }
 
         function setMax() {
@@ -328,43 +282,39 @@
             document.getElementById('balance-error').classList.toggle('hidden', amount <= AVAILABLE);
         }
 
-        function getDestination() {
-            if (!selectedMethod) return '';
-            if (selectedMethod === 'bank') {
-                const name = document.getElementById('bank-name').value.trim();
-                const account = document.getElementById('bank-account').value.trim();
-                const routing = document.getElementById('bank-routing').value.trim();
-                return `${name} | Acct: ${account} | Routing: ${routing}`;
-            }
-            return document.getElementById('wallet-address').value.trim();
-        }
-
         function openModal() {
             const amount = parseFloat(document.getElementById('amount-input').value);
-            const destination = getDestination();
+            const address = document.getElementById('wallet-address')?.value.trim() || '';
+
             if (!amount || amount <= 0) { alert('Please enter a valid amount.'); return; }
             if (amount > AVAILABLE) { alert('Amount exceeds your available balance.'); return; }
-            if (!selectedMethod) { alert('Please select a withdrawal method.'); return; }
-            if (!destination) { alert('Please enter your destination details.'); return; }
+            if (!selectedMethodId) { alert('Please select a withdrawal method.'); return; }
+            if (!address) {
+                document.getElementById('address-error').classList.remove('hidden');
+                document.getElementById('wallet-address').focus();
+                return;
+            }
+            document.getElementById('address-error').classList.add('hidden');
+
+            const { name, ticker, network, color, iconSymbol } = selectedMethodData;
+
             document.getElementById('modal-amount-display').textContent = '$' + amount.toFixed(2);
-            document.getElementById('modal-method').textContent = METHOD_LABELS[selectedMethod];
-            document.getElementById('modal-destination').textContent = destination;
+            document.getElementById('modal-method-icon').textContent = iconSymbol || ticker.slice(0, 3);
+            document.getElementById('modal-method-icon').className = `w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${color}`;
+            document.getElementById('modal-method-name').textContent = name;
+            document.getElementById('modal-network').textContent = network;
+            document.getElementById('modal-destination').textContent = address;
             document.getElementById('modal-receive').textContent = '$' + amount.toFixed(2);
+
             document.getElementById('hidden-amount').value = amount;
-            document.getElementById('hidden-method').value = selectedMethod;
-            document.getElementById('hidden-destination').value = destination;
+            document.getElementById('hidden-method-id').value = selectedMethodId;
+            document.getElementById('hidden-destination').value = address;
+
             document.getElementById('confirm-modal').classList.remove('hidden');
         }
 
         function closeModal() { document.getElementById('confirm-modal').classList.add('hidden'); }
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-
-        document.addEventListener('click', function (e) {
-            const sidebar = document.getElementById('sidebar');
-            if (window.innerWidth < 1024 && !sidebar.contains(e.target) && !e.target.closest('button')) {
-                sidebar.classList.add('-translate-x-full');
-            }
-        });
     </script>
 
 </body>

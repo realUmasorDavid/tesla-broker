@@ -22,6 +22,11 @@
                     <path d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z" />
                 </svg>
             </label>
+
+            <form method="POST" enctype="multipart/form-data" id="avatar-form">
+                {% csrf_token %}
+                <input type="file" name="avatar" id="avatar-input" accept="image/*" class="hidden" onchange="submitAvatar(this)" />
+            </form>
         </div>
     </div>
 
@@ -64,4 +69,5 @@
         class="w-full bg-black text-white py-4 rounded-3xl font-semibold hover:bg-zinc-800 transition">
         Save Changes
     </button>
+    
 </form>

@@ -325,7 +325,9 @@ class ProfileUpdateForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
-        self.fields['country'].choices = COUNTRY_CHOICES
+        if 'country' in self.fields:
+            self.fields['country'].choices = COUNTRY_CHOICES
+            self.fields['country'].widget.choices = COUNTRY_CHOICES
         if user:
             self.fields['first_name'].initial = user.first_name
             self.fields['last_name'].initial  = user.last_name

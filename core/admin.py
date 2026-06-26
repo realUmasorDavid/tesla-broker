@@ -9,6 +9,7 @@ from .models import (
     StockHolding, InvestmentPlan, TeslaVehicle, 
     Order, ReferralBonus, InvestmentPlan, UserInvestment, PaymentMethod
 )
+from .email_utils import send_deposit_received_email, send_withdrawal_completed_email
 
 
 # ====================== Inline Models ======================
@@ -71,6 +72,13 @@ def approve_deposits(modeladmin, request, queryset):
         tx.balance_after  = profile.available_balance
         tx.confirmed_at   = timezone.now()
         tx.save()
+
+        send_deposit_received_email(
+            to_email=profile.user.email,
+            first_name=profile.user.get_full_name() or profile.user.username,
+            amount=float(tx.amount),
+            reference_number=tx.pk
+        )
  
         create_notification(
             profile,
@@ -106,6 +114,13 @@ def approve_withdrawals(modeladmin, request, queryset):
         tx.status       = 'completed'
         tx.confirmed_at = timezone.now()
         tx.save()
+
+        send_withdrawal_completed_email(
+            to_email=tx.profile.user.email,
+            first_name=tx.profile.user.get_full_name() or tx.profile.user.username,
+            amount=float(tx.amount),
+            reference_number=tx.pk
+        )
  
         create_notification(
             tx.profile,
@@ -223,6 +238,12 @@ def approve_kyc(modeladmin, request, queryset):
         kyc.verification_date   = timezone.now()
         kyc.reviewed_by         = request.user
         kyc.save(update_fields=['verification_date', 'reviewed_by'])
+
+        send_kyc_approved_email(
+            to_email=profile.user.email,
+            first_name=profile.user.get_full_name() or profile.user.username
+        )
+        
         approved += 1
     if approved:
         modeladmin.message_user(request, f'✅ {approved} KYC submission(s) approved.', messages.SUCCESS)

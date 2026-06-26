@@ -19,7 +19,7 @@ import random
 import string
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.hashers import make_password
-from .email_utils import send_verification_email, send_welcome_email, send_password_changed_email, send_2fa_code_email, send_login_notification_email, send_password_reset_email
+from .email_utils import send_verification_email, send_welcome_email, send_password_changed_email, send_2fa_code_email, send_login_notification_email, send_password_reset_email, send_withdrawal_request_received_email
 
 User = get_user_model()
 
@@ -300,7 +300,7 @@ def dashboard(request):
 @login_required
 def profile_view(request):
     profile = request.user.profile
- 
+
     if request.method == 'POST':
         # ── Avatar upload ──────────────────────────────────────────────────
         if 'avatar' in request.FILES:
@@ -308,7 +308,7 @@ def profile_view(request):
             profile.save(update_fields=['avatar'])
             messages.success(request, 'Profile photo updated.')
             return redirect('profile')
- 
+
         # ── Profile form ───────────────────────────────────────────────────
         form = ProfileUpdateForm(request.POST, instance=profile, user=request.user)
         if form.is_valid():
@@ -316,47 +316,53 @@ def profile_view(request):
             form.save_user(request.user)
             messages.success(request, 'Profile updated successfully.')
             return redirect('profile')
+        # If invalid, fall through to re-render with errors
     else:
         form = ProfileUpdateForm(instance=profile, user=request.user)
- 
-    return render(request, 'profile.html', {'form': form, 'profile': profile})
+
+    context = {
+        'profile_form': form,   # Changed to match your template
+        'profile': profile,
+    }
+    return render(request, 'profile.html', context)
 
 
 @login_required
 def kyc_view(request):
     profile = request.user.profile
- 
+
     try:
         kyc = profile.kyc_verification
     except KYCVerification.DoesNotExist:
         kyc = None
- 
+
+    # Prevent resubmission if already pending or verified
     if request.method == 'POST':
-        # Block resubmission if already pending or verified
         if profile.kyc_status in ('pending', 'verified'):
-            messages.error(request, 'Your KYC has already been submitted.')
+            messages.error(request, 'Your KYC has already been submitted and cannot be changed at this time.')
             return redirect('kyc')
- 
+
         form = KYCForm(request.POST, request.FILES, instance=kyc)
         if form.is_valid():
             kyc_obj = form.save(commit=False)
             kyc_obj.profile = profile
             kyc_obj.save()
- 
+
             profile.kyc_status = 'pending'
             profile.save(update_fields=['kyc_status'])
- 
-            messages.success(request, 'Your documents have been submitted and are under review.')
+
+            messages.success(request, 'Your documents have been submitted successfully and are under review.')
             return redirect('kyc')
-        # form invalid — fall through to re-render with errors
+        # If invalid, fall through to re-render with errors
     else:
         form = KYCForm(instance=kyc)
- 
-    return render(request, 'kyc.html', {
-        'form':    form,
+
+    context = {
+        'form': form,
         'profile': profile,
-        'kyc':     kyc,
-    })
+        'kyc': kyc,
+    }
+    return render(request, 'kyc.html', context)
     
 @login_required
 def wallet_view(request):
@@ -449,11 +455,12 @@ def deposit_confirm_view(request, pk):
 
 @login_required
 def withdraw_view(request):
-    profile = request.user.profile
+    profile         = request.user.profile
+    payment_methods = PaymentMethod.objects.filter(is_active=True)
  
     if request.method == 'POST':
         raw_amount  = request.POST.get('amount', '0')
-        method      = request.POST.get('method', '').strip().lower()
+        method_id   = request.POST.get('method_id', '').strip()
         destination = request.POST.get('destination', '').strip()
  
         try:
@@ -466,16 +473,18 @@ def withdraw_view(request):
             messages.error(request, 'Please enter a valid amount greater than $0.')
             return redirect('withdraw')
  
-        if method not in ('btc', 'eth', 'ltc', 'bank'):
+        try:
+            payment_method = PaymentMethod.objects.get(pk=method_id, is_active=True)
+        except PaymentMethod.DoesNotExist:
             messages.error(request, 'Please select a valid withdrawal method.')
             return redirect('withdraw')
  
         if not destination:
-            messages.error(request, 'Please provide a destination wallet address or bank details.')
+            messages.error(request, f'Please enter your {payment_method.ticker} wallet address.')
             return redirect('withdraw')
  
         if amount > profile.available_balance:
-            messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance}.')
+            messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
             return redirect('withdraw')
  
         # ── Deduct balance immediately (held pending admin approval) ──────
@@ -483,22 +492,24 @@ def withdraw_view(request):
         profile.available_balance -= amount
         profile.save(update_fields=['available_balance'])
  
-        # ── Create PENDING withdrawal transaction ─────────────────────────
         transaction = WalletTransaction.objects.create(
-            profile=profile,
-            transaction_type='withdrawal',
-            payment_method=method,
-            amount=amount,
-            destination=destination,
-            status='pending',
-            balance_before=balance_before,
-            balance_after=profile.available_balance,
-            description=f'{method.upper()} withdrawal of ${amount} to {destination[:40]}',
+            profile          = profile,
+            transaction_type = 'withdrawal',
+            payment_method   = payment_method.network_key,
+            amount           = amount,
+            destination      = f'{payment_method.name} ({payment_method.network_label}) — {destination}',
+            status           = 'pending',
+            balance_before   = balance_before,
+            balance_after    = profile.available_balance,
+            description      = f'{payment_method.ticker} withdrawal of ${amount} to {destination[:40]}',
         )
  
         return redirect('withdraw_confirm', pk=transaction.pk)
  
-    return render(request, 'withdraw.html', {'profile': profile})
+    return render(request, 'withdraw.html', {
+        'profile':         profile,
+        'payment_methods': payment_methods,
+    })
  
  
 @login_required
@@ -1265,3 +1276,64 @@ def password_reset_confirm(request, token):
 
 def password_reset_done(request):
     return render(request, 'password_reset_done.html')
+
+@login_required
+def security_view(request):
+    profile = request.user.profile
+
+    context = {
+        'profile': profile,
+    }
+    return render(request, 'security.html', context)
+
+@login_required
+def change_password_view(request):
+    if request.method == 'POST':
+        password_form = PasswordChangeForm(user=request.user, data=request.POST)
+        if password_form.is_valid():
+            password_form.save()
+            update_session_auth_hash(request, request.user)
+            send_password_changed_email(request.user.email, request.user.get_full_name())
+            messages.success(request, "Your password has been changed successfully.")
+            return redirect('security')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        password_form = PasswordChangeForm(user=request.user)
+
+    return render(request, 'change_password.html', {'password_form': password_form})
+
+
+@login_required
+def two_factor_view(request):
+    profile = request.user.profile
+
+    # Toggle / Send Code
+    if request.method == 'POST' and 'toggle_2fa' in request.POST:
+        if profile.is_2fa_enabled:
+            profile.is_2fa_enabled = False
+            profile.save()
+            messages.success(request, "Two-Factor Authentication has been disabled.")
+        else:
+            code = str(random.randint(100000, 999999))
+            request.session['2fa_setup_code'] = code
+            request.session['2fa_pending'] = True
+            send_2fa_code_email(request.user.email, code, request.user.get_full_name())
+            messages.info(request, "A verification code has been sent to your email.")
+        return redirect('two_factor')
+
+    # Verify Code
+    if request.method == 'POST' and 'verify_2fa_code' in request.POST:
+        entered_code = request.POST.get('2fa_code')
+        if entered_code == request.session.get('2fa_setup_code'):
+            profile.is_2fa_enabled = True
+            profile.save()
+            request.session.pop('2fa_setup_code', None)
+            request.session.pop('2fa_pending', None)
+            messages.success(request, "Two-Factor Authentication has been successfully enabled!")
+        else:
+            messages.error(request, "Invalid verification code. Please try again.")
+        return redirect('two_factor')
+
+    context = {'profile': profile}
+    return render(request, 'two_factor.html', context)

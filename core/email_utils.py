@@ -406,3 +406,224 @@ def send_password_reset_email(to_email, first_name, reset_url):
         "subject": "Password Reset Request",
         "html": _base_wrapper(content),
     })
+
+def send_deposit_received_email(to_email, first_name, amount, reference_number=None):
+    """Email sent when a deposit is received"""
+    date_received = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    reference_html = ""
+    if reference_number:
+        reference_html = f"""
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Reference Number</td>
+                  <td style="color:#fff;font-size:15px;text-align:right;font-family:monospace;">{reference_number}</td>
+                </tr>
+        """
+
+    content = f"""
+        <p style="color:#e5e7eb;font-size:18px;font-weight:700;margin:0 0 8px;">
+            Hi {first_name or 'there'},
+        </p>
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
+            We have successfully received your deposit.
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          <tr>
+            <td style="background:#141414;border:1px solid #2e2e2e;border-radius:14px;padding:24px;">
+              <table width="100%" cellpadding="0" cellspacing="8">
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Amount</td>
+                  <td style="color:#10b981;font-size:18px;font-weight:700;text-align:right;">${amount:,.2f}</td>
+                </tr>
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Date Received</td>
+                  <td style="color:#fff;font-size:15px;text-align:right;">{date_received}</td>
+                </tr>
+                {reference_html}
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 20px;line-height:1.7;">
+            Your funds are currently being processed and will be reflected in your available balance shortly.
+        </p>
+
+        <p style="color:#6b7280;font-size:13px;line-height:1.6;">
+            Thank you for choosing Tesla Private Capital.
+        </p>
+    """
+
+    resend.Emails.send({
+        "from": "Tesla Private Capital <finance@teslaprivatecapital.com>",
+        "to": [to_email],
+        "subject": "Deposit Received - Tesla Private Capital",
+        "html": _base_wrapper(content),
+    })
+
+def send_withdrawal_completed_email(to_email, first_name, amount, reference_number=None):
+    """Email sent when a withdrawal is successfully processed"""
+    completion_date = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    reference_html = ""
+    if reference_number:
+        reference_html = f"""
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Reference Number</td>
+                  <td style="color:#fff;font-size:15px;text-align:right;font-family:monospace;">{reference_number}</td>
+                </tr>
+        """
+
+    content = f"""
+        <p style="color:#e5e7eb;font-size:18px;font-weight:700;margin:0 0 8px;">
+            Hi {first_name or 'there'},
+        </p>
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
+            Your withdrawal request has been successfully completed.
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          <tr>
+            <td style="background:#141414;border:1px solid #2e2e2e;border-radius:14px;padding:24px;">
+              <table width="100%" cellpadding="0" cellspacing="8">
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Amount</td>
+                  <td style="color:#10b981;font-size:18px;font-weight:700;text-align:right;">${amount:,.2f}</td>
+                </tr>
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Completion Date</td>
+                  <td style="color:#fff;font-size:15px;text-align:right;">{completion_date}</td>
+                </tr>
+                {reference_html}
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 20px;line-height:1.7;">
+            Please allow additional time for your financial institution or wallet provider to post the funds.
+        </p>
+
+        <p style="color:#6b7280;font-size:13px;line-height:1.6;">
+            Thank you for using Tesla Private Capital.
+        </p>
+    """
+
+    resend.Emails.send({
+        "from": "Tesla Private Capital <finance@teslaprivatecapital.com>",
+        "to": [to_email],
+        "subject": "Withdrawal Successfully Completed - Tesla Private Capital",
+        "html": _base_wrapper(content),
+    })
+
+def send_kyc_approved_email(to_email, first_name):
+    """Email sent when KYC is successfully approved"""
+    
+    content = f"""
+        <p style="color:#e5e7eb;font-size:18px;font-weight:700;margin:0 0 8px;">
+            Hi {first_name or 'there'},
+        </p>
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
+            We are pleased to inform you that your Know Your Customer (KYC) review has been completed successfully.
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          <tr>
+            <td style="background:#141414;border:1px solid #2e2e2e;border-radius:14px;padding:32px; text-align:center;">
+              <div style="font-size:52px;margin-bottom:16px;">✅</div>
+              <p style="color:#10b981;font-size:20px;font-weight:700;margin:0;">
+                KYC VERIFIED
+              </p>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
+            Your account has been verified and approved for continued access to all Tesla Private Capital services.
+        </p>
+
+        <p style="color:#10b981;font-size:15px;margin:0 0 28px;line-height:1.7;">
+            You may now access all authorized features within your investor portal.
+        </p>
+
+        <p style="color:#6b7280;font-size:13px;line-height:1.6;">
+            Thank you for your cooperation throughout the verification process.
+        </p>
+
+        <!-- CTA -->
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td align="center">
+              <a href="https://yourdomain.com/dashboard/" 
+                 style="display:inline-block;background:#fff;color:#000;padding:16px 40px;border-radius:12px;
+                        font-size:15px;font-weight:600;text-decoration:none;">
+                Go to Dashboard
+              </a>
+            </td>
+          </tr>
+        </table>
+    """
+
+    resend.Emails.send({
+        "from": "Tesla Private Capital <compliance@teslaprivatecapital.com>",
+        "to": [to_email],
+        "subject": "KYC Review Completed - Account Verified ✅",
+        "html": _base_wrapper(content),
+    })
+
+def send_withdrawal_request_received_email(to_email, first_name, amount, reference_number=None):
+    """Email sent when user submits a withdrawal request (pending review)"""
+    date_submitted = datetime.now().strftime('%B %d, %Y at %I:%M %p')
+    
+    reference_html = ""
+    if reference_number:
+        reference_html = f"""
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Reference Number</td>
+                  <td style="color:#fff;font-size:15px;text-align:right;font-family:monospace;">{reference_number}</td>
+                </tr>
+        """
+
+    content = f"""
+        <p style="color:#e5e7eb;font-size:18px;font-weight:700;margin:0 0 8px;">
+            Hi {first_name or 'there'},
+        </p>
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
+            We have received your withdrawal request.
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+          <tr>
+            <td style="background:#141414;border:1px solid #2e2e2e;border-radius:14px;padding:24px;">
+              <table width="100%" cellpadding="0" cellspacing="8">
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Requested Amount</td>
+                  <td style="color:#10b981;font-size:18px;font-weight:700;text-align:right;">${amount:,.2f}</td>
+                </tr>
+                <tr>
+                  <td style="color:#9ca3af;font-size:13px;">Date Submitted</td>
+                  <td style="color:#fff;font-size:15px;text-align:right;">{date_submitted}</td>
+                </tr>
+                {reference_html}
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <p style="color:#9ca3af;font-size:15px;margin:0 0 20px;line-height:1.7;">
+            Your request is currently under review and processing. 
+            We will notify you once it has been completed.
+        </p>
+
+        <p style="color:#6b7280;font-size:13px;line-height:1.6;">
+            Thank you for using Tesla Private Capital.
+        </p>
+    """
+
+    resend.Emails.send({
+        "from": "Tesla Private Capital <finance@teslaprivatecapital.com>",
+        "to": [to_email],
+        "subject": "Withdrawal Request Received - Tesla Private Capital",
+        "html": _base_wrapper(content),
+    })

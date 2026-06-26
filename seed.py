@@ -1,6 +1,6 @@
 """
 Run this script once to seed all payment methods into the database.
-Place it anywhere and run:  python manage.py shell < seed_payment_methods.py
+Place it anywhere and run:  python manage.py shell < seed.py
 Or paste into the Django shell.
 """
 

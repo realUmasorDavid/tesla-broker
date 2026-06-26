@@ -148,32 +148,38 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-# ============== Supabase S3 Settings ==============
-AWS_ACCESS_KEY_ID = os.getenv("SUPABASE_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("SUPABASE_SECRET_ACCESS_KEY")
+# ============== AWS S3 Settings ==============
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = "teslaprivatecapitals3"
-AWS_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL")
+AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
 AWS_S3_REGION_NAME = "eu-central-1"
 
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_ADDRESSING_STYLE = 'path'
 
 STORAGES = {
-    # Media stays on Supabase
+    # Media stays on AWS
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
-            "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "endpoint_url": AWS_S3_ENDPOINT_URL,
-            "access_key": AWS_ACCESS_KEY_ID,
-            "secret_key": AWS_SECRET_ACCESS_KEY,
-            "region_name": AWS_S3_REGION_NAME,
-            "addressing_style": AWS_S3_ADDRESSING_STYLE,
-            "signature_version": AWS_S3_SIGNATURE_VERSION,
+            # Direct mapping from your environment strings
+            "bucket_name": os.getenv("AWS_STORAGE_BUCKET_NAME"),
+            "access_key": os.getenv("AWS_ACCESS_KEY_ID"),
+            "secret_key": os.getenv("AWS_SECRET_ACCESS_KEY"),
+            "region_name": "eu-central-1",
+            
+            # Using the optimal direct project endpoint layout
+            "endpoint_url": "https://dtxzfcxgkupskpfnjjuy.supabase.co/storage/v1/s3",
+            
+            # Protocol settings required by AWS
+            "addressing_style": "path",
+            "signature_version": "s3v4",
             "location": "media",
             "file_overwrite": False,
             "querystring_auth": True,
             "querystring_expire": 3600,
+            "default_acl": None,
         },
     },
     # Static files migrate back to local/WhiteNoise storage

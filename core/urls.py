@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.views.decorators.http import require_POST
-from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email, settings_view, password_reset_confirm, password_reset_done, password_reset_request
+from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email, settings_view, password_reset_confirm, password_reset_done, password_reset_request, security_view, change_password_view, two_factor_view
 
 urlpatterns = [
     path('', index, name='index'),
@@ -19,6 +19,11 @@ urlpatterns = [
     path('settings/', settings_view, name='settings'),
     path('profile/', profile_view, name='profile'),
     path('kyc/', kyc_view, name='kyc'),
+    path('security/', security_view, name='security'),
+    path('security/change-password/', change_password_view, name='change_password'),
+    path('security/two-factor/', two_factor_view, name='two_factor'),
+
+    
     path('wallet/', wallet_view, name='wallet'),
     path('deposit/', deposit_view, name='deposit'),
     path('deposit/<int:pk>/confirm/', deposit_confirm_view, name='deposit_confirm'),
