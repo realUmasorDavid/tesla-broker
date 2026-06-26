@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -158,7 +159,7 @@ AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_ADDRESSING_STYLE = 'path'
 
 STORAGES = {
-    # Private Media Storage (Requires Signed, Expiring URLs)
+    # Media stays on Supabase
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
@@ -171,30 +172,23 @@ STORAGES = {
             "signature_version": AWS_S3_SIGNATURE_VERSION,
             "location": "media",
             "file_overwrite": False,
-            "querystring_auth": True,          # Protects your user-uploaded media files
-            "querystring_expire": 3600,        # Links expire after 1 hour
+            "querystring_auth": True,
+            "querystring_expire": 3600,
         },
     },
-    # Public Static Storage (Fast, Cacheable, Unsigned URLs)
+    # Static files migrate back to local/WhiteNoise storage
     "staticfiles": {
-        "BACKEND": "storages.backends.s3.S3Storage",
-        "OPTIONS": {
-            "bucket_name": AWS_STORAGE_BUCKET_NAME,
-            "endpoint_url": AWS_S3_ENDPOINT_URL,
-            "access_key": AWS_ACCESS_KEY_ID,
-            "secret_key": AWS_SECRET_ACCESS_KEY,
-            "region_name": AWS_S3_REGION_NAME,
-            "addressing_style": AWS_S3_ADDRESSING_STYLE,
-            "signature_version": AWS_S3_SIGNATURE_VERSION,
-            "location": "static",
-            "file_overwrite": True,
-            "querystring_auth": False,         # Disabled for static files so browsers can cache them
-        },
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 
 # Standard relative URLs (django-storages handles the absolute domain mapping dynamically)
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles") 
 STATIC_URL = "static/"
+
+# Extra places for collectstatic to look (optional, keep if you already have it)
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
 MEDIA_URL = "media/"
 
 # Default primary key field type
