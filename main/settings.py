@@ -154,15 +154,11 @@ AWS_STORAGE_BUCKET_NAME = os.getenv("SUPABASE_STORAGE_BUCKET_NAME")
 AWS_S3_ENDPOINT_URL = os.getenv("SUPABASE_S3_ENDPOINT_URL")
 AWS_S3_REGION_NAME = os.getenv("SUPABASE_S3_REGION")
 
-
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_ADDRESSING_STYLE = 'path'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = True          # Very important for Supabase
-AWS_QUERYSTRING_EXPIRE = 3600        # 1 hour
 
 STORAGES = {
+    # Private Media Storage (Requires Signed, Expiring URLs)
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
@@ -173,12 +169,13 @@ STORAGES = {
             "region_name": AWS_S3_REGION_NAME,
             "addressing_style": AWS_S3_ADDRESSING_STYLE,
             "signature_version": AWS_S3_SIGNATURE_VERSION,
-            "location": "media",                    # ← Important
-            "default_acl": AWS_DEFAULT_ACL,
-            "querystring_auth": AWS_QUERYSTRING_AUTH,
+            "location": "media",
             "file_overwrite": False,
+            "querystring_auth": True,          # Protects your user-uploaded media files
+            "querystring_expire": 3600,        # Links expire after 1 hour
         },
     },
+    # Public Static Storage (Fast, Cacheable, Unsigned URLs)
     "staticfiles": {
         "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
@@ -190,16 +187,15 @@ STORAGES = {
             "addressing_style": AWS_S3_ADDRESSING_STYLE,
             "signature_version": AWS_S3_SIGNATURE_VERSION,
             "location": "static",
-            "default_acl": AWS_DEFAULT_ACL,
-            "querystring_auth": True,
             "file_overwrite": True,
+            "querystring_auth": False,         # Disabled for static files so browsers can cache them
         },
     },
 }
 
-# URLs
-STATIC_URL = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/static/"
-MEDIA_URL  = f"{AWS_S3_ENDPOINT_URL}/{AWS_STORAGE_BUCKET_NAME}/media/"
+# Standard relative URLs (django-storages handles the absolute domain mapping dynamically)
+STATIC_URL = "static/"
+MEDIA_URL = "media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
