@@ -402,7 +402,7 @@ def wallet_view(request):
 login_required
 def deposit_view(request):
     profile         = request.user.profile
-    payment_methods = PaymentMethod.objects.filter(is_active=True)
+    payment_methods = PaymentMethod.objects.filter(is_active=True, is_deposit_method=True)
  
     if request.method == 'POST':
         raw_amount = request.POST.get('amount', '0')
@@ -474,7 +474,7 @@ def withdraw_view(request):
             return redirect('withdraw')
  
         try:
-            payment_method = PaymentMethod.objects.get(pk=method_id, is_active=True)
+            payment_method = PaymentMethod.objects.get(pk=method_id, is_active=True, is_withdrawal_method=True)
         except PaymentMethod.DoesNotExist:
             messages.error(request, 'Please select a valid withdrawal method.')
             return redirect('withdraw')

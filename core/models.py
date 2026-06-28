@@ -392,6 +392,7 @@ class PaymentMethod(models.Model):
         ('trx',  'Tron (TRC-20)'),
         ('xrp',  'Ripple (XRP)'),
         ('doge', 'Dogecoin (DOGE)'),
+        ('bank','Bank'),
         ('other','Other'),
     ]
  
@@ -412,6 +413,8 @@ class PaymentMethod(models.Model):
  
     # ── Settings ──────────────────────────────────────────────────────────────
     is_active     = models.BooleanField(default=True)
+    is_withdrawal_method = models.BooleanField(default=True)
+    is_deposit_method     = models.BooleanField(default=True)
     sort_order    = models.PositiveIntegerField(default=0)
     created_at    = models.DateTimeField(auto_now_add=True)
     updated_at    = models.DateTimeField(auto_now=True)

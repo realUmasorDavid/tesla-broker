@@ -9,7 +9,7 @@ from .models import (
     StockHolding, InvestmentPlan, TeslaVehicle, 
     Order, ReferralBonus, InvestmentPlan, UserInvestment, PaymentMethod
 )
-from .email_utils import send_deposit_received_email, send_withdrawal_completed_email
+from .email_utils import send_deposit_received_email, send_withdrawal_completed_email, send_kyc_approved_email
 
 
 # ====================== Inline Models ======================
@@ -422,9 +422,9 @@ class ReferralBonusAdmin(admin.ModelAdmin):
     
 @admin.register(PaymentMethod)
 class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display  = ('name', 'ticker', 'network_key', 'short_address', 'is_active', 'sort_order')
-    list_editable = ('is_active', 'sort_order')
-    list_filter   = ('is_active', 'network_key')
+    list_display  = ('name', 'ticker', 'network_key', 'short_address', 'is_active', 'is_deposit_method', 'is_withdrawal_method', 'sort_order')
+    list_editable = ('is_active', 'is_deposit_method', 'is_withdrawal_method', 'sort_order')
+    list_filter   = ('is_active', 'is_deposit_method', 'is_withdrawal_method', 'network_key')
     search_fields = ('name', 'ticker', 'address')
     ordering      = ('sort_order', 'name')
  
@@ -436,7 +436,7 @@ class PaymentMethodAdmin(admin.ModelAdmin):
             'fields': ('address',)
         }),
         ('Settings', {
-            'fields': ('is_active', 'sort_order')
+            'fields': ('is_active', 'is_deposit_method', 'is_withdrawal_method', 'sort_order')
         }),
     )
  
