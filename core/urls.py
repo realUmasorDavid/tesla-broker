@@ -1,10 +1,11 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.views.decorators.http import require_POST
-from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email, settings_view, password_reset_confirm, password_reset_done, password_reset_request, security_view, change_password_view, two_factor_view
+from .views import deposit_confirm_view, index, blog, investments_view, investment_subscribe, login, profile_view, register, dashboard, kyc_view, stock_confirm, wallet_view, deposit_view, withdraw_view, withdraw_confirm_view, stocks_list, stock_detail, stock_buy, portfolio_view, inventory_view, vehicle_detail_view, vehicle_order_view, vehicle_order_confirm_view, vehicle_order_success_view, logout, orders_view, notifications_view, mark_all_notifications_read, notifications_unread_count, mark_notification_read, about, careers, help, privacy, terms, verify_email, settings_view, password_reset_confirm, password_reset_done, password_reset_request, security_view, change_password_view, two_factor_view, access_code_view
 
 urlpatterns = [
     path('', index, name='index'),
+    path('validate/', access_code_view, name='access_code'),
     path('blog/', blog, name='blog'),
     path('about/', about, name='about'),
     path('careers/', careers, name='careers'),

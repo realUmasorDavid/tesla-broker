@@ -7,7 +7,7 @@ from .notifications import create_notification
 from .models import (
     Profile, KYCVerification, WalletTransaction, Stock, 
     StockHolding, InvestmentPlan, TeslaVehicle, 
-    Order, ReferralBonus, InvestmentPlan, UserInvestment, PaymentMethod
+    Order, ReferralBonus, InvestmentPlan, UserInvestment, PaymentMethod, AccessCode
 )
 from .email_utils import send_deposit_received_email, send_withdrawal_completed_email, send_kyc_approved_email
 
@@ -264,7 +264,16 @@ def reject_kyc(modeladmin, request, queryset):
         modeladmin.message_user(request, f'❌ {rejected} KYC submission(s) rejected.', messages.SUCCESS)
 
 # ====================== Main Models ======================
+@admin.register(AccessCode)
+class AccessCodeAdmin(admin.ModelAdmin):
+    list_display = ('code', 'is_used', 'created_at', 'used_by')
+    list_filter = ('is_used', 'created_at')
+    search_fields = ('code',)
+    readonly_fields = ('code', 'created_at')
 
+    def has_add_permission(self, request):
+        return True  # Allow admin to generate new codes
+    
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display    = ('user', 'referral_code', 'kyc_status', 'available_balance', 'total_balance', 'created_at')

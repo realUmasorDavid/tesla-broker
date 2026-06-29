@@ -5,6 +5,19 @@ from django.utils import timezone
 import uuid
 import secrets
 
+class AccessCode(models.Model):
+    code = models.CharField(max_length=8, unique=True, editable=False)
+    is_used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    used_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='used_access_code')
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = secrets.token_hex(4).upper()  # e.g., A1B2C3D4
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.code} - {'Used' if self.is_used else 'Active'}"
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')

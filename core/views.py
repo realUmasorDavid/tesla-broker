@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod, PasswordResetToken
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod, PasswordResetToken, AccessCode
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -22,6 +22,27 @@ from django.contrib.auth.hashers import make_password
 from .email_utils import send_verification_email, send_welcome_email, send_password_changed_email, send_2fa_code_email, send_login_notification_email, send_password_reset_email, send_withdrawal_request_received_email
 
 User = get_user_model()
+
+def access_code_view(request):
+    if request.method == 'POST':
+        entered_code = request.POST.get('access_code', '').strip().upper()
+        try:
+            access_code = AccessCode.objects.get(code=entered_code, is_used=False)
+            
+            # Mark as used
+            access_code.is_used = True
+            access_code.used_by = request.user if request.user.is_authenticated else None
+            access_code.save()
+
+            request.session['access_granted'] = True
+            request.session['access_code_id'] = access_code.pk
+
+            messages.success(request, "Access granted! You can now create an account.")
+            return redirect('register')
+        except AccessCode.DoesNotExist:
+            messages.error(request, "Invalid or already used access code.")
+
+    return render(request, 'access_code.html')
 
 def index(request):
     vehicles = TeslaVehicle.objects.filter(is_available=True)[:4]
