@@ -36,6 +36,10 @@
         <main class="flex-1 px-3 py-10 flex items-start justify-center">
             <div class="w-full max-w-md space-y-5">
 
+                <div class="space-y-2">
+                    {% include 'partials/messages.html' with message_tag='vehicle_order_success' %}
+                </div>
+
                 <!-- Success icon -->
                 <div class="bg-white rounded-2xl border border-gray-200 p-8 text-center space-y-4">
                     <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">

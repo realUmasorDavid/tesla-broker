@@ -13,6 +13,7 @@ from django.utils import timezone
 from datetime import timedelta
 import requests
 from .notifications import create_notification
+from .utils import get_client_ip, get_location_from_ip
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import random
@@ -22,6 +23,15 @@ from django.contrib.auth.hashers import make_password
 from .email_utils import send_verification_email, send_welcome_email, send_password_changed_email, send_2fa_code_email, send_login_notification_email, send_password_reset_email, send_withdrawal_request_received_email
 
 User = get_user_model()
+
+
+def flash_success(request, tag, message):
+    messages.success(request, message, extra_tags=tag)
+
+
+def flash_error(request, tag, message):
+    messages.error(request, message, extra_tags=tag)
+
 
 def access_code_view(request):
     if request.method == 'POST':
@@ -37,10 +47,10 @@ def access_code_view(request):
             request.session['access_granted'] = True
             request.session['access_code_id'] = access_code.pk
 
-            messages.success(request, "Access granted! You can now create an account.")
+            flash_success(request, 'register', "Access granted! You can now create an account.")
             return redirect('register')
         except AccessCode.DoesNotExist:
-            messages.error(request, "Invalid or already used access code.")
+            flash_error(request, 'access_code', "Invalid or already used access code.")
 
     return render(request, 'access_code.html')
 
@@ -108,12 +118,16 @@ def login(request):
             request.session.modified = True
             return redirect('verify_email')
  
-        messages.error(request, 'Invalid email or password.')
+        flash_error(request, 'login', 'Invalid email or password.')
  
     return render(request, 'login.html')
  
  
 def register(request):
+    if not request.session.get('access_granted'):
+        flash_error(request, 'access_code', "You need a valid access code to register.")
+        return redirect('access_code')
+    
     first_name    = ''
     last_name     = ''
     email         = ''
@@ -131,26 +145,26 @@ def register(request):
         full_phone   = f"{phone_code}{phone_number}" if phone_number else ''
  
         if not first_name or not last_name or not email or not password or not password2:
-            messages.error(request, 'Please complete all fields.')
+            flash_error(request, 'register', 'Please complete all fields.')
         elif password != password2:
-            messages.error(request, 'Passwords do not match.')
+            flash_error(request, 'register', 'Passwords do not match.')
         elif User.objects.filter(username__iexact=email).exists() or \
              User.objects.filter(email__iexact=email).exists():
-            messages.error(request, 'An account with that email already exists.')
+            flash_error(request, 'register', 'An account with that email already exists.')
         else:
             referrer_profile = None
             if referral_code:
                 try:
                     referrer_profile = Profile.objects.get(referral_code__iexact=referral_code)
                 except Profile.DoesNotExist:
-                    messages.error(request, 'Referral code not found. Please check and try again.')
+                    flash_error(request, 'register', 'Referral code not found. Please check and try again.')
  
             if not list(messages.get_messages(request)):
                 try:
                     validate_password(password)
                 except ValidationError as error:
                     for msg in error.messages:
-                        messages.error(request, msg)
+                        flash_error(request, 'register', msg)
                 else:
                     # Create user but don't log in yet
                     user = User.objects.create_user(
@@ -193,7 +207,7 @@ def verify_email(request):
  
     user_id = request.session.get('pending_login_user_id')
     if not user_id:
-        messages.error(request, 'Session expired. Please try again.')
+        flash_error(request, 'login', 'Session expired. Please try again.')
         return redirect('login')
  
     user        = get_object_or_404(User, pk=user_id)
@@ -209,9 +223,9 @@ def verify_email(request):
             code = _issue_code(user, purpose)
             try:
                 send_verification_email(user.email, code, purpose, user.first_name)
-                messages.success(request, 'A new code has been sent to your email.')
+                flash_success(request, 'verify_email', 'A new code has been sent to your email.')
             except Exception:
-                messages.error(request, 'Failed to resend. Please try again.')
+                flash_error(request, 'verify_email', 'Failed to resend. Please try again.')
             return redirect('verify_email')
  
         # ── Verify ────────────────────────────────────────────────────────
@@ -238,8 +252,8 @@ def verify_email(request):
                 to_email=request.user.email,
                 first_name=request.user.get_full_name() or request.user.username,
                 login_time=timezone.now(),
-                ip_address=request.META.get('REMOTE_ADDR'),
-                location="Unknown"  # You can improve this with geoip later
+                ip_address=get_client_ip(request),
+                location=get_location_from_ip(request)
             )
             
             if is_register:
@@ -253,9 +267,9 @@ def verify_email(request):
             request.session.pop('pending_register', None)
  
             if is_register:
-                messages.success(request, 'Welcome! Your account has been verified.')
+                flash_success(request, 'dashboard', 'Welcome! Your account has been verified.')
             else:
-                messages.success(request, f'Welcome back, {user.first_name}!')
+                flash_success(request, 'dashboard', f'Welcome back, {user.first_name}!')
  
             return redirect('dashboard')
  
@@ -327,7 +341,7 @@ def profile_view(request):
         if 'avatar' in request.FILES:
             profile.avatar = request.FILES['avatar']
             profile.save(update_fields=['avatar'])
-            messages.success(request, 'Profile photo updated.')
+            flash_success(request, 'profile', 'Profile photo updated.')
             return redirect('profile')
 
         # ── Profile form ───────────────────────────────────────────────────
@@ -335,7 +349,7 @@ def profile_view(request):
         if form.is_valid():
             form.save()
             form.save_user(request.user)
-            messages.success(request, 'Profile updated successfully.')
+            flash_success(request, 'profile', 'Profile updated successfully.')
             return redirect('profile')
         # If invalid, fall through to re-render with errors
     else:
@@ -360,7 +374,7 @@ def kyc_view(request):
     # Prevent resubmission if already pending or verified
     if request.method == 'POST':
         if profile.kyc_status in ('pending', 'verified'):
-            messages.error(request, 'Your KYC has already been submitted and cannot be changed at this time.')
+            flash_error(request, 'kyc', 'Your KYC has already been submitted and cannot be changed at this time.')
             return redirect('kyc')
 
         form = KYCForm(request.POST, request.FILES, instance=kyc)
@@ -372,7 +386,7 @@ def kyc_view(request):
             profile.kyc_status = 'pending'
             profile.save(update_fields=['kyc_status'])
 
-            messages.success(request, 'Your documents have been submitted successfully and are under review.')
+            flash_success(request, 'kyc', 'Your documents have been submitted successfully and are under review.')
             return redirect('kyc')
         # If invalid, fall through to re-render with errors
     else:
@@ -435,14 +449,14 @@ def deposit_view(request):
             amount = Decimal('0')
  
         if amount <= 0:
-            messages.error(request, 'Please enter a valid amount greater than $0.')
+            flash_error(request, 'deposit', 'Please enter a valid amount greater than $0.')
             return redirect('deposit')
  
         # Fetch the selected method from DB — validates it exists and is active
         try:
             payment_method = PaymentMethod.objects.get(pk=method_id, is_active=True)
         except PaymentMethod.DoesNotExist:
-            messages.error(request, 'Please select a valid payment method.')
+            flash_error(request, 'deposit', 'Please select a valid payment method.')
             return redirect('deposit')
  
         transaction = WalletTransaction.objects.create(
@@ -491,21 +505,21 @@ def withdraw_view(request):
  
         # ── Validations ───────────────────────────────────────────────────
         if amount <= 0:
-            messages.error(request, 'Please enter a valid amount greater than $0.')
+            flash_error(request, 'withdraw', 'Please enter a valid amount greater than $0.')
             return redirect('withdraw')
  
         try:
             payment_method = PaymentMethod.objects.get(pk=method_id, is_active=True, is_withdrawal_method=True)
         except PaymentMethod.DoesNotExist:
-            messages.error(request, 'Please select a valid withdrawal method.')
+            flash_error(request, 'withdraw', 'Please select a valid withdrawal method.')
             return redirect('withdraw')
  
         if not destination:
-            messages.error(request, f'Please enter your {payment_method.ticker} wallet address.')
+            flash_error(request, 'withdraw', f'Please enter your {payment_method.ticker} wallet address.')
             return redirect('withdraw')
  
         if amount > profile.available_balance:
-            messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
+            flash_error(request, 'withdraw', f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
             return redirect('withdraw')
  
         # ── Deduct balance immediately (held pending admin approval) ──────
@@ -615,13 +629,13 @@ def stock_buy(request, symbol):
             shares = Decimal('0')
 
         if shares <= 0:
-            messages.error(request, "Please enter a valid number of shares.")
+            flash_error(request, 'stock_detail', "Please enter a valid number of shares.")
             return redirect('stock_detail', symbol=symbol)
 
         total_cost = shares * stock.current_price
 
         if total_cost > request.user.profile.available_balance:
-            messages.error(request, f"Insufficient balance. You need ${total_cost:.2f}.")
+            flash_error(request, 'stock_detail', f"Insufficient balance. You need ${total_cost:.2f}.")
             return redirect('stock_detail', symbol=symbol)
 
         # Store order details in session for confirmation
@@ -643,7 +657,7 @@ def stock_confirm(request, symbol):
     order_data = request.session.get('pending_stock_order')
  
     if not order_data or order_data['symbol'] != symbol:
-        messages.error(request, "No pending order found.")
+        flash_error(request, 'stocks', "No pending order found.")
         return redirect('stocks')
  
     if request.method == 'POST':
@@ -653,7 +667,7 @@ def stock_confirm(request, symbol):
  
         # ── Re-validate balance ───────────────────────────────────────────
         if total_cost > profile.available_balance:
-            messages.error(request, "Insufficient balance.")
+            flash_error(request, 'stocks', "Insufficient balance.")
             del request.session['pending_stock_order']
             return redirect('stocks')
  
@@ -713,7 +727,7 @@ def stock_confirm(request, symbol):
         # ── Clear session ─────────────────────────────────────────────────
         del request.session['pending_stock_order']
  
-        messages.success(request, f"Successfully purchased {shares} shares of {stock.symbol}!")
+        flash_success(request, 'dashboard', f"Successfully purchased {shares} shares of {stock.symbol}!")
         return redirect('dashboard')
  
     context = {
@@ -766,15 +780,15 @@ def investment_subscribe(request, plan_id):
             amount = Decimal('0')
  
         if amount < plan.min_amount:
-            messages.error(request, f'Minimum investment for {plan.name} is ${plan.min_amount:,.2f}.')
+            flash_error(request, 'investments', f'Minimum investment for {plan.name} is ${plan.min_amount:,.2f}.')
             return redirect('investments')
  
         if plan.max_amount and amount > plan.max_amount:
-            messages.error(request, f'Maximum investment for {plan.name} is ${plan.max_amount:,.2f}.')
+            flash_error(request, 'investments', f'Maximum investment for {plan.name} is ${plan.max_amount:,.2f}.')
             return redirect('investments')
  
         if amount > profile.available_balance:
-            messages.error(request, f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
+            flash_error(request, 'investments', f'Insufficient balance. Your available balance is ${profile.available_balance:,.2f}.')
             return redirect('investments')
  
         # ── Formula: floor(duration_days / 7) whole weeks × weekly ROI ───────
@@ -837,8 +851,9 @@ def investment_subscribe(request, plan_id):
             ),
         )
  
-        messages.success(
+        flash_success(
             request,
+            'investments',
             f'🎉 Successfully invested ${amount:,.2f} in {plan.name}! '
             f'Expected profit: ${expected_return:,.2f}. '
             f'Total payout: ${amount + expected_return:,.2f}. '
@@ -964,11 +979,11 @@ def vehicle_order_view(request, pk):
  
     if request.method == 'POST':
         if vehicle.price > profile.available_balance:
-            messages.error(request, f'Insufficient balance. You need ${vehicle.price:,.2f} but have ${profile.available_balance:,.2f}.')
+            flash_error(request, 'vehicle_detail', f'Insufficient balance. You need ${vehicle.price:,.2f} but have ${profile.available_balance:,.2f}.')
             return redirect('vehicle_detail', pk=pk)
  
         if vehicle.stock_quantity < 1:
-            messages.error(request, 'This vehicle is currently out of stock.')
+            flash_error(request, 'vehicle_detail', 'This vehicle is currently out of stock.')
             return redirect('vehicle_detail', pk=pk)
  
         # Store in session for confirmation step
@@ -989,17 +1004,17 @@ def vehicle_order_confirm_view(request, pk):
     order_data = request.session.get('pending_vehicle_order')
  
     if not order_data or order_data.get('vehicle_id') != pk:
-        messages.error(request, 'No pending order found.')
+        flash_error(request, 'inventory', 'No pending order found.')
         return redirect('inventory')
  
     if request.method == 'POST':
         # Re-validate
         if vehicle.price > profile.available_balance:
-            messages.error(request, 'Insufficient balance.')
+            flash_error(request, 'vehicle_detail', 'Insufficient balance.')
             return redirect('vehicle_detail', pk=pk)
  
         if vehicle.stock_quantity < 1:
-            messages.error(request, 'This vehicle is no longer available.')
+            flash_error(request, 'inventory', 'This vehicle is no longer available.')
             return redirect('inventory')
  
         balance_before             = profile.available_balance
@@ -1043,7 +1058,7 @@ def vehicle_order_confirm_view(request, pk):
         # Clear session
         del request.session['pending_vehicle_order']
  
-        messages.success(request, f'🎉 Order placed for {vehicle.model_name} {vehicle.variant}! Our team will be in touch shortly.')
+        flash_success(request, 'vehicle_order_success', f'🎉 Order placed for {vehicle.model_name} {vehicle.variant}! Our team will be in touch shortly.')
         return redirect('vehicle_order_success', pk=order.pk)
  
     context = {
@@ -1177,7 +1192,7 @@ def settings_view(request):
         if profile_form.is_valid():
             profile_form.save()
             profile_form.save_user(request.user)
-            messages.success(request, "Profile updated successfully.")
+            flash_success(request, 'settings', "Profile updated successfully.")
             return redirect('settings')
     else:
         profile_form = ProfileUpdateForm(instance=profile, user=request.user)
@@ -1196,7 +1211,7 @@ def settings_view(request):
             kyc_obj.save()
             profile.kyc_status = 'pending'
             profile.save()
-            messages.success(request, "KYC documents submitted successfully and are under review.")
+            flash_success(request, 'settings', "KYC documents submitted successfully and are under review.")
             return redirect('settings')
     else:
         kyc_form = KYCForm(instance=kyc)
@@ -1208,10 +1223,10 @@ def settings_view(request):
             password_form.save()
             update_session_auth_hash(request, request.user)
             send_password_changed_email(request.user.email, request.user.get_full_name())
-            messages.success(request, "Your password has been changed successfully.")
+            flash_success(request, 'settings', "Your password has been changed successfully.")
             return redirect('settings')
         else:
-            messages.error(request, "Please correct the errors below.")
+            flash_error(request, 'settings', "Please correct the errors below.")
 
     # ====================== 2FA (Simple Version) ======================
     if request.method == 'POST' and 'toggle_2fa' in request.POST:
@@ -1219,14 +1234,14 @@ def settings_view(request):
             # Disable 2FA
             profile.is_2fa_enabled = False
             profile.save()
-            messages.success(request, "Two-Factor Authentication has been disabled.")
+            flash_success(request, 'settings', "Two-Factor Authentication has been disabled.")
         else:
             # Enable 2FA - send verification code
             code = str(random.randint(100000, 999999))
             request.session['2fa_setup_code'] = code
             request.session['2fa_pending'] = True
             send_2fa_code_email(request.user.email, code, request.user.get_full_name())
-            messages.info(request, "A verification code has been sent to your email to enable 2FA.")
+            flash_success(request, 'settings', "A verification code has been sent to your email to enable 2FA.")
         return redirect('settings')
 
     # Verify 2FA Code (during setup)
@@ -1237,9 +1252,9 @@ def settings_view(request):
             profile.save()
             request.session.pop('2fa_setup_code', None)
             request.session.pop('2fa_pending', None)
-            messages.success(request, "Two-Factor Authentication has been successfully enabled!")
+            flash_success(request, 'settings', "Two-Factor Authentication has been successfully enabled!")
         else:
-            messages.error(request, "Invalid verification code. Please try again.")
+            flash_error(request, 'settings', "Invalid verification code. Please try again.")
         return redirect('settings')
 
     context = {
@@ -1261,10 +1276,10 @@ def password_reset_request(request):
             reset_url = request.build_absolute_uri(f'/password-reset-confirm/{token.token}/')
             
             send_password_reset_email(user.email, user.get_full_name(), reset_url)
-            messages.success(request, "Password reset link has been sent to your email.")
+            flash_success(request, 'password_reset_done', "Password reset link has been sent to your email.")
             return redirect('password_reset_done')
         except User.DoesNotExist:
-            messages.error(request, "No account found with this email address.")
+            flash_error(request, 'password_reset', "No account found with this email address.")
     
     return render(request, 'password_reset.html')
 
@@ -1273,7 +1288,7 @@ def password_reset_confirm(request, token):
     reset_token = get_object_or_404(PasswordResetToken, token=token)
     
     if reset_token.is_used or reset_token.is_expired():
-        messages.error(request, "This reset link has expired or been used.")
+        flash_error(request, 'password_reset', "This reset link has expired or been used.")
         return redirect('password_reset')
 
     if request.method == 'POST':
@@ -1287,10 +1302,10 @@ def password_reset_confirm(request, token):
             reset_token.is_used = True
             reset_token.save()
             
-            messages.success(request, "Your password has been reset successfully.")
+            flash_success(request, 'login', "Your password has been reset successfully.")
             return redirect('login')
         else:
-            messages.error(request, "Passwords do not match.")
+            flash_error(request, 'password_reset_confirm', "Passwords do not match.")
 
     return render(request, 'password_reset_confirm.html', {'token': token})
 
@@ -1315,10 +1330,10 @@ def change_password_view(request):
             password_form.save()
             update_session_auth_hash(request, request.user)
             send_password_changed_email(request.user.email, request.user.get_full_name())
-            messages.success(request, "Your password has been changed successfully.")
+            flash_success(request, 'security', "Your password has been changed successfully.")
             return redirect('security')
         else:
-            messages.error(request, "Please correct the errors below.")
+            flash_error(request, 'change_password', "Please correct the errors below.")
     else:
         password_form = PasswordChangeForm(user=request.user)
 
@@ -1334,13 +1349,13 @@ def two_factor_view(request):
         if profile.is_2fa_enabled:
             profile.is_2fa_enabled = False
             profile.save()
-            messages.success(request, "Two-Factor Authentication has been disabled.")
+            flash_success(request, 'two_factor', "Two-Factor Authentication has been disabled.")
         else:
             code = str(random.randint(100000, 999999))
             request.session['2fa_setup_code'] = code
             request.session['2fa_pending'] = True
             send_2fa_code_email(request.user.email, code, request.user.get_full_name())
-            messages.info(request, "A verification code has been sent to your email.")
+            flash_success(request, 'two_factor', "A verification code has been sent to your email.")
         return redirect('two_factor')
 
     # Verify Code
@@ -1351,9 +1366,9 @@ def two_factor_view(request):
             profile.save()
             request.session.pop('2fa_setup_code', None)
             request.session.pop('2fa_pending', None)
-            messages.success(request, "Two-Factor Authentication has been successfully enabled!")
+            flash_success(request, 'two_factor', "Two-Factor Authentication has been successfully enabled!")
         else:
-            messages.error(request, "Invalid verification code. Please try again.")
+            flash_error(request, 'two_factor', "Invalid verification code. Please try again.")
         return redirect('two_factor')
 
     context = {'profile': profile}

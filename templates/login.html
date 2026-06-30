@@ -45,11 +45,7 @@
             </div>
 
             <!-- Django messages -->
-            {% if messages %}
-            {% for message in messages %}
-            <div class="mb-4 text-sm px-3 py-2 rounded bg-red-50 text-red-600 border border-red-200">{{ message }}</div>
-            {% endfor %}
-            {% endif %}
+            {% include 'partials/messages.html' with message_tag='login' wrapper_class='mb-4 text-sm px-3 py-2 rounded font-medium' %}
 
             <!-- Form -->
             <form method="POST" action="{% url 'login' %}" class="space-y-5">

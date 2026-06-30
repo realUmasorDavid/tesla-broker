@@ -37,13 +37,9 @@
                 <p class="text-sm text-gray-500 mt-2">You need a valid access code to create an account</p>
             </div>
 
-            {% if messages %}
-            {% for message in messages %}
-            <div class="mb-6 px-4 py-3 rounded-xl text-sm bg-red-50 text-red-600 border border-red-200">
-                {{ message }}
+            <div class="space-y-2 mb-6">
+                {% include 'partials/messages.html' with message_tag='access_code' wrapper_class='px-4 py-3 rounded-xl text-sm font-medium' %}
             </div>
-            {% endfor %}
-            {% endif %}
 
             <form method="POST" class="space-y-6">
                 {% csrf_token %}

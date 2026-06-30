@@ -1,0 +1,10 @@
+{% for message in messages %}
+{% if message_tag in message.tags %}
+<div class="{% if wrapper_class %}{{ wrapper_class }}{% else %}rounded-xl px-5 py-3 text-sm font-medium{% endif %}
+  {% if 'error' in message.tags %}bg-red-50 text-red-700 border border-red-200
+  {% elif 'success' in message.tags %}bg-green-50 text-green-700 border border-green-200
+  {% endif %}">
+    {{ message }}
+</div>
+{% endif %}
+{% endfor %}
