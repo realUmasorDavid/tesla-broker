@@ -73,15 +73,15 @@
                         <!-- Custom country selector -->
                         <div class="relative" id="country-picker">
                             <!-- Hidden input that actually submits -->
-                            <input type="hidden" name="phone_code" id="phone-code-input" value="+234" />
+                            <input type="hidden" name="phone_code" id="phone-code-input" value="+1" />
                 
                             <!-- Trigger button -->
                             <button type="button" onclick="togglePicker()"
                                 class="flex items-center gap-1.5 border border-r-0 border-gray-300 rounded-l px-2.5 py-2 bg-gray-50 hover:bg-gray-100 transition h-full focus:outline-none focus:ring-1 focus:ring-black"
                                 style="min-width:80px;">
-                                <img id="selected-flag" src="https://flagcdn.com/w20/ng.png" alt=""
+                                <img id="selected-flag" src="https://flagcdn.com/w20/us.png" alt="United States"
                                     class="w-5 h-3.5 object-cover rounded-sm shrink-0" />
-                                <span id="selected-code" class="text-sm text-gray-900 font-medium">+234</span>
+                                <span id="selected-code" class="text-sm text-gray-900 font-medium">+1</span>
                                 <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2"
                                     viewBox="0 0 24 24">
                                     <path d="M19 9l-7 7-7-7" />
@@ -116,6 +116,7 @@
                 
                 <script>
                     const COUNTRIES = [
+                        { name: 'United States', code: '+1', iso: 'us' },
                         { name: 'Afghanistan', code: '+93', iso: 'af' },
                         { name: 'Albania', code: '+355', iso: 'al' },
                         { name: 'Algeria', code: '+213', iso: 'dz' },
@@ -303,7 +304,6 @@
                         { name: 'Ukraine', code: '+380', iso: 'ua' },
                         { name: 'United Arab Emirates', code: '+971', iso: 'ae' },
                         { name: 'United Kingdom', code: '+44', iso: 'gb' },
-                        { name: 'United States', code: '+1', iso: 'us' },
                         { name: 'Uruguay', code: '+598', iso: 'uy' },
                         { name: 'Uzbekistan', code: '+998', iso: 'uz' },
                         { name: 'Vanuatu', code: '+678', iso: 'vu' },
