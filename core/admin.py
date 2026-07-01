@@ -240,8 +240,8 @@ def approve_kyc(modeladmin, request, queryset):
         kyc.save(update_fields=['verification_date', 'reviewed_by'])
 
         send_kyc_approved_email(
-            to_email=profile.user.email,
-            first_name=profile.user.get_full_name() or profile.user.username
+            to_email=kyc.profile.user.email,
+            first_name=kyc.profile.user.get_full_name() or kyc.profile.user.username
         )
         
         approved += 1

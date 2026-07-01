@@ -847,7 +847,7 @@ def investment_subscribe(request, plan_id):
             balance_after    = profile.available_balance,
             description      = (
                 f'Invested ${amount:,.2f} in {plan.name} '
-                f'({plan.roi_percent}%/week × {int(weeks)} weeks = ${expected_return:,.2f} profit)'
+                f'({plan.roi_percent}%/{cycle_label} × {int(periods)} {cycle_label} periods = ${expected_return:,.2f} profit)'
             ),
         )
  
