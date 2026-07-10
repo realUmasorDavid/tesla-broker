@@ -55,12 +55,20 @@ def access_code_view(request):
     return render(request, 'access_code.html')
 
 def index(request):
+    return render(request, 'index.html')
+
+def home(request):
+    return render(request, 'home.html')
+
+
+def home(request):
     vehicles = TeslaVehicle.objects.filter(is_available=True)[:4]
     
     context = {
         'vehicles': vehicles,
     }
-    return render(request, 'index.html', context)
+    return render(request, 'home.html', context)
+
 
 def blog(request):
     return render(request, 'blog.html')

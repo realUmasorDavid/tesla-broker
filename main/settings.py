@@ -29,7 +29,15 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = ['useeliteaccess.com' ,'teslaprivatecapital.com', 'localhost', '127.0.0.1', 'tesla-broker.fly.dev']
+ALLOWED_HOSTS = [
+    'useeliteaccess.com',
+    'www.useeliteaccess.com',
+    'teslaprivatecapital.com',
+    'www.teslaprivatecapital.com',
+    'localhost',
+    '127.0.0.1',
+    'tesla-broker.fly.dev',
+]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.dev',
@@ -37,8 +45,19 @@ CSRF_TRUSTED_ORIGINS = [
     'https://umasordavid.pythonanywhere.com',
     'https://tesla-broker.fly.dev',
     'https://useeliteaccess.com',
+    'https://www.useeliteaccess.com',
     'https://teslaprivatecapital.com',
+    'https://www.teslaprivatecapital.com',
 ]
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'False' if DEBUG else 'True').lower() == 'true'
+SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'False' if DEBUG else 'True').lower() == 'true'
+CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False' if DEBUG else 'True').lower() == 'true'
+SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', '31536000'))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = os.getenv('SECURE_HSTS_INCLUDE_SUBDOMAINS', 'True').lower() == 'true'
+SECURE_HSTS_PRELOAD = os.getenv('SECURE_HSTS_PRELOAD', 'True').lower() == 'true'
+SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 
 # Application definition

@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tesla — Register</title>
+    <title>Vantage — Register</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
     <style>
@@ -18,14 +18,14 @@
 <body class="bg-gray-100 min-h-screen flex flex-col">
 
     <nav class="flex items-center justify-between px-10 py-5 bg-white border-b border-gray-200">
-        <a href="{% url 'index' %}">
+        <a href="{% url 'home' %}">
             <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
         </a>
         <div class="flex lg:hidden items-center gap-6 text-sm text-gray-700">
             <a href="{% url 'login' %}" class="hover:text-black transition">Sign In</a>
         </div>
         <div class="hidden lg:flex items-center gap-6 text-sm text-gray-700">
-            <a href="{% url 'index' %}" class="hover:text-black transition">Home</a>
+            <a href="{% url 'home' %}" class="hover:text-black transition">Home</a>
             <a href="{% url 'inventory' %}" class="hover:text-black transition">Inventory</a>
             <a href="{% url 'login' %}" class="hover:text-black transition">Sign In</a>
             <a href="{% url 'register' %}" class="font-medium text-black">Register</a>
@@ -37,7 +37,7 @@
 
             <div class="text-center mb-7">
                 <h1 class="text-xl font-semibold text-gray-900">Create your account</h1>
-                <p class="text-sm text-gray-500 mt-1">Start trading, investing and accessing premium EV inventory.</p>
+                <p class="text-sm text-gray-500 mt-1">Start trading, investing and accessing premium inventory.</p>
             </div>
 
             {% include 'partials/messages.html' with message_tag='register' wrapper_class='mb-4 text-sm px-3 py-2 rounded font-medium' %}

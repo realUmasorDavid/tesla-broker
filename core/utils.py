@@ -40,7 +40,7 @@ def _format_location(city='', region='', country=''):
 
 def _location_from_ip_api(ip):
     response = requests.get(
-        f'http://ip-api.com/json/{ip}',
+        f'https://ip-api.com/json/{ip}',
         params={'fields': 'status,message,country,city,regionName'},
         timeout=3,
     )
