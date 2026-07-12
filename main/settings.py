@@ -32,8 +32,8 @@ DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 ALLOWED_HOSTS = [
     'useeliteaccess.com',
     'www.useeliteaccess.com',
-    'teslaprivatecapital.com',
-    'www.teslaprivatecapital.com',
+    'useelitevest.com',
+    'www.useelitevest.com',
     'localhost',
     '127.0.0.1',
     'tesla-broker.fly.dev',
@@ -46,8 +46,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://tesla-broker.fly.dev',
     'https://useeliteaccess.com',
     'https://www.useeliteaccess.com',
-    'https://teslaprivatecapital.com',
-    'https://www.teslaprivatecapital.com',
+    'https://useelitevest.com',
+    'https://www.useelitevest.com',
 ]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -226,7 +226,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 
 RESEND_API_KEY = 're_aUuku585_LeBS7Loroxs57ryig3pnp295'
-DEFAULT_FROM_EMAIL = 'Tesla Private Capital <onboarding@teslaprivatecapital.com>'
+DEFAULT_FROM_EMAIL = 'Tesla Capital <onboarding@useelitevest.com>'
 
 SESSION_SAVE_EVERY_REQUEST = True
 
