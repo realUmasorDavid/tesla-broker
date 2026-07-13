@@ -2,6 +2,9 @@ import resend
 from django.conf import settings
 from datetime import datetime
 
+# <img src="{LOGO_URL}" alt="Tesla Capital"
+#                  style="height:36px;width:auto;display:inline-block;" />
+                 
 resend.api_key = settings.RESEND_API_KEY
 
 LOGO_URL = 'https://res.cloudinary.com/dqqgr0j4l/image/upload/v1782115061/logo2_dsyojj.svg'
@@ -10,8 +13,7 @@ def _base_wrapper(content_html):
     """Shared outer shell for all emails."""
     logo_block = f'''
         <div style="text-align:center;margin-bottom:32px;">
-            <img src="{LOGO_URL}" alt="Tesla Capital"
-                 style="height:36px;width:auto;display:inline-block;" />
+            <h1 style="font-size:28px;font-weight:700;margin:0;color:#fff;letter-spacing:-0.5px;">EliteVest</h1>
         </div>
     ''' if LOGO_URL else '''
         <div style="margin-bottom:32px;">
@@ -51,8 +53,8 @@ def _base_wrapper(content_html):
           <tr>
             <td style="background:#080808;border-top:1px solid #1f1f1f;padding:20px 36px;">
               <p style="color:#374151;font-size:11px;margin:0;line-height:1.6;">
-                © 2026 Tesla Capital. All rights reserved.<br/>
-                You're receiving this email because you created an account on Tesla Capital.
+                © 2026 EliteVest. All rights reserved.<br/>
+                You're receiving this email because you created an account on EliteVest.
               </p>
             </td>
           </tr>
@@ -66,7 +68,7 @@ def _base_wrapper(content_html):
  
  
 def send_verification_email(to_email, code, purpose, first_name=''):
-    action = 'sign in to your account' if purpose == 'login' else 'verify your Tesla Capital account'
+    action = 'sign in to your account' if purpose == 'login' else 'verify your EliteVest account'
  
     content = f"""
         <p style="color:#e5e7eb;font-size:16px;font-weight:600;margin:0 0 8px;">
@@ -108,13 +110,13 @@ def send_verification_email(to_email, code, purpose, first_name=''):
     """
  
     subject = (
-        f"Your Tesla Capital sign-in code: {code}"
+        f"Your EliteVest sign-in code: {code}"
         if purpose == 'login'
-        else f"Verify your Tesla Capital account — code: {code}"
+        else f"Verify your EliteVest account — code: {code}"
     )
  
     resend.Emails.send({
-        "from":    "Tesla Capital <onboarding@useelitevest.com>",
+        "from":    "EliteVest <onboarding@useelitevest.com>",
         "to":      [to_email],
         "subject": subject,
         "html":    _base_wrapper(content),
@@ -124,7 +126,7 @@ def send_verification_email(to_email, code, purpose, first_name=''):
 def send_welcome_email(to_email, first_name):
     content = f"""
         <p style="color:#e5e7eb;font-size:18px;font-weight:700;margin:0 0 8px;">
-            Welcome to Tesla Capital, {first_name}! 🎉
+            Welcome to EliteVest, {first_name}! 🎉
         </p>
         <p style="color:#9ca3af;font-size:14px;margin:0 0 28px;line-height:1.7;">
             Your account has been successfully created.
@@ -192,9 +194,9 @@ def send_welcome_email(to_email, first_name):
     """
  
     resend.Emails.send({
-        "from":    "Tesla Capital <onboarding@useelitevest.com>",
+        "from":    "EliteVest <onboarding@useelitevest.com>",
         "to":      [to_email],
-        "subject": f"Welcome to Tesla Capital, {first_name}! Your account is ready 🚀",
+        "subject": f"Welcome to EliteVest, {first_name}! Your account is ready 🚀",
         "html":    _base_wrapper(content),
     })
 
@@ -205,7 +207,7 @@ def send_password_changed_email(to_email, first_name=''):
             Hi {first_name or 'there'},
         </p>
         <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
-            This is to confirm that your Tesla Capital account password was successfully changed.
+            This is to confirm that your EliteVest account password was successfully changed.
         </p>
         
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -227,9 +229,9 @@ def send_password_changed_email(to_email, first_name=''):
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <security@useelitevest.com>",
+        "from": "EliteVest <security@useelitevest.com>",
         "to": [to_email],
-        "subject": "Your Tesla Capital Password Was Changed",
+        "subject": "Your EliteVest Password Was Changed",
         "html": _base_wrapper(content),
     })
 
@@ -265,9 +267,9 @@ def send_2fa_code_email(to_email, code, first_name=''):
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <security@useelitevest.com>",
+        "from": "EliteVest <security@useelitevest.com>",
         "to": [to_email],
-        "subject": f"Your Tesla Capital 2FA Code: {code}",
+        "subject": f"Your EliteVest 2FA Code: {code}",
         "html": _base_wrapper(content),
     })
 
@@ -282,7 +284,7 @@ def send_login_notification_email(to_email, first_name='', login_time=None, ip_a
             Hi {first_name or 'there'},
         </p>
         <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
-            A new login to your Tesla Capital account was detected.
+            A new login to your EliteVest account was detected.
         </p>
         
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -324,9 +326,9 @@ def send_login_notification_email(to_email, first_name='', login_time=None, ip_a
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <security@useelitevest.com>",
+        "from": "EliteVest <security@useelitevest.com>",
         "to": [to_email],
-        "subject": "New Login Detected on Your Tesla Capital Account",
+        "subject": "New Login Detected on Your EliteVest Account",
         "html": _base_wrapper(content),
     })
 
@@ -337,7 +339,7 @@ def send_password_changed_email(to_email, first_name=''):
             Hi {first_name or 'there'},
         </p>
         <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
-            This message confirms that your Tesla Capital account password was successfully changed.
+            This message confirms that your EliteVest account password was successfully changed.
         </p>
         
         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
@@ -367,9 +369,9 @@ def send_password_changed_email(to_email, first_name=''):
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <security@useelitevest.com>",
+        "from": "EliteVest <security@useelitevest.com>",
         "to": [to_email],
-        "subject": "Your Tesla Capital Password Was Successfully Changed",
+        "subject": "Your EliteVest Password Was Successfully Changed",
         "html": _base_wrapper(content),
     })
 
@@ -401,7 +403,7 @@ def send_password_reset_email(to_email, first_name, reset_url):
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <security@useelitevest.com>",
+        "from": "EliteVest <security@useelitevest.com>",
         "to": [to_email],
         "subject": "Password Reset Request",
         "html": _base_wrapper(content),
@@ -451,14 +453,14 @@ def send_deposit_received_email(to_email, first_name, amount, reference_number=N
         </p>
 
         <p style="color:#6b7280;font-size:13px;line-height:1.6;">
-            Thank you for choosing Tesla Capital.
+            Thank you for choosing EliteVest.
         </p>
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <finance@useelitevest.com>",
+        "from": "EliteVest <finance@useelitevest.com>",
         "to": [to_email],
-        "subject": "Deposit Received - Tesla Capital",
+        "subject": "Deposit Received - EliteVest",
         "html": _base_wrapper(content),
     })
 
@@ -506,14 +508,14 @@ def send_withdrawal_completed_email(to_email, first_name, amount, reference_numb
         </p>
 
         <p style="color:#6b7280;font-size:13px;line-height:1.6;">
-            Thank you for using Tesla Capital.
+            Thank you for using EliteVest.
         </p>
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <finance@useelitevest.com>",
+        "from": "EliteVest <finance@useelitevest.com>",
         "to": [to_email],
-        "subject": "Withdrawal Successfully Completed - Tesla Capital",
+        "subject": "Withdrawal Successfully Completed - EliteVest",
         "html": _base_wrapper(content),
     })
 
@@ -540,7 +542,7 @@ def send_kyc_approved_email(to_email, first_name):
         </table>
 
         <p style="color:#9ca3af;font-size:15px;margin:0 0 28px;line-height:1.7;">
-            Your account has been verified and approved for continued access to all Tesla Capital services.
+            Your account has been verified and approved for continued access to all EliteVest services.
         </p>
 
         <p style="color:#10b981;font-size:15px;margin:0 0 28px;line-height:1.7;">
@@ -566,7 +568,7 @@ def send_kyc_approved_email(to_email, first_name):
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <compliance@useelitevest.com>",
+        "from": "EliteVest <compliance@useelitevest.com>",
         "to": [to_email],
         "subject": "KYC Review Completed - Account Verified ✅",
         "html": _base_wrapper(content),
@@ -617,13 +619,13 @@ def send_withdrawal_request_received_email(to_email, first_name, amount, referen
         </p>
 
         <p style="color:#6b7280;font-size:13px;line-height:1.6;">
-            Thank you for using Tesla Capital.
+            Thank you for using EliteVest.
         </p>
     """
 
     resend.Emails.send({
-        "from": "Tesla Capital <finance@useelitevest.com>",
+        "from": "EliteVest <finance@useelitevest.com>",
         "to": [to_email],
-        "subject": "Withdrawal Request Received - Tesla Capital",
+        "subject": "Withdrawal Request Received - EliteVest",
         "html": _base_wrapper(content),
     })

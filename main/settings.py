@@ -226,7 +226,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 
 RESEND_API_KEY = 're_aUuku585_LeBS7Loroxs57ryig3pnp295'
-DEFAULT_FROM_EMAIL = 'Tesla Capital <onboarding@useelitevest.com>'
+DEFAULT_FROM_EMAIL = 'EliteVest <onboarding@useelitevest.com>'
 
 SESSION_SAVE_EVERY_REQUEST = True
 
