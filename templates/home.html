@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vantage — Invest. Trade. Grow.</title>
+    <title>EliteVest — Invest. Trade. Grow.</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -31,7 +31,8 @@
     <!-- Nav -->
     <nav
         class="flex items-center justify-between px-5 md:px-10 py-5 border-b border-border bg-white/90 backdrop-blur sticky top-0 z-50">
-        <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt="">
+        <!-- <img src="{% static 'logo.svg' %}" class="w-24 sm:w-32" alt=""> -->
+        <h1 class="text-xl text-black font-bold">EliteVest</h1>
         <div class="hidden lg:flex items-center gap-8 text-sm text-black">
             <a href="{% url 'inventory' %}" class="hover:text-white transition">Inventory</a>
             <a href="{% url 'investments' %}" class="hover:text-white transition">Invest</a>
@@ -136,7 +137,7 @@
                     <a href="{% url 'inventory' %}"
                         class="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-6 hover:bg-white/10 hover:border-white/20 transition">
                         <p class="text-xs text-gray-500 uppercase tracking-wide mb-2">Marketplace</p>
-                        <h3 class="text-xl font-semibold mb-2">Vantage</h3>
+                        <h3 class="text-xl font-semibold mb-2">EliteVest</h3>
                         <p class="text-sm text-gray-400">Curated premium selection.</p>
                     </a>
                 </div>
@@ -586,9 +587,10 @@
         <div class="relative px-5 md:px-10 max-w-7xl mx-auto">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
                 <div class="lg:col-span-2 flex flex-col space-y-6">
-                    <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt="">
-                    <p class="text-gray-300 text-sm">Powered by Vantage Capital</p>
-                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> Vantage Capital. All
+                    <!-- <img src="{% static 'logo2.svg' %}" class="w-40 md:w-52" alt=""> -->
+                    <h1 class="text-xl text-black font-bold">EliteVest</h1>
+                    <p class="text-gray-300 text-sm">Powered by EliteVest</p>
+                    <p class="text-gray-300 text-sm">&copy; <span id="year"></span> EliteVest. All
                         rights reserved.</p>
                 </div>
                 <div class="flex flex-col space-y-4">
