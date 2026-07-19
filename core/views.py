@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod, PasswordResetToken, AccessCode
+from .models import Profile, KYCVerification, WalletTransaction, Stock, StockHolding, InvestmentPlan, UserInvestment, Order, TeslaVehicle, Notification, EmailVerificationCode, PaymentMethod, PasswordResetToken
 from .forms import KYCForm, ProfileUpdateForm
 from decimal import Decimal
 from django.db.models import Sum, F
@@ -33,29 +33,29 @@ def flash_error(request, tag, message):
     messages.error(request, message, extra_tags=tag)
 
 
-def access_code_view(request):
-    if request.method == 'POST':
-        entered_code = request.POST.get('access_code', '').strip().upper()
-        try:
-            access_code = AccessCode.objects.get(code=entered_code, is_used=False)
+# def access_code_view(request):
+#     if request.method == 'POST':
+#         entered_code = request.POST.get('access_code', '').strip().upper()
+#         try:
+#             access_code = AccessCode.objects.get(code=entered_code, is_used=False)
             
-            # Mark as used
-            access_code.is_used = True
-            access_code.used_by = request.user if request.user.is_authenticated else None
-            access_code.save()
+#             # Mark as used
+#             access_code.is_used = True
+#             access_code.used_by = request.user if request.user.is_authenticated else None
+#             access_code.save()
 
-            request.session['access_granted'] = True
-            request.session['access_code_id'] = access_code.pk
+#             request.session['access_granted'] = True
+#             request.session['access_code_id'] = access_code.pk
 
-            flash_success(request, 'register', "Access granted! You can now create an account.")
-            return redirect('register')
-        except AccessCode.DoesNotExist:
-            flash_error(request, 'access_code', "Invalid or already used access code.")
+#             flash_success(request, 'register', "Access granted! You can now create an account.")
+#             return redirect('register')
+#         except AccessCode.DoesNotExist:
+#             flash_error(request, 'access_code', "Invalid or already used access code.")
 
-    return render(request, 'access_code.html')
+#     return render(request, 'access_code.html')
 
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'home.html')
 
 def home(request):
     return render(request, 'home.html')
@@ -132,9 +132,9 @@ def login(request):
  
  
 def register(request):
-    if not request.session.get('access_granted'):
-        flash_error(request, 'access_code', "You need a valid access code to register.")
-        return redirect('access_code')
+    # if not request.session.get('access_granted'):
+    #     flash_error(request, 'access_code', "You need a valid access code to register.")
+    #     return redirect('access_code')
     
     first_name    = ''
     last_name     = ''

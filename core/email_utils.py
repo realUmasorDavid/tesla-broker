@@ -181,7 +181,7 @@ def send_welcome_email(to_email, first_name):
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td align="center">
-              <a href="https://yourdomain.com/dashboard/"
+              <a href="https://useelitevest.com/dashboard/"
                  style="display:inline-block;background:#fff;color:#000;
                         padding:14px 36px;border-radius:10px;
                         font-size:14px;font-weight:600;text-decoration:none;
@@ -557,7 +557,7 @@ def send_kyc_approved_email(to_email, first_name):
         <table width="100%" cellpadding="0" cellspacing="0">
           <tr>
             <td align="center">
-              <a href="https://yourdomain.com/dashboard/" 
+              <a href="https://useelitevest.com/dashboard/" 
                  style="display:inline-block;background:#fff;color:#000;padding:16px 40px;border-radius:12px;
                         font-size:15px;font-weight:600;text-decoration:none;">
                 Go to Dashboard
