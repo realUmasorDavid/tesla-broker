@@ -225,7 +225,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/login/'
 
-RESEND_API_KEY = 're_aUuku585_LeBS7Loroxs57ryig3pnp295'
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 DEFAULT_FROM_EMAIL = 'EliteVest <onboarding@useelitevest.com>'
 
 SESSION_SAVE_EVERY_REQUEST = True
